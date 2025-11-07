@@ -1,0 +1,5 @@
+{
+  "name": "Automotive Configurator UI",
+  "description": "A web application that clones the UI/UX of the Tesla vehicle configurator, allowing users to customize options like paint, wheels, and interior. Built with React, TypeScript, and Tailwind CSS for a modern, responsive design.",
+  "requestFramePermissions": []
+}
