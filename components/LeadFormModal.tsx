@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 interface LeadFormModalProps {
-  onSubmit: () => void;
+  onSubmit: (consumption?: string) => void;
 }
 
 const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
@@ -24,7 +24,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
     console.log('Form Submitted:', formData);
     // Here you would typically send the data to a server
     alert('Thank you for your submission!');
-    onSubmit();
+    onSubmit(formData.consumption);
   };
 
   return (
@@ -35,7 +35,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
         className="bg-white rounded-lg shadow-2xl border border-gray-200 w-full max-w-[772px] relative p-12"
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onSubmit} className="absolute top-6 right-6 text-gray-400 hover:text-gray-800" aria-label="Close">
+        <button onClick={() => onSubmit()} className="absolute top-6 right-6 text-gray-400 hover:text-gray-800" aria-label="Close">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
         <h2 className="text-3xl font-semibold mb-2 text-left text-gray-900">Contact Form</h2>

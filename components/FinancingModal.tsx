@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { PaintOption, WheelOption } from '../types';
 
 // Re-use the currency formatter
@@ -24,29 +24,53 @@ const FinancingModal: React.FC<{
   onClose: () => void;
   paint: PaintOption;
   wheels: WheelOption;
-}> = ({ onClose, paint, wheels }) => {
+  finalPrice: number;
+}> = ({ onClose, paint, wheels, finalPrice }) => {
   const [activeTab, setActiveTab] = useState<'full' | 'loan'>('full');
   const imageUrl = 'https://i.postimg.cc/X7yYY8Tr/rps.jpg';
   const fallbackUrl = 'https://i.postimg.cc/zfkB1G46/rps2.jpg';
 
-  // These values are hardcoded to precisely match the design in the user's image.
-  const breakdown = {
-      gst: 321389,
-      tcs: 65890,
-      adminFee: 50000,
-      fastag: 800,
-      roadTax: 258,
-      fuelSavings: -343500
-  };
-  const onRoadPrice = 6705948; 
+  const exShowroomPrice = finalPrice;
+
+  // These values are now calculated based on the ex-showroom price
+  const breakdown = useMemo(() => {
+    const calculatedGst = exShowroomPrice * 0.05; // 5% GST on EVs
+    const calculatedTcs = exShowroomPrice * 0.01; // 1% TCS
+    const adminFee = 50000; // Fixed
+    const fastag = 800; // Fixed
+    const roadTax = 258; // Placeholder
+    const fuelSavings = -343500; // Constant
+
+    return {
+      gst: calculatedGst,
+      tcs: calculatedTcs,
+      adminFee: adminFee,
+      fastag: fastag,
+      roadTax: roadTax,
+      fuelSavings: fuelSavings,
+    };
+  }, [exShowroomPrice]);
+
+  const onRoadPrice = useMemo(() => {
+    return exShowroomPrice + breakdown.gst + breakdown.tcs + breakdown.adminFee + breakdown.fastag + breakdown.roadTax;
+  }, [exShowroomPrice, breakdown]);
 
   // State for loan calculation
   const [loanTerm, setLoanTerm] = useState(60); // Default 60 months (5 years)
   const [downPayment, setDownPayment] = useState(onRoadPrice * 0.2); // Default 20% down
   const INTEREST_RATE = 9; // 9% annual interest rate
 
-  const minDownPayment = onRoadPrice * 0.1; // 10%
-  const maxDownPayment = onRoadPrice * 0.8; // 80%
+  const minDownPayment = useMemo(() => onRoadPrice * 0.1, [onRoadPrice]); // 10%
+  const maxDownPayment = useMemo(() => onRoadPrice * 0.8, [onRoadPrice]); // 80%
+
+  // Adjust down payment if onRoadPrice changes to ensure it's within bounds
+  useEffect(() => {
+    const newDefaultDownPayment = onRoadPrice * 0.2;
+    if (downPayment < minDownPayment || downPayment > maxDownPayment) {
+        setDownPayment(Math.max(minDownPayment, Math.min(newDefaultDownPayment, maxDownPayment)));
+    }
+  }, [onRoadPrice, minDownPayment, maxDownPayment, downPayment]);
+
 
   const loanAmount = useMemo(() => onRoadPrice - downPayment, [onRoadPrice, downPayment]);
 

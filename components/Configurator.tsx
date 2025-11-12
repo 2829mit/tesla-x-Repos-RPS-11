@@ -24,6 +24,7 @@ interface ConfiguratorProps {
   orderFee: number;
   finalPrice: number;
   setVisualizerView: (view: 'car' | 'wheels') => void;
+  recommendedTrimId: TrimOption['id'] | null;
 }
 
 const Configurator: React.FC<ConfiguratorProps> = ({
@@ -46,6 +47,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   orderFee,
   finalPrice,
   setVisualizerView,
+  recommendedTrimId,
 }) => {
   const [paymentMode, setPaymentMode] = useState<'cash' | 'finance'>('cash');
   const [showPriceDetails, setShowPriceDetails] = useState(true);
@@ -126,13 +128,46 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     }).format(amount);
   };
 
-  const financePayment = useMemo(() => {
-    const loanAmount = finalPrice - 500000; // Assume ₹5 Lakh down payment
-    const monthlyRate = 9 / 12 / 100; // 9% annual interest rate
-    const tenureMonths = 60; // 5 years
-    if (loanAmount <= 0) return 0;
-    const emi = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) / (Math.pow(1 + monthlyRate, tenureMonths) - 1);
-    return emi;
+  const INTEREST_RATE = 8.50; // Annual ROI as per user's image
+
+  const financingDetails = useMemo(() => {
+    const exShowroomPrice = finalPrice;
+    
+    // On-road price calculation, similar to FinancingModal
+    const gst = exShowroomPrice * 0.05; // 5% GST on EVs
+    const tcs = exShowroomPrice * 0.01; // 1% TCS
+    const adminFee = 50000; // Fixed
+    const fastag = 800; // Fixed
+    const roadTax = 258; // Placeholder
+    const onRoadPrice = exShowroomPrice + gst + tcs + adminFee + fastag + roadTax;
+
+    // Down payment (10% of on-road price to match the screenshot's logic)
+    const downPayment = onRoadPrice * 0.10;
+
+    // Loan details
+    const loanTerm = 60; // months
+    const loanAmount = onRoadPrice - downPayment;
+    const monthlyRate = INTEREST_RATE / 12 / 100;
+
+    if (loanAmount <= 0) {
+        return {
+            monthlyPayment: 0,
+            downPayment,
+            loanTerm,
+            interestRate: INTEREST_RATE,
+            purchasePrice: onRoadPrice
+        };
+    }
+    
+    const emi = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, loanTerm)) / (Math.pow(1 + monthlyRate, loanTerm) - 1);
+
+    return {
+        monthlyPayment: emi,
+        downPayment,
+        loanTerm,
+        interestRate: INTEREST_RATE,
+        purchasePrice: onRoadPrice
+    };
   }, [finalPrice]);
 
   const formatPrice = (price: number) => {
@@ -162,7 +197,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   const getFooterPrice = () => {
     switch (paymentMode) {
       case 'finance':
-        return `${formatCurrency(financePayment)}/mo`;
+        return `${formatCurrency(financingDetails.monthlyPayment)}/mo`;
       case 'cash':
       default:
         return formatCurrency(finalPrice);
@@ -206,27 +241,33 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   <button 
                       key={option.id}
                       onClick={() => setSelectedTrim(option)}
-                      className={`relative overflow-hidden w-full p-4 border rounded-lg text-left transition-all duration-300 ${
+                      className={`relative w-full p-4 border rounded-lg text-left transition-all duration-300 ${
                         selectedTrim.id === option.id 
                           ? 'border-blue-600 ring-2 ring-blue-600' 
                           : 'border-gray-300 hover:border-gray-500'
-                      } ${
-                        selectedTrim.id === option.id 
-                          ? '' 
-                          : option.id === 'p-awd' 
-                            ? 'opacity-75' 
-                            : 'opacity-70'
                       }`}
                   >
-                      {option.id === 'p-awd' && (
-                        <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] px-2 py-0.5 font-semibold rounded-bl-lg">
-                            Recommended
-                        </div>
+                      {option.id === recommendedTrimId && (
+                          <div className="absolute top-0 right-0 text-white text-xs font-semibold z-10">
+                              <div className="relative bg-blue-600 px-2.5 py-0.5 rounded-tr-lg shadow">
+                                  Recommended
+                              </div>
+                              <div 
+                                  className="absolute top-full left-0 w-0 h-0"
+                                  style={{
+                                      borderStyle: 'solid',
+                                      borderWidth: '0 6px 6px 0',
+                                      borderColor: 'transparent #1d4ed8 transparent transparent'
+                                  }}
+                              />
+                          </div>
                       )}
                       <div className="flex justify-between items-center">
                           <div>
+                            <div className="flex items-center">
                               <p className="font-semibold">{option.name}</p>
-                              <p className="text-sm text-gray-500">{option.drive}</p>
+                            </div>
+                            <p className="text-sm text-gray-500">{option.drive}</p>
                           </div>
                           <p className="font-semibold text-lg">{getTrimDisplayPrice(option)}</p>
                       </div>
@@ -423,6 +464,23 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               />
               {showPriceDetails && (
                 <div className="space-y-2 pt-2">
+                  {paymentMode === 'finance' && (
+                    <>
+                      <div className="py-2">
+                        <div className="flex justify-between items-baseline">
+                          <p className="text-xl font-semibold text-gray-900">Est. Loan Payment</p>
+                          <p className="text-xl font-semibold text-gray-900">
+                            {formatCurrency(financingDetails.monthlyPayment)} /mo
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {formatCurrency(financingDetails.downPayment)} down payment, {financingDetails.loanTerm} months, {financingDetails.interestRate.toFixed(2)}% ROI, {formatCurrency(financingDetails.purchasePrice)} On-Road Price
+                        </p>
+                      </div>
+                      <hr className="my-2"/>
+                    </>
+                  )}
+                  
                   <PriceLineItem label={`${selectedTrim.name} ${selectedTrim.drive}`} value={formatLineItemPrice(selectedTrim.price)} />
                   {selectedPaint.price > 0 && <PriceLineItem label={selectedPaint.name} value={formatLineItemPrice(selectedPaint.price)} />}
                   {selectedWheels.price > 0 && <PriceLineItem label={selectedWheels.name} value={formatLineItemPrice(selectedWheels.price)} />}
@@ -449,9 +507,27 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   <PriceLineItem label="Order Fee" value={orderFee} />
                   <hr className="my-2"/>
                   <div className="flex justify-between items-center text-lg font-bold text-gray-800">
-                    <p>Est. Purchase Price</p>
+                    <p>Ex-Showroom Price</p>
                     <p>{formatCurrency(finalPrice)}</p>
                   </div>
+
+                  {paymentMode === 'finance' && (
+                    <div className="space-y-2 pt-3 border-t mt-3">
+                        <p className="text-sm font-semibold text-gray-700">On-Road Price Additions</p>
+                        <PriceLineItem label="GST (5%)" value={formatCurrency(finalPrice * 0.05)} />
+                        <PriceLineItem label="TCS (1%)" value={formatCurrency(finalPrice * 0.01)} />
+                        <PriceLineItem label="Admin & Service Fee" value={formatCurrency(50000)} />
+                        <PriceLineItem label="Fastag" value={formatCurrency(800)} />
+                        <PriceLineItem label="Est. Road Tax & Charges" value={formatCurrency(258)} />
+                        <hr className="my-2"/>
+                        <div className="flex justify-between items-center text-lg font-bold text-gray-800">
+                            <p>Final On-Road Price</p>
+                            <p>{formatCurrency(financingDetails.purchasePrice)}</p>
+                        </div>
+                        <p className="text-xs text-gray-500 text-right">Loan calculations are based on this price.</p>
+                    </div>
+                  )}
+
                   <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 pt-3">
                     <button
                       onClick={() => setSelectedPaymentMethod('card')}
@@ -520,6 +596,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           onClose={() => setIsFinancingModalOpen(false)} 
           paint={selectedPaint}
           wheels={selectedWheels}
+          finalPrice={finalPrice}
         />
       )}
       {selectedPackForModal && (
