@@ -55,7 +55,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition"
                   placeholder="Your full name"
                 />
               </div>
@@ -68,7 +68,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   value={formData.mobile}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition"
                   placeholder="e.g., 9876543210"
                 />
               </div>
@@ -85,7 +85,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition"
                   placeholder="you@example.com"
                 />
               </div>
@@ -101,7 +101,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   id="company"
                   value={formData.company}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition"
                   placeholder="Your company's name"
                 />
               </div>
@@ -113,7 +113,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   id="industry"
                   value={formData.industry}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition"
                   placeholder="e.g., Technology, Manufacturing"
                 />
               </div>
@@ -129,7 +129,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   value={formData.consumption}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition appearance-none"
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition appearance-none"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                     backgroundPosition: 'right 0.5rem center',

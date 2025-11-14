@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Header from './components/Header.tsx';
 import CarVisualizer from './components/CarVisualizer.tsx';
 import Configurator from './components/Configurator.tsx';
@@ -15,15 +15,30 @@ import {
 
 const App: React.FC = () => {
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(true);
-  const [selectedTrim, setSelectedTrim] = useState<TrimOption>(TRIM_OPTIONS.find(t => t.id === 'p-awd') || TRIM_OPTIONS[0]);
-  const [selectedPaint, setSelectedPaint] = useState<PaintOption>(PAINT_OPTIONS[0]);
-  const [selectedWheels, setSelectedWheels] = useState<WheelOption>(WHEEL_OPTIONS[0]);
-  const [selectedInterior, setSelectedInterior] = useState<InteriorOption>(INTERIOR_OPTIONS[0]);
+  const [selectedTrim, setSelectedTrim] = useState<TrimOption | null>(null);
+  const [selectedTank, setSelectedTank] = useState<TrimOption['id'] | null>(null);
+  const [selectedPaint, setSelectedPaint] = useState<PaintOption | null>(null);
+  const [selectedWheels, setSelectedWheels] = useState<WheelOption | null>(null);
+  const [selectedInterior, setSelectedInterior] = useState<InteriorOption | null>(null);
   const [selectedAccessories, setSelectedAccessories] = useState<AccessoryOption[]>([]);
   const [selectedCharging, setSelectedCharging] = useState<ChargingOption[]>([]);
   const [selectedPacks, setSelectedPacks] = useState<AccessoryPackOption[]>([]);
   const [visualizerView, setVisualizerView] = useState<'car' | 'wheels'>('car');
   const [recommendedTrimId, setRecommendedTrimId] = useState<TrimOption['id'] | null>(null);
+
+  // Preload all possible vehicle images on initial app load for a smoother experience
+  useEffect(() => {
+    const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
+    const imageCount = 31; // We have images from 1.png to 31.png
+    const imageUrls = Array.from({ length: imageCount }, (_, i) => `${s3BaseUrl}${i + 1}.png`);
+    
+    // This loop tells the browser to start downloading and caching these images.
+    imageUrls.forEach(url => {
+      const img = new Image();
+      img.src = url;
+    });
+  }, []); // The empty dependency array ensures this runs only once when the component mounts.
+
 
   const handleLeadFormClose = (consumption?: string) => {
     setIsLeadFormOpen(false);
@@ -73,10 +88,10 @@ const App: React.FC = () => {
   };
 
   const vehiclePrice = useMemo(() => {
-    let price = selectedTrim.price;
-    price += selectedPaint.price;
-    price += selectedWheels.price;
-    price += selectedInterior.price;
+    let price = selectedTrim?.price ?? 0;
+    price += selectedPaint?.price ?? 0;
+    price += selectedWheels?.price ?? 0;
+    price += selectedInterior?.price ?? 0;
     price += selectedAccessories.reduce((total, acc) => total + acc.price, 0);
     price += selectedCharging.reduce((total, charger) => total + charger.price, 0);
     price += selectedPacks.reduce((total, pack) => total + pack.price, 0);
@@ -94,6 +109,8 @@ const App: React.FC = () => {
           <CarVisualizer 
             paint={selectedPaint} 
             trim={selectedTrim}
+            tank={selectedTank}
+            packs={selectedPacks}
             visualizerView={visualizerView}
           />
         </div>
@@ -101,6 +118,8 @@ const App: React.FC = () => {
           <Configurator
             selectedTrim={selectedTrim}
             setSelectedTrim={setSelectedTrim}
+            selectedTank={selectedTank}
+            setSelectedTank={setSelectedTank}
             selectedPaint={selectedPaint}
             setSelectedPaint={setSelectedPaint}
             selectedWheels={selectedWheels}

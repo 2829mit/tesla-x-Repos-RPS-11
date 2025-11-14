@@ -27,7 +27,7 @@ const Header: React.FC = () => {
             <img
               src="https://i.postimg.cc/52fvQyLD/Repos-New-Logo-V1-1.png"
               alt="Repos logo"
-              className="h-12 w-auto"
+              className="h-9 w-auto opacity-60"
             />
           </div>
           

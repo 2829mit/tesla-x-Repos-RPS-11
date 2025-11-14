@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { PaintOption, WheelOption } from '../types';
 
 // Re-use the currency formatter
 const formatCurrency = (amount: number) => {
@@ -22,10 +21,8 @@ const BreakdownItem: React.FC<{ label: string; value: string; }> = ({ label, val
 
 const FinancingModal: React.FC<{
   onClose: () => void;
-  paint: PaintOption;
-  wheels: WheelOption;
   finalPrice: number;
-}> = ({ onClose, paint, wheels, finalPrice }) => {
+}> = ({ onClose, finalPrice }) => {
   const [activeTab, setActiveTab] = useState<'full' | 'loan'>('full');
   const imageUrl = 'https://i.postimg.cc/X7yYY8Tr/rps.jpg';
   const fallbackUrl = 'https://i.postimg.cc/zfkB1G46/rps2.jpg';
@@ -140,7 +137,7 @@ const FinancingModal: React.FC<{
                   
                   <div className="flex justify-between items-center bg-stone-50 p-3 rounded-lg">
                       <div className="flex items-center">
-                          <input type="checkbox" id="fuel-savings" className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                          <input type="checkbox" id="fuel-savings" className="h-5 w-5 rounded border-gray-300 text-gray-600 focus:ring-1 focus:ring-gray-400" />
                           <label htmlFor="fuel-savings" className="ml-3 text-sm text-gray-700">
                               Include Est. Fuel Savings
                               <span className="block text-xs text-blue-600 underline cursor-pointer">Customise</span>
@@ -174,7 +171,7 @@ const FinancingModal: React.FC<{
                             <button
                                 key={term}
                                 onClick={() => setLoanTerm(term)}
-                                className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${loanTerm === term ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                                className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${loanTerm === term ? 'bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
                             >
                                 {term} mo
                             </button>

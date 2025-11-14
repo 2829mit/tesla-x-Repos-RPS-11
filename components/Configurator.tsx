@@ -3,15 +3,18 @@ import type { PaintOption, WheelOption, InteriorOption, TrimOption, AccessoryOpt
 import { PAINT_OPTIONS, WHEEL_OPTIONS, INTERIOR_OPTIONS, TRIM_OPTIONS, ACCESSORY_OPTIONS, CHARGING_OPTIONS, ACCESSORY_PACK_OPTIONS } from '../constants';
 import ConnectivityModal from './ConnectivityModal.tsx';
 import FinancingModal from './FinancingModal.tsx';
+import ComparisonModal from './ComparisonModal.tsx';
 
 interface ConfiguratorProps {
-  selectedTrim: TrimOption;
+  selectedTrim: TrimOption | null;
   setSelectedTrim: (trim: TrimOption) => void;
-  selectedPaint: PaintOption;
+  selectedTank: TrimOption['id'] | null;
+  setSelectedTank: (tankId: TrimOption['id']) => void;
+  selectedPaint: PaintOption | null;
   setSelectedPaint: (paint: PaintOption) => void;
-  selectedWheels: WheelOption;
+  selectedWheels: WheelOption | null;
   setSelectedWheels: (wheels: WheelOption) => void;
-  selectedInterior: InteriorOption;
+  selectedInterior: InteriorOption | null;
   setSelectedInterior: (interior: InteriorOption) => void;
   selectedAccessories: AccessoryOption[];
   onAccessoryToggle: (accessory: AccessoryOption) => void;
@@ -30,6 +33,8 @@ interface ConfiguratorProps {
 const Configurator: React.FC<ConfiguratorProps> = ({
   selectedTrim,
   setSelectedTrim,
+  selectedTank,
+  setSelectedTank,
   selectedPaint,
   setSelectedPaint,
   selectedWheels,
@@ -55,12 +60,19 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'upi'>('card');
   const [isConnectivityModalOpen, setIsConnectivityModalOpen] = useState(false);
   const [isFinancingModalOpen, setIsFinancingModalOpen] = useState(false);
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [selectedPackForModal, setSelectedPackForModal] = useState<AccessoryPackOption | null>(null);
 
 
   const priceDetailsRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const wheelsRef = useRef<HTMLDivElement>(null);
+  
+  const dispensingUnitLabels: { [key in TrimOption['id']]?: string } = {
+    'rwd': 'Base Model',
+    'lr': '1 RFID',
+    'lr-awd': '2 RFID',
+  };
 
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -181,7 +193,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   const PaymentToggleButton: React.FC<{ mode: 'cash' | 'finance'; label: string }> = ({ mode, label }) => (
     <button
         onClick={() => setPaymentMode(mode)}
-        className={`w-1/2 pb-2 text-sm font-bold transition-all duration-200 focus:outline-none ${paymentMode === mode ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-900 opacity-50 hover:opacity-100'}`}
+        className={`w-1/2 pb-2 text-[14px] leading-[16.8px] font-medium transition-all duration-200 focus:outline-none ${paymentMode === mode ? 'text-[#171A20] border-b-2 border-[#171A20]' : 'text-[#171A20] opacity-50 hover:opacity-100'}`}
     >
         {label}
     </button>
@@ -193,16 +205,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
       <p className="text-gray-800">{typeof value === 'number' ? formatCurrency(value) : value}</p>
     </div>
   );
-  
-  const getFooterPrice = () => {
-    switch (paymentMode) {
-      case 'finance':
-        return `${formatCurrency(financingDetails.monthlyPayment)}/mo`;
-      case 'cash':
-      default:
-        return formatCurrency(finalPrice);
-    }
-  }
 
   const getTrimDisplayPrice = (trim: TrimOption) => {
     switch (paymentMode) {
@@ -214,21 +216,53 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     }
   }
 
+  const getAccessoryPackImageUrl = (pack: AccessoryPackOption): string => {
+    const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
+    const is60klTank = selectedTank === 'lr';
+
+    if (is60klTank) {
+      if (pack.id === 'crash-barrier-pack') {
+        return `${s3BaseUrl}30.png`;
+      }
+      if (pack.id === 'fire-extinguisher-pack') {
+        return `${s3BaseUrl}31.png`;
+      }
+    }
+    
+    // Default image for 30KL or when no tank is selected
+    return pack.imageUrl;
+  };
+
   return (
     <div className="bg-white text-gray-800 h-full flex flex-col">
       {/* Scrollable Content Area */}
       <div ref={scrollContainerRef} className="flex-grow overflow-y-auto">
         <div className="p-6 md:p-10">
-          <h1 className="text-4xl sm:text-5xl font-semibold text-center text-gray-900">Model Y</h1>
+          <h1 className="text-[40px] leading-[48px] font-medium text-center text-[#171A20]">RPS</h1>
           <div className="flex justify-around my-8 text-center">
-            {selectedTrim.specs.map(spec => (
-              <div key={spec.label}>
-                <p className="text-xl sm:text-2xl font-semibold text-gray-900">
-                  {spec.value}
-                </p>
-                <p className="text-xs text-gray-600 mt-1">{spec.label}</p>
-              </div>
-            ))}
+            {selectedTrim ? (
+              selectedTrim.specs.map(spec => (
+                <div key={spec.label}>
+                  <p className="text-xl sm:text-2xl font-semibold text-gray-900">
+                    {spec.value}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">{spec.label}</p>
+                </div>
+              ))
+            ) : (
+              [
+                { label: 'Range (WLTP)', value: '-' },
+                { label: 'Top Speed', value: '-' },
+                { label: '0-100 km/h', value: '-' },
+              ].map(spec => (
+                <div key={spec.label}>
+                  <p className="text-xl sm:text-2xl font-semibold text-gray-900">
+                    {spec.value}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">{spec.label}</p>
+                </div>
+              ))
+            )}
           </div>
 
           <div className="flex justify-around mb-6">
@@ -237,230 +271,254 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           </div>
           
           <div className="space-y-4 mb-[45px]">
-              {TRIM_OPTIONS.map(option => (
-                  <button 
-                      key={option.id}
-                      onClick={() => setSelectedTrim(option)}
-                      className={`relative w-full p-4 border rounded-lg text-left transition-all duration-300 ${
-                        selectedTrim.id === option.id 
-                          ? 'border-blue-600 ring-2 ring-blue-600' 
-                          : 'border-gray-300 hover:border-gray-500'
-                      }`}
-                  >
-                      {option.id === recommendedTrimId && (
-                          <div className="absolute top-0 right-0 text-white text-xs font-semibold z-10">
-                              <div className="relative bg-blue-600 px-2.5 py-0.5 rounded-tr-lg shadow">
-                                  Recommended
-                              </div>
-                              <div 
-                                  className="absolute top-full left-0 w-0 h-0"
-                                  style={{
-                                      borderStyle: 'solid',
-                                      borderWidth: '0 6px 6px 0',
-                                      borderColor: 'transparent #1d4ed8 transparent transparent'
-                                  }}
-                              />
-                          </div>
-                      )}
-                      <div className="flex justify-between items-center">
-                          <div>
-                            <div className="flex items-center">
-                              <p className="font-semibold">{option.name}</p>
+            {TRIM_OPTIONS.filter(o => o.id === 'rwd' || o.id === 'lr').map(option => (
+                <button 
+                    key={option.id}
+                    onClick={() => setSelectedTank(option.id)}
+                    className={`group relative w-full p-4 border rounded-lg text-left transition-all duration-300 ${
+                      selectedTank === option.id 
+                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' 
+                        : 'border-gray-300 hover:border-gray-500'
+                    }`}
+                >
+                    {option.id === recommendedTrimId && (
+                        <div className="absolute top-0 right-0 text-white text-xs font-semibold z-10">
+                            <div className="relative bg-blue-600 px-2.5 py-0.5 rounded-tr-lg shadow">
+                                Recommended
                             </div>
-                            <p className="text-sm text-gray-500">{option.drive}</p>
-                          </div>
-                          <p className="font-semibold text-lg">{getTrimDisplayPrice(option)}</p>
+                            <div 
+                                className="absolute top-full left-0 w-0 h-0"
+                                style={{
+                                    borderStyle: 'solid',
+                                    borderWidth: '0 6px 6px 0',
+                                    borderColor: 'transparent #1d4ed8 transparent transparent'
+                                }}
+                            />
+                        </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">Tank</p>
+                          <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">Capacity</p>
+                        </div>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.id === 'rwd' ? '30KL' : '60KL'}</p>
+                    </div>
+                    {/* Faint overlay */}
+                    {selectedTank && selectedTank !== option.id && (
+                        <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
+                    )}
+                </button>
+            ))}
+          </div>
+
+          <div className="mb-[45px]">
+              <button
+                  onClick={() => setIsComparisonModalOpen(true)}
+                  className="w-full flex justify-between items-center p-4 bg-gray-100 hover:bg-gray-200 rounded-lg text-left transition-colors"
+              >
+                  <span className="font-semibold text-gray-800">View & Compare Features</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+              </button>
+          </div>
+
+          <div className="mb-[45px]">
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Dispensing Unit</h2>
+            <div className="space-y-2">
+              {TRIM_OPTIONS.filter(option => option.id !== 'p-awd')
+                .sort((a, b) => {
+                  const order: Array<TrimOption['id']> = ['lr-awd', 'lr', 'rwd'];
+                  return order.indexOf(a.id) - order.indexOf(b.id);
+                })
+                .map(option => (
+                  <button
+                    key={`dispensing-${option.id}`}
+                    onClick={() => setSelectedTrim(option)}
+                    className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                      selectedTrim?.id === option.id 
+                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' 
+                        : 'border-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    {option.id === recommendedTrimId && (
+                        <div className="absolute -top-px -right-px text-white text-xs font-semibold z-10">
+                            <div className="relative bg-blue-600 px-2.5 py-0.5 rounded-tr-lg rounded-bl-md shadow">
+                                Recommended
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{dispensingUnitLabels[option.id]}</p>
+                          <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.drive}</p>
+                        </div>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{getTrimDisplayPrice(option)}</p>
                       </div>
+                    </div>
+                    {/* Faint overlay */}
+                    {selectedTrim && selectedTrim.id !== option.id && (
+                        <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
+                    )}
                   </button>
               ))}
+            </div>
           </div>
 
           <div className="space-y-[45px]">
-            {/* Paint Section */}
-            <div>
-              <h2 className="text-2xl font-semibold mb-2 text-center">Paint</h2>
-              <p className="text-gray-500 mb-2 text-sm text-center">{selectedPaint.name} <span className="text-gray-800 font-medium">{formatPrice(selectedPaint.price)}</span></p>
-              <div className="flex space-x-3 justify-center">
-                {PAINT_OPTIONS.map(option => (
-                  <button
-                    key={option.id}
-                    onClick={() => setSelectedPaint(option)}
-                    className={`w-10 h-10 rounded-full border-2 transition-transform duration-200 hover:scale-110 ${selectedPaint.id === option.id ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2' : 'border-gray-300'}`}
-                    aria-label={`Select ${option.name} paint`}
-                  >
-                    <div className={`w-full h-full rounded-full ${option.colorCode}`}></div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Wheels Section */}
-            <div ref={wheelsRef}>
-              <h2 className="text-2xl font-semibold mb-2 text-center">Wheels</h2>
-              <p className="text-gray-500 mb-2 text-sm text-center">{selectedWheels.name} <span className="text-gray-800 font-medium">{formatPrice(selectedWheels.price)}</span></p>
-              <div className="flex space-x-4 justify-center">
-                {WHEEL_OPTIONS.map(option => (
-                  <button
-                    key={option.id}
-                    onClick={() => setSelectedWheels(option)}
-                    className={`p-1 bg-gray-200 rounded-full border-2 transition-transform duration-200 hover:scale-105 ${selectedWheels.id === option.id ? 'border-blue-500' : 'border-transparent'}`}
-                    aria-label={`Select ${option.name}`}
-                  >
-                    <img src={option.imageUrl} alt={option.name} className="w-16 h-16 rounded-full object-contain" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Interior Section */}
-            <div>
-              <h2 className="text-2xl font-semibold mb-2 text-center">Interior</h2>
-              <p className="text-gray-500 mb-2 text-sm text-center">{selectedInterior.name} <span className="text-gray-800 font-medium">{formatPrice(selectedInterior.price)}</span></p>
-              <div className="flex space-x-3 justify-center">
-                {INTERIOR_OPTIONS.map(option => (
-                  <button
-                    key={option.id}
-                    onClick={() => setSelectedInterior(option)}
-                    className={`w-10 h-10 rounded-full border-2 transition-transform duration-200 hover:scale-110 ${selectedInterior.id === option.id ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2' : 'border-gray-300'}`}
-                    aria-label={`Select ${option.name} interior`}
-                  >
-                    <div className={`w-full h-full rounded-full ${option.id === 'black' ? 'bg-black' : 'bg-white border'}`}></div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Accessories Section */}
-            <div>
-              <h2 className="text-2xl font-semibold mb-3 text-center">Accessories</h2>
-              <div className="space-y-2">
-                {ACCESSORY_OPTIONS.map(option => (
-                  <label 
-                    key={option.id}
-                    htmlFor={option.id}
-                    className="flex items-center justify-between p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-gray-500 transition-colors"
-                  >
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={option.id}
-                        checked={selectedAccessories.some(a => a.id === option.id)}
-                        onChange={() => onAccessoryToggle(option)}
-                        className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span className="ml-3 text-sm text-gray-700">{option.name}</span>
-                    </div>
-                    <span className="text-sm font-semibold text-gray-800">{formatCurrency(option.price)}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-             {/* Charging Section */}
-            <div>
-                <h2 className="text-2xl font-semibold mb-2 text-center">Charging</h2>
-                <p className="text-gray-500 mb-3 text-sm text-center">Every Tesla includes access to the largest global Supercharging network</p>
-                <div className="space-y-2">
-                    {CHARGING_OPTIONS.map(option => (
-                        <label 
-                            key={option.id}
-                            htmlFor={option.id}
-                            className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-gray-500 transition-colors"
-                        >
-                            <input
-                                type="checkbox"
-                                id={option.id}
-                                checked={selectedCharging.some(c => c.id === option.id)}
-                                onChange={() => onChargingToggle(option)}
-                                className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 self-start mt-1"
-                            />
-                            <img 
-                              src={option.imageUrl} 
-                              alt={option.name} 
-                              className="w-16 h-auto mx-3 object-contain" 
-                            />
-                            <div className="flex-grow">
-                                <p className="text-sm font-semibold">{formatCurrency(option.price)}</p>
-                                <p className="text-sm font-semibold text-gray-800">{option.name}</p>
-                                <p className="text-xs text-gray-500">{option.description}</p>
-                            </div>
-                        </label>
-                    ))}
-                </div>
-
-                {/* FSD Video card */}
-                <button className="w-full border border-gray-300 rounded-lg flex items-center p-2 mt-6 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    <div className="relative w-1/3 flex-shrink-0">
-                        <img 
-                            src="https://static-assets.tesla.com/configurator/compositor?context=design_studio_2&options=$MT367,$PN01,$W38C,$IBB4&view=STUD_SIDEVIEW&model=m3&size=1920&bkba_opt=2&crop=0,0,0,0&overlay=0&" 
-                            alt="Full Self-Driving in action" 
-                            className="rounded-md aspect-[16/9] object-cover" 
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-10 rounded-md">
-                            <div className="bg-gray-300 bg-opacity-75 rounded-full p-3 backdrop-blur-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M8 5v14l11-7z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="ml-4 flex-1">
-                        <p className="font-semibold text-gray-900">Watch a Video</p>
-                        <p className="text-sm text-gray-600">See Full Self-Driving in Action</p>
-                    </div>
-                </button>
-                
-                <p className="text-center text-xs text-gray-500 mt-3">Mobile Charger is included</p>
-                <div className="text-center mt-4">
-                    <button className="bg-gray-100 text-gray-800 text-sm font-semibold py-2 px-5 rounded-md hover:bg-gray-200 transition-colors">
-                        Learn More
-                    </button>
-                </div>
-            </div>
-
             {/* Accessory Packs Section */}
             <div>
-              <h2 className="text-2xl font-semibold mb-3 text-center">Accessory Packs</h2>
-              <div className="grid grid-cols-1 gap-4">
+              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Accessory Packs</h2>
+              <div className="grid grid-cols-1 gap-8">
                 {ACCESSORY_PACK_OPTIONS.map(option => (
-                  <div
-                    key={option.id}
-                    className={`border rounded-lg p-4 cursor-pointer hover:border-gray-500 transition-colors ${selectedPacks.some(p => p.id === option.id) ? 'border-blue-600 ring-2 ring-blue-600' : 'border-gray-300'}`}
-                    onClick={() => onPackToggle(option)}
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <p className="font-semibold text-gray-800">{option.name}</p>
-                      <div className="flex items-center space-x-3">
-                        <button aria-label="More info" onClick={(e) => { e.stopPropagation(); setSelectedPackForModal(option); }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </button>
-                        <input
-                          type="checkbox"
-                          checked={selectedPacks.some(p => p.id === option.id)}
-                          readOnly
-                          className="h-6 w-6 text-blue-600 border-gray-300 rounded focus:ring-blue-500 pointer-events-none"
-                        />
+                  <div key={option.id}>
+                    <div
+                      className={`group relative border rounded-lg p-4 cursor-pointer hover:border-gray-500 transition-all duration-300 ${selectedPacks.some(p => p.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300'}`}
+                      onClick={() => onPackToggle(option)}
+                    >
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center">
+                          <div className={`h-6 w-6 border rounded flex-shrink-0 flex items-center justify-center transition-colors ${
+                              selectedPacks.some(p => p.id === option.id)
+                                ? 'bg-gray-600 border-gray-600'
+                                : 'bg-white border-gray-300'
+                            }`}>
+                            {selectedPacks.some(p => p.id === option.id) && (
+                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20] ml-3">{option.name}</p>
+                        </div>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatCurrency(option.price)}</p>
                       </div>
+                      <img
+                        src={getAccessoryPackImageUrl(option)}
+                        alt={option.name}
+                        className="w-full h-auto object-contain rounded"
+                      />
+                      {/* Faint overlay */}
+                      {selectedPacks.length > 0 && !selectedPacks.some(p => p.id === option.id) && (
+                          <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0 pointer-events-none"></div>
+                      )}
                     </div>
-                    <img
-                      src={option.imageUrl}
-                      alt={option.name}
-                      className="w-full h-auto object-contain rounded"
-                    />
+                    <div className="mt-6 text-center">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSelectedPackForModal(option); }}
+                        className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-md transition-colors"
+                        aria-label={`Learn more about ${option.name}`}
+                      >
+                        Learn More
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* Safety Section */}
+            <div>
+              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-2">Safety</h2>
+              <p className="text-center text-gray-600 mt-1 mb-6">Engineered to be the safest in the world</p>
+              
+              <div className="border border-gray-200 rounded-lg p-6 space-y-6">
+                {/* Feature 1: 360-Degree Visibility */}
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">360-Degree Visibility</h3>
+                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">Onboard cameras detect nearby objects, pedestrians and vehicles</p>
+                  </div>
+                </div>
+                
+                {/* Feature 2: Active Safety */}
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Active Safety</h3>
+                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">Automatic Emergency Braking, Lane Assist, Forward and Blind-Spot Collision Warning</p>
+                  </div>
+                </div>
+                
+                {/* Feature 3: Passive Safety */}
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Passive Safety</h3>
+                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">A rigid body, fortified battery pack and large crumple zones for greater impact protection</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 text-center">
+                <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-md transition-colors">
+                  Learn More
+                </button>
+              </div>
+            </div>
             
+            {/* Warranties Section */}
+            <div>
+              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-2">Warranties</h2>
+              
+              <div className="border border-gray-200 rounded-lg p-6 space-y-6 mt-6">
+                {/* Feature 1: Limited Warranty */}
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Limited Warranty</h3>
+                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">Repairs and replacements covered for 4 years or 50,000 miles, whichever comes first.</p>
+                  </div>
+                </div>
+                
+                {/* Feature 2: Battery and Drive Unit Warranty */}
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Battery and Drive Unit Limited Warranty</h3>
+                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">Covered for 8 years or 120,000 miles, whichever comes first.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 text-center">
+                <button className="font-semibold text-gray-600 underline hover:text-gray-900 transition-colors text-sm">
+                  Learn More
+                </button>
+              </div>
+            </div>
+
+
             {/* New Pricing Breakdown Section */}
             <div ref={priceDetailsRef} className="pt-4 space-y-3">
               <h2 className="text-2xl font-semibold text-center">Enter Delivery ZIP</h2>
               <input 
                 type="text" 
                 placeholder="Enter Delivery ZIP" 
-                className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-md text-center focus:ring-2 focus:ring-blue-500 outline-none" 
+                className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-md text-center focus:ring-1 focus:ring-gray-400 outline-none" 
               />
               {showPriceDetails && (
                 <div className="space-y-2 pt-2">
@@ -481,10 +539,10 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </>
                   )}
                   
-                  <PriceLineItem label={`${selectedTrim.name} ${selectedTrim.drive}`} value={formatLineItemPrice(selectedTrim.price)} />
-                  {selectedPaint.price > 0 && <PriceLineItem label={selectedPaint.name} value={formatLineItemPrice(selectedPaint.price)} />}
-                  {selectedWheels.price > 0 && <PriceLineItem label={selectedWheels.name} value={formatLineItemPrice(selectedWheels.price)} />}
-                  {selectedInterior.price > 0 && <PriceLineItem label={selectedInterior.name} value={formatLineItemPrice(selectedInterior.price)} />}
+                  {selectedTrim && <PriceLineItem label={`${selectedTrim.name} ${selectedTrim.drive}`} value={formatLineItemPrice(selectedTrim.price)} />}
+                  {selectedPaint && selectedPaint.price > 0 && <PriceLineItem label={selectedPaint.name} value={formatLineItemPrice(selectedPaint.price)} />}
+                  {selectedWheels && selectedWheels.price > 0 && <PriceLineItem label={selectedWheels.name} value={formatLineItemPrice(selectedWheels.price)} />}
+                  {selectedInterior && selectedInterior.price > 0 && <PriceLineItem label={selectedInterior.name} value={formatLineItemPrice(selectedInterior.price)} />}
                   {selectedPacks.map(pack => <PriceLineItem key={pack.id} label={pack.name} value={formatLineItemPrice(pack.price)} />)}
                   {selectedAccessories.map(acc => <PriceLineItem key={acc.id} label={acc.name} value={formatLineItemPrice(acc.price)} />)}
                   {selectedCharging.map(charger => <PriceLineItem key={charger.id} label={charger.name} value={formatLineItemPrice(charger.price)} />)}
@@ -568,21 +626,30 @@ const Configurator: React.FC<ConfiguratorProps> = ({
       
       {/* Sticky Footer */}
       {isStickyFooterVisible && (
-        <div className="p-4 bg-white border-t border-gray-200">
+        <div className="mx-3.5 mt-0.5 px-6 py-2 bg-white rounded-xl border border-gray-200 shadow-md">
           <div className="flex justify-between items-center">
+            {/* Left Section: Price and Label */}
             <div>
-              <div className="flex items-center space-x-1">
-                <p className="text-2xl font-bold">{getFooterPrice()}</p>
+              <div className="flex items-center space-x-2">
+                 <p className="text-2xl font-bold text-black leading-tight">
+                  {formatCurrency(finalPrice)}
+                </p>
                 <button onClick={() => setIsFinancingModalOpen(true)} aria-label="Show financing details">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  {/* Dropdown Arrow */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 font-bold text-black/80 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
               </div>
-              <p className="text-sm text-gray-500 -mt-1">Vehicle Price</p>
+              {/* Subtitle Label */}
+              <p className="text-sm text-gray-500 mt-0">
+                Vehicle Price
+              </p>
             </div>
+            
+            {/* Right Section: CTA Button */}
             <button 
-              className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duration-300"
+              className="bg-[#3E6AE1] text-white font-semibold py-2 px-5 rounded hover:bg-[#3457b1] transition-colors duration-300"
             >
               Order Now
             </button>
@@ -591,11 +658,10 @@ const Configurator: React.FC<ConfiguratorProps> = ({
       )}
 
       {isConnectivityModalOpen && <ConnectivityModal onClose={() => setIsConnectivityModalOpen(false)} />}
+      {isComparisonModalOpen && <ComparisonModal onClose={() => setIsComparisonModalOpen(false)} />}
       {isFinancingModalOpen && (
         <FinancingModal 
           onClose={() => setIsFinancingModalOpen(false)} 
-          paint={selectedPaint}
-          wheels={selectedWheels}
           finalPrice={finalPrice}
         />
       )}

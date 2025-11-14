@@ -1,25 +1,132 @@
 import React, { useState, useEffect } from 'react';
-import type { PaintOption, TrimOption } from '../types';
+import type { PaintOption, TrimOption, AccessoryPackOption } from '../types';
 
 interface CarVisualizerProps {
-  paint: PaintOption;
-  trim: TrimOption;
+  paint: PaintOption | null;
+  trim: TrimOption | null;
+  tank: TrimOption['id'] | null;
+  packs: AccessoryPackOption[];
   visualizerView: 'car' | 'wheels';
 }
 
 const wheelsViewImageUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png';
 
-const CarVisualizer: React.FC<CarVisualizerProps> = ({ paint, trim, visualizerView }) => {
+const CarVisualizer: React.FC<CarVisualizerProps> = ({ paint, trim, tank, packs, visualizerView }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  const carImageUrls = paint.imageUrls[trim.id] || paint.imageUrls['p-awd'];
-  const finalImageUrls = visualizerView === 'wheels' ? wheelsViewImageUrl : carImageUrls;
+  const getImageUrl = (): string | string[] => {
+    const hasFirePack = packs.some(p => p.id === 'fire-extinguisher-pack');
+    const hasCrashPack = packs.some(p => p.id === 'crash-barrier-pack');
+    const is30klTank = tank === 'rwd';
+    const is60klTank = tank === 'lr';
+    const isDuWithoutRfid = trim?.id === 'rwd';
+    const isDuWith1Rfid = trim?.id === 'lr';
+    const isDuWith2Rfid = trim?.id === 'lr-awd';
+    const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
 
+    // Tank: 60KL
+    if (is60klTank) {
+      // With Dispensing Unit
+      if (trim) {
+        // DU: 2 RFID
+        if (isDuWith2Rfid) {
+          if (hasFirePack && hasCrashPack) return `${s3BaseUrl}28.png`;
+          if (hasCrashPack) return `${s3BaseUrl}27.png`;
+          if (hasFirePack) return `${s3BaseUrl}26.png`;
+          return `${s3BaseUrl}25.png`;
+        }
+        // DU: 1 RFID
+        if (isDuWith1Rfid) {
+          if (hasFirePack && hasCrashPack) return `${s3BaseUrl}24.png`;
+          if (hasCrashPack) return `${s3BaseUrl}23.png`;
+          if (hasFirePack) return `${s3BaseUrl}22.png`;
+          return `${s3BaseUrl}21.png`;
+        }
+        // DU: Without RFID
+        if (isDuWithoutRfid) {
+          if (hasFirePack && hasCrashPack) return `${s3BaseUrl}20.png`;
+          if (hasCrashPack) return `${s3BaseUrl}19.png`;
+          if (hasFirePack) return `${s3BaseUrl}18.png`;
+          return `${s3BaseUrl}17.png`;
+        }
+      }
+      // Without Dispensing Unit
+      else {
+        if (hasFirePack && hasCrashPack) return `${s3BaseUrl}31.png`;
+        if (hasFirePack) return `${s3BaseUrl}31.png`;
+        if (hasCrashPack) return `${s3BaseUrl}30.png`;
+        return `${s3BaseUrl}29.png`;
+      }
+    }
+
+    // Tank: 30KL
+    if (is30klTank) {
+      // With Dispensing Unit
+      if (trim) {
+        // DU: 2 RFID
+        if (isDuWith2Rfid) {
+          if (hasFirePack && hasCrashPack) return `${s3BaseUrl}12.png`;
+          if (hasCrashPack) return `${s3BaseUrl}11.png`;
+          if (hasFirePack) return `${s3BaseUrl}10.png`;
+          return `${s3BaseUrl}9.png`;
+        }
+        // DU: 1 RFID
+        if (isDuWith1Rfid) {
+          if (hasFirePack && hasCrashPack) return `${s3BaseUrl}8.png`;
+          if (hasCrashPack) return `${s3BaseUrl}7.png`;
+          if (hasFirePack) return `${s3BaseUrl}6.png`;
+          return `${s3BaseUrl}5.png`;
+        }
+        // DU: Without RFID
+        if (isDuWithoutRfid) {
+          if (hasFirePack && hasCrashPack) return `${s3BaseUrl}4.png`;
+          if (hasCrashPack) return `${s3BaseUrl}3.png`;
+          if (hasFirePack) return `${s3BaseUrl}2.png`;
+          return `${s3BaseUrl}1.png`;
+        }
+      }
+      // Without Dispensing Unit
+      else {
+        if (hasFirePack && hasCrashPack) return `${s3BaseUrl}16.png`;
+        if (hasCrashPack) return `${s3BaseUrl}14.png`;
+        if (hasFirePack) return `${s3BaseUrl}15.png`;
+        return `${s3BaseUrl}13.png`;
+      }
+    }
+
+    // General case for paint (if uncommented in configurator)
+    if (paint && trim) {
+      return paint.imageUrls[trim.id] || paint.imageUrls['p-awd'];
+    }
+
+    // Default image if no specific configuration matches
+    return `${s3BaseUrl}13.png`;
+  };
+  
+  const imageUrl = getImageUrl();
+  const finalImageUrls = visualizerView === 'wheels' ? wheelsViewImageUrl : imageUrl;
+  
   useEffect(() => {
     setCurrentIndex(0);
   }, [finalImageUrls]);
 
-  const images = Array.isArray(finalImageUrls) ? finalImageUrls : [finalImageUrls];
+  const images = Array.isArray(finalImageUrls) ? finalImageUrls : (finalImageUrls ? [finalImageUrls] : []);
+
+  const targetImageUrl = images[currentIndex] || '';
+  const [renderedImageUrl, setRenderedImageUrl] = useState(targetImageUrl);
+
+  useEffect(() => {
+    if (targetImageUrl && targetImageUrl !== renderedImageUrl) {
+      const img = new Image();
+      img.src = targetImageUrl;
+      img.onload = () => {
+        setRenderedImageUrl(targetImageUrl);
+      };
+    } else if (!targetImageUrl && renderedImageUrl) {
+      // Handles clearing the image when selections are removed
+      setRenderedImageUrl('');
+    }
+  }, [targetImageUrl, renderedImageUrl]);
   
   const goToPrevious = () => {
     const isFirstSlide = currentIndex === 0;
@@ -37,14 +144,23 @@ const CarVisualizer: React.FC<CarVisualizerProps> = ({ paint, trim, visualizerVi
     setCurrentIndex(slideIndex);
   };
 
-  const currentImageUrl = images[currentIndex];
+  if (!renderedImageUrl) {
+    return (
+      <div className="relative w-full h-full flex items-center justify-center bg-white overflow-hidden group">
+        <div className="text-center text-gray-500 p-8">
+          <h2 className="text-2xl font-semibold mb-2">Your Vehicle Preview</h2>
+          <p>Select options on the right to see your configuration.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full flex items-center justify-center bg-white overflow-hidden group">
       <img
-        key={currentImageUrl}
-        src={currentImageUrl}
-        alt={`Model Y in ${paint.name}`}
+        key={renderedImageUrl}
+        src={renderedImageUrl}
+        alt={`Model Y in ${paint?.name ?? 'your configuration'}`}
         className="object-contain w-5/6 h-5/6 animate-fade-in"
       />
       {images.length > 1 && (

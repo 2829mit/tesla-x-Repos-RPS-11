@@ -10,6 +10,7 @@ export interface TrimOption {
   price: number;
   financePerMonth: number;
   specs: PerformanceSpec[];
+  imageUrl?: string;
 }
 
 export interface PaintOption {

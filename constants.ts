@@ -11,7 +11,8 @@ export const TRIM_OPTIONS: TrimOption[] = [
       { value: '420km', label: 'Range (WLTP)' },
       { value: '217km/h', label: 'Top Speed' },
       { value: '6.9sec', label: '0-100 km/h' },
-    ]
+    ],
+    imageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010429/15_a79ols.png',
   },
   { 
     id: 'lr', 
@@ -20,10 +21,11 @@ export const TRIM_OPTIONS: TrimOption[] = [
     price: 4000000, 
     financePerMonth: 55000,
     specs: [
-      { value: '515km', label: 'Range (WLTP)' },
+      { value: '500km', label: 'Range (WLTP)' },
       { value: '217km/h', label: 'Top Speed' },
       { value: '5.0sec', label: '0-100 km/h' },
-    ]
+    ],
+    imageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010390/14_sdtrkr.png',
   },
   { 
     id: 'lr-awd', 
@@ -35,7 +37,8 @@ export const TRIM_OPTIONS: TrimOption[] = [
       { value: '500km', label: 'Range (WLTP)' },
       { value: '217km/h', label: 'Top Speed' },
       { value: '5.0sec', label: '0-100 km/h' },
-    ]
+    ],
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
   },
   { 
     id: 'p-awd', 
@@ -126,11 +129,8 @@ export const INTERIOR_OPTIONS: InteriorOption[] = [
 ];
 
 export const ACCESSORY_OPTIONS: AccessoryOption[] = [
-  { id: 'console-trays', name: 'Center Console Trays', price: 3000 },
-  { id: 'projection-lights', name: 'Projection Lights', price: 5000 },
-  { id: 'trunk-liner', name: 'All-Weather Rear Trunk + Seatback Liner', price: 20000 },
-  { id: 'interior-liners', name: 'All-Weather Interior Liners', price: 25000 },
-  { id: 'roof-rack', name: 'Roof Rack', price: 50000 },
+  { id: 'crash-barrier', name: 'Crash Barrier', price: 60000 },
+  { id: 'fire-Suppression', name: 'Fire Suppression', price: 75000 },
 ];
 
 export const CHARGING_OPTIONS: ChargingOption[] = [
@@ -152,18 +152,18 @@ export const CHARGING_OPTIONS: ChargingOption[] = [
 
 export const ACCESSORY_PACK_OPTIONS: AccessoryPackOption[] = [
   { 
-    id: 'explorer', 
-    name: 'Explorer Pack', 
+    id: 'crash-barrier-pack', 
+    name: 'Crash Barrier', 
     price: 350000, 
-    imageUrl:'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-    description: 'Freedom for all. With eight seats as standard and best-in-class space. Options of seven seats and five seats for ultimate versatility.'
+    imageUrl:'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010390/14_sdtrkr.png',
+    description: 'Enhanced safety package including a robust crash barrier for front-end protection.'
   },
   { 
-    id: 'adventure', 
-    name: 'Adventure Pack', 
+    id: 'fire-extinguisher-pack', 
+    name: 'Fire Suppression System', 
     price: 280000, 
-     imageUrl:'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-    description: 'Built for the wild. Includes expedition roof rack, an integrated air compressor, and a side-mounted gear carrier for all your equipment.'
+     imageUrl:'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010429/15_a79ols.png',
+    description: 'Safety-focused package featuring an integrated fire extinguisher for emergency situations.'
   },
 ];
 
