@@ -238,7 +238,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
       {/* Scrollable Content Area */}
       <div ref={scrollContainerRef} className="flex-grow overflow-y-auto">
         <div className="p-6 md:p-10">
-          <h1 className="text-[40px] leading-[48px] font-medium text-center text-[#171A20]">RPS</h1>
+          <h1 className="text-[28px] leading-[48px] font-medium text-center text-[#171A20]">Repos Portable Station</h1>
           <div className="flex justify-around my-8 text-center">
             {selectedTrim ? (
               selectedTrim.specs.map(spec => (
@@ -246,20 +246,20 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   <p className="text-xl sm:text-2xl font-semibold text-gray-900">
                     {spec.value}
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">{spec.label}</p>
+                  <p className="text-[14px] leading-[20px] text-[#393C41] mt-1">{spec.label}</p>
                 </div>
               ))
             ) : (
               [
-                { label: 'Range (WLTP)', value: '-' },
-                { label: 'Top Speed', value: '-' },
-                { label: '0-100 km/h', value: '-' },
+                { label: 'Speed', value: '120L/m' },
+                { label: 'Tracking', value: '100%' },
+                { label: 'Monitoring', value: '24/7' },
               ].map(spec => (
                 <div key={spec.label}>
                   <p className="text-xl sm:text-2xl font-semibold text-gray-900">
                     {spec.value}
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">{spec.label}</p>
+                  <p className="text-[14px] leading-[20px] text-[#393C41] mt-1">{spec.label}</p>
                 </div>
               ))
             )}
@@ -433,8 +433,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">360-Degree Visibility</h3>
-                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">Onboard cameras detect nearby objects, pedestrians and vehicles</p>
+                    <h3 className="font-semibold text-gray-800">Double Walled Safety</h3>
+                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">High tensile Strength and Durability</p>
                   </div>
                 </div>
                 
@@ -446,8 +446,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Active Safety</h3>
-                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">Automatic Emergency Braking, Lane Assist, Forward and Blind-Spot Collision Warning</p>
+                    <h3 className="font-semibold text-gray-800">Vaccum Valve</h3>
+                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">Automatic Release of excess Vapour Pressure</p>
                   </div>
                 </div>
                 
@@ -459,8 +459,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Passive Safety</h3>
-                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">A rigid body, fortified battery pack and large crumple zones for greater impact protection</p>
+                    <h3 className="font-semibold text-gray-800">leak Detection System</h3>
+                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">To Detect leak and Trigger an Immediate safety Reposne</p>
                   </div>
                 </div>
               </div>
@@ -486,7 +486,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-800">Limited Warranty</h3>
-                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">Repairs and replacements covered for 4 years or 50,000 miles, whichever comes first.</p>
+                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">Repairs and replacements covered for 4 years or 50,000 miles, whichever comes first.</p>
                   </div>
                 </div>
                 
@@ -499,13 +499,13 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-800">Battery and Drive Unit Limited Warranty</h3>
-                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">Covered for 8 years or 120,000 miles, whichever comes first.</p>
+                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">Covered for 8 years or 120,000 miles, whichever comes first.</p>
                   </div>
                 </div>
               </div>
               
               <div className="mt-6 text-center">
-                <button className="font-semibold text-gray-600 underline hover:text-gray-900 transition-colors text-sm">
+                <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-md transition-colors">
                   Learn More
                 </button>
               </div>
