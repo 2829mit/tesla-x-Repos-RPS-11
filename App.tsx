@@ -3,28 +3,38 @@ import Header from './components/Header.tsx';
 import CarVisualizer from './components/CarVisualizer.tsx';
 import Configurator from './components/Configurator.tsx';
 import LeadFormModal from './components/LeadFormModal.tsx';
-import type { PaintOption, WheelOption, InteriorOption, TrimOption, AccessoryOption, ChargingOption, AccessoryPackOption } from './types';
+import type { PaintOption, WheelOption, InteriorOption, TrimOption, AccessoryOption, ChargingOption, AccessoryPackOption, IotOption, TankOption, WarrantyOption } from './types';
 import { 
   PAINT_OPTIONS, 
   WHEEL_OPTIONS, 
   INTERIOR_OPTIONS, 
   TRIM_OPTIONS,
   DESTINATION_FEE,
-  ORDER_FEE
+  ORDER_FEE,
+  BASE_PRICE,
+  DECANTATION_OPTIONS,
+  REPOS_OS_OPTIONS,
+  WARRANTY_OPTIONS
 } from './constants';
 
 const App: React.FC = () => {
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(true);
   const [selectedTrim, setSelectedTrim] = useState<TrimOption | null>(null);
-  const [selectedTank, setSelectedTank] = useState<TrimOption['id'] | null>(null);
+  const [selectedTank, setSelectedTank] = useState<TankOption['id'] | null>(null);
   const [selectedPaint, setSelectedPaint] = useState<PaintOption | null>(null);
   const [selectedWheels, setSelectedWheels] = useState<WheelOption | null>(null);
   const [selectedInterior, setSelectedInterior] = useState<InteriorOption | null>(null);
   const [selectedAccessories, setSelectedAccessories] = useState<AccessoryOption[]>([]);
   const [selectedCharging, setSelectedCharging] = useState<ChargingOption[]>([]);
   const [selectedPacks, setSelectedPacks] = useState<AccessoryPackOption[]>([]);
+  const [selectedIotOptions, setSelectedIotOptions] = useState<IotOption[]>([]);
+  const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>([]);
+  const [selectedDecantation, setSelectedDecantation] = useState<IotOption>(DECANTATION_OPTIONS.find(o => o.price === 0)!);
+  const [selectedSafetyUnits, setSelectedSafetyUnits] = useState<AccessoryOption[]>([]);
+  const [selectedWarrantyOption, setSelectedWarrantyOption] = useState<WarrantyOption>(WARRANTY_OPTIONS.find(o => o.price === 0)!);
+  const [selectedConsumption, setSelectedConsumption] = useState<string | null>(null);
   const [visualizerView, setVisualizerView] = useState<'car' | 'wheels'>('car');
-  const [recommendedTrimId, setRecommendedTrimId] = useState<TrimOption['id'] | null>(null);
+  const [recommendedTankId, setRecommendedTankId] = useState<TankOption['id'] | null>(null);
 
   // Preload all possible vehicle images on initial app load for a smoother experience
   useEffect(() => {
@@ -45,21 +55,42 @@ const App: React.FC = () => {
     if (consumption) {
       switch (consumption) {
         case '50-100KL':
-          setRecommendedTrimId('rwd');
+          setRecommendedTankId('22kl');
           break;
         case '100-200KL':
-          setRecommendedTrimId('lr');
+          setRecommendedTankId('30kl');
           break;
         case '200-300KL':
-          setRecommendedTrimId('lr-awd');
+          setRecommendedTankId('45kl');
           break;
         case '300-400KL':
-          setRecommendedTrimId('p-awd');
+          setRecommendedTankId('60kl');
           break;
         default:
-          setRecommendedTrimId(null);
+          setRecommendedTankId(null);
           break;
       }
+    }
+  };
+
+  const handleConsumptionSelect = (consumption: string) => {
+    setSelectedConsumption(consumption);
+    switch (consumption) {
+      case '50-100KL':
+        setRecommendedTankId('22kl');
+        break;
+      case '100-200KL':
+        setRecommendedTankId('30kl');
+        break;
+      case '200-300KL':
+        setRecommendedTankId('45kl');
+        break;
+      case '300-1000KL':
+        setRecommendedTankId('60kl');
+        break;
+      default:
+        setRecommendedTankId(null);
+        break;
     }
   };
 
@@ -87,16 +118,45 @@ const App: React.FC = () => {
     );
   };
 
+  const handleIotToggle = (option: IotOption) => {
+    setSelectedIotOptions(prev =>
+      prev.find(o => o.id === option.id)
+        ? prev.filter(o => o.id !== option.id)
+        : [...prev, option]
+    );
+  };
+
+  const handleReposOsToggle = (option: AccessoryOption) => {
+    setSelectedReposOsOptions(prev =>
+      prev.find(o => o.id === option.id)
+        ? prev.filter(o => o.id !== option.id)
+        : [...prev, option]
+    );
+  };
+
+  const handleSafetyUnitToggle = (option: AccessoryOption) => {
+    setSelectedSafetyUnits(prev =>
+      prev.find(o => o.id === option.id)
+        ? prev.filter(o => o.id !== option.id)
+        : [...prev, option]
+    );
+  };
+
   const vehiclePrice = useMemo(() => {
-    let price = selectedTrim?.price ?? 0;
+    let price = BASE_PRICE + (selectedTrim?.price ?? 0);
     price += selectedPaint?.price ?? 0;
     price += selectedWheels?.price ?? 0;
     price += selectedInterior?.price ?? 0;
     price += selectedAccessories.reduce((total, acc) => total + acc.price, 0);
     price += selectedCharging.reduce((total, charger) => total + charger.price, 0);
     price += selectedPacks.reduce((total, pack) => total + pack.price, 0);
+    price += selectedIotOptions.reduce((total, opt) => total + opt.price, 0);
+    price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
+    price += selectedDecantation?.price ?? 0;
+    price += selectedSafetyUnits.reduce((total, unit) => total + unit.price, 0);
+    price += selectedWarrantyOption?.price ?? 0;
     return price;
-  }, [selectedTrim, selectedPaint, selectedWheels, selectedInterior, selectedAccessories, selectedCharging, selectedPacks]);
+  }, [selectedTrim, selectedPaint, selectedWheels, selectedInterior, selectedAccessories, selectedCharging, selectedPacks, selectedIotOptions, selectedReposOsOptions, selectedDecantation, selectedSafetyUnits, selectedWarrantyOption]);
 
   const finalPrice = vehiclePrice + DESTINATION_FEE + ORDER_FEE;
 
@@ -132,12 +192,24 @@ const App: React.FC = () => {
             onChargingToggle={handleChargingToggle}
             selectedPacks={selectedPacks}
             onPackToggle={handlePackToggle}
+            selectedIotOptions={selectedIotOptions}
+            onIotToggle={handleIotToggle}
+            selectedReposOsOptions={selectedReposOsOptions}
+            onReposOsToggle={handleReposOsToggle}
+            selectedDecantation={selectedDecantation}
+            setSelectedDecantation={setSelectedDecantation}
+            selectedSafetyUnits={selectedSafetyUnits}
+            onSafetyUnitToggle={handleSafetyUnitToggle}
+            selectedWarrantyOption={selectedWarrantyOption}
+            setSelectedWarrantyOption={setSelectedWarrantyOption}
+            selectedConsumption={selectedConsumption}
+            onConsumptionSelect={handleConsumptionSelect}
             vehiclePrice={vehiclePrice}
             destinationFee={DESTINATION_FEE}
             orderFee={ORDER_FEE}
             finalPrice={finalPrice}
             setVisualizerView={setVisualizerView}
-            recommendedTrimId={recommendedTrimId}
+            recommendedTankId={recommendedTankId}
           />
         </div>
       </main>

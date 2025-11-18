@@ -59,6 +59,25 @@ export interface AccessoryPackOption {
   description: string;
 }
 
+export interface IotOption {
+  id: string;
+  name: string;
+  price: number;
+  subtext: string;
+}
+
+export interface TankOption {
+  id: string;
+  name: string;
+}
+
+export interface WarrantyOption {
+  id: string;
+  name: string;
+  price: number;
+  subtext?: string;
+}
+
 export interface SavedBuild {
   id: string;
   name: string;

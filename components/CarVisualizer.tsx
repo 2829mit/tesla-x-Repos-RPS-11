@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { PaintOption, TrimOption, AccessoryPackOption } from '../types';
+import type { PaintOption, TrimOption, AccessoryPackOption, TankOption } from '../types';
 
 interface CarVisualizerProps {
   paint: PaintOption | null;
   trim: TrimOption | null;
-  tank: TrimOption['id'] | null;
+  tank: TankOption['id'] | null;
   packs: AccessoryPackOption[];
   visualizerView: 'car' | 'wheels';
 }
@@ -17,15 +17,15 @@ const CarVisualizer: React.FC<CarVisualizerProps> = ({ paint, trim, tank, packs,
   const getImageUrl = (): string | string[] => {
     const hasFirePack = packs.some(p => p.id === 'fire-extinguisher-pack');
     const hasCrashPack = packs.some(p => p.id === 'crash-barrier-pack');
-    const is30klTank = tank === 'rwd';
-    const is60klTank = tank === 'lr';
+    const isSmallTank = tank === '22kl' || tank === '30kl';
+    const isLargeTank = tank === '45kl' || tank === '60kl';
     const isDuWithoutRfid = trim?.id === 'rwd';
     const isDuWith1Rfid = trim?.id === 'lr';
     const isDuWith2Rfid = trim?.id === 'lr-awd';
     const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
 
-    // Tank: 60KL
-    if (is60klTank) {
+    // Tank: Large (45KL, 60KL)
+    if (isLargeTank) {
       // With Dispensing Unit
       if (trim) {
         // DU: 2 RFID
@@ -59,8 +59,8 @@ const CarVisualizer: React.FC<CarVisualizerProps> = ({ paint, trim, tank, packs,
       }
     }
 
-    // Tank: 30KL
-    if (is30klTank) {
+    // Tank: Small (22KL, 30KL)
+    if (isSmallTank) {
       // With Dispensing Unit
       if (trim) {
         // DU: 2 RFID
