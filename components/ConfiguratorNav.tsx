@@ -1,6 +1,6 @@
 import React from 'react';
 
-// This component is no longer in use. Its functionality has been merged into Header.tsx.
+// This component is not currently in use and has been neutralized to prevent potential errors.
 const ConfiguratorNav: React.FC = () => {
   return null;
 };

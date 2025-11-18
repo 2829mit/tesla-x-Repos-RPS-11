@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { CONSUMPTION_OPTIONS } from '../constants';
+import type { CustomerDetails } from '../types';
 
 interface LeadFormModalProps {
-  onSubmit: (consumption?: string) => void;
+  onSubmit: (data?: CustomerDetails) => void;
 }
 
 const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CustomerDetails>({
     name: '',
     mobile: '',
     email: '',
@@ -21,10 +23,8 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form Submitted:', formData);
     // Here you would typically send the data to a server
-    alert('Thank you for your submission!');
-    onSubmit(formData.consumption);
+    onSubmit(formData);
   };
 
   return (
@@ -35,9 +35,10 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
         className="bg-white rounded-lg shadow-2xl border border-gray-200 w-full max-w-[772px] relative p-12"
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={() => onSubmit()} className="absolute top-6 right-6 text-gray-400 hover:text-gray-800" aria-label="Close">
+        {/* Close button removed to enforce data collection, or kept if optional */}
+        {/* <button onClick={() => onSubmit()} className="absolute top-6 right-6 text-gray-400 hover:text-gray-800" aria-label="Close">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
+        </button> */}
         <h2 className="text-3xl font-semibold mb-2 text-left text-gray-900">Contact Form</h2>
         <p className="text-sm text-gray-600 mb-6 text-left">
           Registration in Mumbai, Pune, Delhi and Gurugram will be prioritized for delivery. State or territory location are used to estimate your on-road price. Final prices may vary due to individual circumstances.
@@ -138,10 +139,9 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   }}
                 >
                   <option value="" disabled>Select Consumption</option>
-                  <option value="50-100KL">50-100KL</option>
-                  <option value="100-200KL">100-200KL</option>
-                  <option value="200-300KL">200-300KL</option>
-                  <option value="300-400KL">300-400KL</option>
+                  {CONSUMPTION_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
                 </select>
               </div>
             </div>

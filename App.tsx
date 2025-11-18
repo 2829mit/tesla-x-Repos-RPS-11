@@ -1,39 +1,70 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import Header from './components/Header.tsx';
 import CarVisualizer from './components/CarVisualizer.tsx';
 import Configurator from './components/Configurator.tsx';
 import LeadFormModal from './components/LeadFormModal.tsx';
-import type { PaintOption, WheelOption, InteriorOption, TrimOption, AccessoryOption, ChargingOption, AccessoryPackOption, IotOption, TankOption, WarrantyOption } from './types';
+import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails } from './types';
 import { 
-  PAINT_OPTIONS, 
-  WHEEL_OPTIONS, 
-  INTERIOR_OPTIONS, 
   TRIM_OPTIONS,
-  DESTINATION_FEE,
-  ORDER_FEE,
   BASE_PRICE,
   DECANTATION_OPTIONS,
   REPOS_OS_OPTIONS,
-  WARRANTY_OPTIONS
+  WARRANTY_OPTIONS,
+  SAFETY_UNIT_OPTIONS,
+  DISPENSING_UNIT_OPTIONS,
+  FUEL_LEVEL_TECHNOLOGY_OPTIONS,
+  MECHANICAL_INCLUSION_OPTIONS,
+  SAFETY_UPGRADE_OPTIONS
 } from './constants';
 
 const App: React.FC = () => {
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(true);
-  const [selectedTrim, setSelectedTrim] = useState<TrimOption | null>(null);
-  const [selectedTank, setSelectedTank] = useState<TankOption['id'] | null>(null);
-  const [selectedPaint, setSelectedPaint] = useState<PaintOption | null>(null);
-  const [selectedWheels, setSelectedWheels] = useState<WheelOption | null>(null);
-  const [selectedInterior, setSelectedInterior] = useState<InteriorOption | null>(null);
-  const [selectedAccessories, setSelectedAccessories] = useState<AccessoryOption[]>([]);
-  const [selectedCharging, setSelectedCharging] = useState<ChargingOption[]>([]);
-  const [selectedPacks, setSelectedPacks] = useState<AccessoryPackOption[]>([]);
-  const [selectedIotOptions, setSelectedIotOptions] = useState<IotOption[]>([]);
-  const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>([]);
-  const [selectedDecantation, setSelectedDecantation] = useState<IotOption>(DECANTATION_OPTIONS.find(o => o.price === 0)!);
-  const [selectedSafetyUnits, setSelectedSafetyUnits] = useState<AccessoryOption[]>([]);
-  const [selectedWarrantyOption, setSelectedWarrantyOption] = useState<WarrantyOption>(WARRANTY_OPTIONS.find(o => o.price === 0)!);
+  const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null);
+  
+  // Use safe initialization with fallbacks to prevent crashes
+  const [selectedTrim, setSelectedTrim] = useState<TrimOption>(() => {
+    if (TRIM_OPTIONS && TRIM_OPTIONS.length > 0) return TRIM_OPTIONS[0];
+    return { id: 'rwd', name: '3 RFID Nozzle', drive: '', price: 0, financePerMonth: 0, specs: [] };
+  });
+
+  const [selectedTank, setSelectedTank] = useState<TankOption['id']>('22kl');
+  
+  const [selectedFuelLevelTechnologyOptions, setSelectedFuelLevelTechnologyOptions] = useState<AccessoryOption[]>(() => 
+    Array.isArray(FUEL_LEVEL_TECHNOLOGY_OPTIONS) ? FUEL_LEVEL_TECHNOLOGY_OPTIONS : []
+  );
+  
+  const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>(() => 
+    (REPOS_OS_OPTIONS || []).filter(o => o.price === 0)
+  );
+  
+  const [selectedMechanicalInclusionOptions, setSelectedMechanicalInclusionOptions] = useState<AccessoryOption[]>(() => 
+    Array.isArray(MECHANICAL_INCLUSION_OPTIONS) ? MECHANICAL_INCLUSION_OPTIONS : []
+  );
+
+  // Robust initializers for single-select options
+  const [selectedDecantation, setSelectedDecantation] = useState<IotOption>(() => {
+    const options = DECANTATION_OPTIONS || [];
+    return options.find(o => o.price === 0) || options[0] || { id: 'basic', name: 'Basic', price: 0, subtext: '' };
+  });
+  
+  const [selectedDispensingUnit, setSelectedDispensingUnit] = useState<DispensingUnitOption>(() => {
+    const options = DISPENSING_UNIT_OPTIONS || [];
+    return options[0] || { id: 'single', name: 'Single', subtext: '', price: 0 };
+  });
+  
+  const [selectedSafetyUnits, setSelectedSafetyUnits] = useState<AccessoryOption[]>(() => 
+    (SAFETY_UNIT_OPTIONS || []).filter(o => o.price === 0)
+  );
+
+  const [selectedSafetyUpgrades, setSelectedSafetyUpgrades] = useState<SafetyUpgradeOption[]>([]);
+  
+  const [selectedWarrantyOption, setSelectedWarrantyOption] = useState<WarrantyOption>(() => {
+    const options = WARRANTY_OPTIONS || [];
+    return options.find(o => o.price === 0) || options[0] || { id: 'basic', name: 'Basic', price: 0 };
+  });
+  
   const [selectedConsumption, setSelectedConsumption] = useState<string | null>(null);
-  const [visualizerView, setVisualizerView] = useState<'car' | 'wheels'>('car');
   const [recommendedTankId, setRecommendedTankId] = useState<TankOption['id'] | null>(null);
 
   // Preload all possible vehicle images on initial app load for a smoother experience
@@ -50,10 +81,13 @@ const App: React.FC = () => {
   }, []); // The empty dependency array ensures this runs only once when the component mounts.
 
 
-  const handleLeadFormClose = (consumption?: string) => {
+  const handleLeadFormClose = (details?: CustomerDetails) => {
     setIsLeadFormOpen(false);
-    if (consumption) {
-      switch (consumption) {
+    if (details) {
+      setCustomerDetails(details);
+      setSelectedConsumption(details.consumption);
+      
+      switch (details.consumption) {
         case '50-100KL':
           setRecommendedTankId('22kl');
           break;
@@ -63,7 +97,7 @@ const App: React.FC = () => {
         case '200-300KL':
           setRecommendedTankId('45kl');
           break;
-        case '300-400KL':
+        case '300-1000KL':
           setRecommendedTankId('60kl');
           break;
         default:
@@ -94,32 +128,8 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAccessoryToggle = (accessory: AccessoryOption) => {
-    setSelectedAccessories(prev =>
-      prev.find(a => a.id === accessory.id)
-        ? prev.filter(a => a.id !== accessory.id)
-        : [...prev, accessory]
-    );
-  };
-
-  const handleChargingToggle = (charger: ChargingOption) => {
-    setSelectedCharging(prev =>
-      prev.find(c => c.id === charger.id)
-        ? prev.filter(c => c.id !== charger.id)
-        : [...prev, charger]
-    );
-  };
-
-  const handlePackToggle = (pack: AccessoryPackOption) => {
-    setSelectedPacks(prev =>
-      prev.find(p => p.id === pack.id)
-        ? prev.filter(p => p.id !== pack.id)
-        : [...prev, pack]
-    );
-  };
-
-  const handleIotToggle = (option: IotOption) => {
-    setSelectedIotOptions(prev =>
+  const handleFuelLevelTechnologyToggle = (option: AccessoryOption) => {
+    setSelectedFuelLevelTechnologyOptions(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
         : [...prev, option]
@@ -134,6 +144,14 @@ const App: React.FC = () => {
     );
   };
 
+  const handleMechanicalInclusionToggle = (option: AccessoryOption) => {
+    setSelectedMechanicalInclusionOptions(prev =>
+      prev.find(o => o.id === option.id)
+        ? prev.filter(o => o.id !== option.id)
+        : [...prev, option]
+    );
+  };
+
   const handleSafetyUnitToggle = (option: AccessoryOption) => {
     setSelectedSafetyUnits(prev =>
       prev.find(o => o.id === option.id)
@@ -142,23 +160,28 @@ const App: React.FC = () => {
     );
   };
 
-  const vehiclePrice = useMemo(() => {
-    let price = BASE_PRICE + (selectedTrim?.price ?? 0);
-    price += selectedPaint?.price ?? 0;
-    price += selectedWheels?.price ?? 0;
-    price += selectedInterior?.price ?? 0;
-    price += selectedAccessories.reduce((total, acc) => total + acc.price, 0);
-    price += selectedCharging.reduce((total, charger) => total + charger.price, 0);
-    price += selectedPacks.reduce((total, pack) => total + pack.price, 0);
-    price += selectedIotOptions.reduce((total, opt) => total + opt.price, 0);
-    price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
-    price += selectedDecantation?.price ?? 0;
-    price += selectedSafetyUnits.reduce((total, unit) => total + unit.price, 0);
-    price += selectedWarrantyOption?.price ?? 0;
-    return price;
-  }, [selectedTrim, selectedPaint, selectedWheels, selectedInterior, selectedAccessories, selectedCharging, selectedPacks, selectedIotOptions, selectedReposOsOptions, selectedDecantation, selectedSafetyUnits, selectedWarrantyOption]);
+  const handleSafetyUpgradeToggle = (option: SafetyUpgradeOption) => {
+    setSelectedSafetyUpgrades(prev =>
+      prev.find(o => o.id === option.id)
+        ? prev.filter(o => o.id !== option.id)
+        : [...prev, option]
+    );
+  };
 
-  const finalPrice = vehiclePrice + DESTINATION_FEE + ORDER_FEE;
+  const vehiclePrice = useMemo(() => {
+    let price = BASE_PRICE + (selectedTrim?.price || 0);
+    price += selectedDispensingUnit?.price || 0;
+    price += (selectedFuelLevelTechnologyOptions || []).reduce((total, opt) => total + opt.price, 0);
+    price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
+    price += selectedMechanicalInclusionOptions.reduce((total, opt) => total + opt.price, 0);
+    price += selectedDecantation?.price || 0;
+    price += selectedSafetyUnits.reduce((total, unit) => total + unit.price, 0);
+    price += selectedSafetyUpgrades.reduce((total, unit) => total + unit.price, 0);
+    price += selectedWarrantyOption?.price || 0;
+    return price;
+  }, [selectedTrim, selectedDispensingUnit, selectedFuelLevelTechnologyOptions, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedWarrantyOption]);
+
+  const finalPrice = vehiclePrice;
 
   return (
     <div className="min-h-screen bg-stone-50 font-sans text-gray-800">
@@ -167,48 +190,38 @@ const App: React.FC = () => {
       <main className="flex flex-col lg:flex-row">
         <div className="lg:w-3/4 w-full lg:h-[calc(100vh-72px)] lg:sticky lg:top-[72px]">
           <CarVisualizer 
-            paint={selectedPaint} 
             trim={selectedTrim}
             tank={selectedTank}
-            packs={selectedPacks}
-            visualizerView={visualizerView}
+            safetyUpgrades={selectedSafetyUpgrades}
           />
         </div>
         <div className="lg:w-1/4 w-full lg:h-[calc(100vh-72px)]">
           <Configurator
+            customerDetails={customerDetails}
             selectedTrim={selectedTrim}
             setSelectedTrim={setSelectedTrim}
             selectedTank={selectedTank}
             setSelectedTank={setSelectedTank}
-            selectedPaint={selectedPaint}
-            setSelectedPaint={setSelectedPaint}
-            selectedWheels={selectedWheels}
-            setSelectedWheels={setSelectedWheels}
-            selectedInterior={selectedInterior}
-            setSelectedInterior={setSelectedInterior}
-            selectedAccessories={selectedAccessories}
-            onAccessoryToggle={handleAccessoryToggle}
-            selectedCharging={selectedCharging}
-            onChargingToggle={handleChargingToggle}
-            selectedPacks={selectedPacks}
-            onPackToggle={handlePackToggle}
-            selectedIotOptions={selectedIotOptions}
-            onIotToggle={handleIotToggle}
+            selectedFuelLevelTechnologyOptions={selectedFuelLevelTechnologyOptions}
+            onFuelLevelTechnologyToggle={handleFuelLevelTechnologyToggle}
             selectedReposOsOptions={selectedReposOsOptions}
             onReposOsToggle={handleReposOsToggle}
+            selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}
+            onMechanicalInclusionToggle={handleMechanicalInclusionToggle}
             selectedDecantation={selectedDecantation}
             setSelectedDecantation={setSelectedDecantation}
+            selectedDispensingUnit={selectedDispensingUnit}
+            setSelectedDispensingUnit={setSelectedDispensingUnit}
             selectedSafetyUnits={selectedSafetyUnits}
             onSafetyUnitToggle={handleSafetyUnitToggle}
+            selectedSafetyUpgrades={selectedSafetyUpgrades}
+            onSafetyUpgradeToggle={handleSafetyUpgradeToggle}
             selectedWarrantyOption={selectedWarrantyOption}
             setSelectedWarrantyOption={setSelectedWarrantyOption}
             selectedConsumption={selectedConsumption}
             onConsumptionSelect={handleConsumptionSelect}
             vehiclePrice={vehiclePrice}
-            destinationFee={DESTINATION_FEE}
-            orderFee={ORDER_FEE}
             finalPrice={finalPrice}
-            setVisualizerView={setVisualizerView}
             recommendedTankId={recommendedTankId}
           />
         </div>

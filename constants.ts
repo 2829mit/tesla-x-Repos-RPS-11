@@ -1,46 +1,41 @@
-import type { PaintOption, WheelOption, InteriorOption, PerformanceSpec, TrimOption, AccessoryOption, ChargingOption, AccessoryPackOption, IotOption, TankOption, WarrantyOption } from './types';
+
+import type { PerformanceSpec, TrimOption, IotOption, TankOption, WarrantyOption, AccessoryOption, DispensingUnitOption, SafetyUpgradeOption } from './types';
 
 export const BASE_PRICE = 3500000;
 export const BASE_FINANCE_PER_MONTH = 48000;
 
+const commonSpecs: PerformanceSpec[] = [
+  { value: '120L/m', label: 'Speed' },
+  { value: '100%', label: 'Tracking' },
+  { value: '24/7', label: 'Monitoring' },
+];
+
 export const TRIM_OPTIONS: TrimOption[] = [
   { 
     id: 'rwd', 
-    name: 'Basic Nozzle', 
-    drive: 'Already Included', 
-    price: 0, 
+    name: '3 RFID Nozzle', 
+    drive: '150 tags', 
+    price: 60000, 
     financePerMonth: 0,
-    specs: [
-      { value: '420km', label: 'Range (WLTP)' },
-      { value: '217km/h', label: 'Top Speed' },
-      { value: '6.9sec', label: '0-100 km/h' },
-    ],
+    specs: commonSpecs,
     imageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010429/15_a79ols.png',
   },
   { 
     id: 'lr', 
     name: '1 RFID Nozzle', 
-    drive: '50 RFID Tags', 
+    drive: '50 Tags', 
     price: 30000, 
     financePerMonth: 7000,
-    specs: [
-      { value: '500km', label: 'Range (WLTP)' },
-      { value: '217km/h', label: 'Top Speed' },
-      { value: '5.0sec', label: '0-100 km/h' },
-    ],
+    specs: commonSpecs,
     imageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010390/14_sdtrkr.png',
   },
   { 
     id: 'lr-awd', 
     name: '2 RFID Nozzle', 
-    drive: '100 RFID Tags', 
+    drive: '100 Tags', 
     price: 50000, 
     financePerMonth: 12000,
-    specs: [
-      { value: '500km', label: 'Range (WLTP)' },
-      { value: '217km/h', label: 'Top Speed' },
-      { value: '5.0sec', label: '0-100 km/h' },
-    ],
+    specs: commonSpecs,
     imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
   },
   { 
@@ -57,84 +52,14 @@ export const TRIM_OPTIONS: TrimOption[] = [
   },
 ];
 
-
-export const PAINT_OPTIONS: PaintOption[] = [
-  { 
-    id: 'stealth-grey', 
-    name: 'Stealth Grey', 
-    price: 0, 
-    colorCode: 'bg-gray-600', 
-    imageUrls: {
-      'rwd': 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1762515708/halfrps_gonsz4.png',
-      'lr': 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1762515708/halfrps_gonsz4.png',
-      'lr-awd': 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-      'p-awd': 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-    }
-  },
-  { 
-    id: 'pearl-white', 
-    name: 'Pearl White Multi-Coat', 
-    price: 100000, 
-    colorCode: 'bg-gray-100', 
-    imageUrls: {
-      'rwd': 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1762515708/halfrps_gonsz4.png',
-      'lr': 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1762515708/halfrps_gonsz4.png',
-      'lr-awd': 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-      'p-awd': 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-    } 
-  },
-  { 
-    id: 'diamond-black', 
-    name: 'Diamond Black', 
-    price: 150000, 
-    colorCode: 'bg-black', 
-    imageUrls: {
-      'rwd': 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1762515708/halfrps_gonsz4.png',
-      'lr': 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1762515708/halfrps_gonsz4.png',
-      'lr-awd': 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-      'p-awd': 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-    } 
-  },
-  { 
-    id: 'ultra-red', 
-    name: 'Ultra Red', 
-    price: 200000, 
-    colorCode: 'bg-red-700', 
-    imageUrls: {
-      'rwd': 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1762515708/halfrps_gonsz4.png',
-      'lr': 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1762515708/halfrps_gonsz4.png',
-      'lr-awd': 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-      'p-awd': 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-    } 
-  },
+export const DISPENSING_UNIT_OPTIONS: DispensingUnitOption[] = [
+  { id: 'single-du', name: 'Single DU', subtext: '2 Nozzle', price: 50000 },
+  { id: 'double-du', name: 'Double DU', subtext: '3 Nozzle', price: 60000 },
 ];
 
-export const WHEEL_OPTIONS: WheelOption[] = [
-  { 
-    id: 'gemini', 
-    name: '19" Gemini Wheels', 
-    price: 0, 
-    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtZq7Hvs4vqO2006_avH4wH2Cx9n0R0qU6LA&s', 
-     closeUpImageUrl: 'https://stimg.cardekho.com/images/car-images/large/Tesla/Model-Y/6390/1752498018984/Diamond-Black_0a0a0d.jpg?impolicy=resize&imwidth=420'
-  },
-  { 
-    id: 'induction', 
-    name: '20" Induction Wheels', 
-    price: 150000, 
-    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtZq7Hvs4vqO2006_avH4wH2Cx9n0R0qU6LA&s', 
-    closeUpImageUrl: 'https://stimg.cardekho.com/images/car-images/large/Tesla/Model-Y/6390/1752498018984/Diamond-Black_0a0a0d.jpg?impolicy=resize&imwidth=420' 
-  },
-];
-
-export const INTERIOR_OPTIONS: InteriorOption[] = [
-  { id: 'black', name: 'All Black', price: 0 },
-  { id: 'white', name: 'Black and White', price: 100000 },
-];
-
-export const IOT_OPTIONS: IotOption[] = [
-  { id: 'iot-controller', name: 'Repos IOT Controller', price: 0, subtext: 'Already Included' },
-  { id: 'fuel-sensors', name: 'Fuel Level sensors', price: 0, subtext: 'Already Included' },
-  { id: 'cctv', name: 'CCTV Camera', price: 0, subtext: 'Already Included' },
+export const FUEL_LEVEL_TECHNOLOGY_OPTIONS: AccessoryOption[] = [
+  { id: 'ultraviolet-sensor', name: 'Ultraviolet Sensor', price: 0 },
+  { id: 'capacitance-sensor', name: 'Capacitance Sensor', price: 0 },
 ];
 
 export const REPOS_OS_OPTIONS: AccessoryOption[] = [
@@ -149,12 +74,44 @@ export const DECANTATION_OPTIONS: IotOption[] = [
   { id: 'basic-skid', name: 'Basic Skid', subtext: 'Already Included', price: 0 },
 ];
 
+export const MECHANICAL_INCLUSION_OPTIONS: AccessoryOption[] = [
+  { id: 'dual-walled-tank', name: 'Dual Walled Tank', price: 0 },
+  { id: 'peso-manhole', name: 'PESO Approved Manhole Assembly', price: 0 },
+  { id: 'weather-proof-canopy', name: 'Weather Proof Modular Canopy', price: 0 },
+  { id: 'ss-pipeline', name: 'Stainless Steel Pipeline', price: 0 },
+  { id: 'galvanized-surface', name: 'Galvanized Surface', price: 0 },
+  { id: 'filtration-mechanism', name: 'Filtration Mechanism', price: 0 },
+];
+
 export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
+  { id: 'iot-controller-safety', name: 'IOT Controller', price: 0 },
   { id: 'leak-detection', name: 'Leak Detection System', price: 0 },
   { id: 'overfill-sensors', name: 'Overfill Sensors', price: 0 },
   { id: 'decantation-cutoff', name: 'Decantation Cutoff', price: 0 },
   { id: 'flame-proof-illumination', name: 'Flame Proof Illumination', price: 0 },
-  { id: 'glasswood-shield', name: 'Glasswood Shield', price: 0 },
+  { id: 'glasswool-shield', name: 'Glasswool Shield', price: 0 },
+  { id: 'bollard-barriers', name: 'Bollard Barriers', price: 4999 },
+  { id: 'decantation-metering', name: 'Decantation Metering Counter', price: 9999 },
+  { id: 'fire-protection-sensor', name: 'Fire Protection Sensor', price: 4999 },
+  { id: 'surveillance-camera', name: 'Surveillance Camera', price: 12999 },
+  { id: 'mobile-device', name: 'Mobile Device', price: 20000 },
+];
+
+export const SAFETY_UPGRADE_OPTIONS: SafetyUpgradeOption[] = [
+  { 
+    id: 'crash-barrier', 
+    name: 'Crash Barrier', 
+    price: 350000,
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png',
+    description: 'Reinforced protective barriers engineered to safeguard the station against vehicular impact and ensure operational safety.'
+  },
+  { 
+    id: 'fire-suppression', 
+    name: 'Fire Suppression System', 
+    price: 280000,
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/2.png',
+    description: 'Safety-focused package featuring an integrated fire extinguisher for emergency situations.'
+  },
 ];
 
 export const TANK_OPTIONS: TankOption[] = [
@@ -176,46 +133,6 @@ export const WARRANTY_OPTIONS: WarrantyOption[] = [
   { id: '1-year-amc', name: '1 Year AMC', price: 25000 },
   { id: '2-year-amc', name: '2 Year AMC', price: 30000 },
 ];
-
-export const ACCESSORY_OPTIONS: AccessoryOption[] = [
-  { id: 'crash-barrier', name: 'Crash Barrier', price: 60000 },
-  { id: 'fire-Suppression', name: 'Fire Suppression', price: 75000 },
-];
-
-export const CHARGING_OPTIONS: ChargingOption[] = [
-    {
-      id: 'home-charger-1',
-      name: 'Home Charger',
-      price: 40000,
-      description: 'Up to 70 km range /hr, install required',
-      imageUrl: 'https://digitalassets-shop.tesla.com/image/upload/f_auto,q_auto/v1/content/dam/tesla/CAR_ACCESSORIES/MODEL_3/CHARGING_ADAPTERS/WC_ConfigV4.png?&'
-    },
-    {
-      id: 'home-charger-2',
-      name: 'Home Charger',
-      price: 40000,
-      description: 'Up to 70 km range /hr, install required',
-      imageUrl: 'https://digitalassets-shop.tesla.com/image/upload/f_auto,q_auto/v1/content/dam/tesla/CAR_ACCESSORIES/MODEL_3/CHARGING_ADAPTERS/WC_ConfigV4.png?&'
-    }
-];
-
-export const ACCESSORY_PACK_OPTIONS: AccessoryPackOption[] = [
-  { 
-    id: 'crash-barrier-pack', 
-    name: 'Crash Barrier', 
-    price: 350000, 
-    imageUrl:'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010390/14_sdtrkr.png',
-    description: 'Enhanced safety package including a robust crash barrier for front-end protection.'
-  },
-  { 
-    id: 'fire-extinguisher-pack', 
-    name: 'Fire Suppression Systmem', 
-    price: 280000, 
-     imageUrl:'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010429/15_a79ols.png',
-    description: 'Safety-focused package featuring an integrated fire extinguisher for emergency situations.'
-  },
-];
-
 
 export const DESTINATION_FEE = 125000;
 export const ORDER_FEE = 25000;

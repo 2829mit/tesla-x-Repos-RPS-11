@@ -1,153 +1,109 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import type { PaintOption, WheelOption, InteriorOption, TrimOption, AccessoryOption, ChargingOption, AccessoryPackOption, IotOption, TankOption, WarrantyOption } from '../types';
-import { PAINT_OPTIONS, WHEEL_OPTIONS, INTERIOR_OPTIONS, TRIM_OPTIONS, ACCESSORY_OPTIONS, CHARGING_OPTIONS, ACCESSORY_PACK_OPTIONS, IOT_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, WARRANTY_OPTIONS, REPOS_OS_OPTIONS } from '../constants';
-import ConnectivityModal from './ConnectivityModal.tsx';
+
+import React, { useState, useRef, useEffect } from 'react';
+import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails } from '../types';
+import { TRIM_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, WARRANTY_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, FUEL_LEVEL_TECHNOLOGY_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, BASE_PRICE } from '../constants';
 import ComparisonModal from './ComparisonModal.tsx';
 
+// Declare jsPDF on window since we are using CDN
+declare global {
+  interface Window {
+    jspdf: any;
+  }
+}
+
 interface ConfiguratorProps {
-  selectedTrim: TrimOption | null;
+  customerDetails: CustomerDetails | null;
+  selectedTrim: TrimOption;
   setSelectedTrim: (trim: TrimOption) => void;
-  selectedTank: TankOption['id'] | null;
+  selectedTank: TankOption['id'];
   setSelectedTank: (tankId: TankOption['id']) => void;
-  selectedPaint: PaintOption | null;
-  setSelectedPaint: (paint: PaintOption) => void;
-  selectedWheels: WheelOption | null;
-  setSelectedWheels: (wheels: WheelOption) => void;
-  selectedInterior: InteriorOption | null;
-  setSelectedInterior: (interior: InteriorOption) => void;
-  selectedAccessories: AccessoryOption[];
-  onAccessoryToggle: (accessory: AccessoryOption) => void;
-  selectedCharging: ChargingOption[];
-  onChargingToggle: (charger: ChargingOption) => void;
-  selectedPacks: AccessoryPackOption[];
-  onPackToggle: (pack: AccessoryPackOption) => void;
-  selectedIotOptions: IotOption[];
-  onIotToggle: (option: IotOption) => void;
+  selectedFuelLevelTechnologyOptions: AccessoryOption[];
+  onFuelLevelTechnologyToggle: (option: AccessoryOption) => void;
   selectedReposOsOptions: AccessoryOption[];
   onReposOsToggle: (option: AccessoryOption) => void;
-  selectedDecantation: IotOption | null;
+  selectedMechanicalInclusionOptions: AccessoryOption[];
+  onMechanicalInclusionToggle: (option: AccessoryOption) => void;
+  selectedDecantation: IotOption;
   setSelectedDecantation: (option: IotOption) => void;
+  selectedDispensingUnit: DispensingUnitOption;
+  setSelectedDispensingUnit: (option: DispensingUnitOption) => void;
   selectedSafetyUnits: AccessoryOption[];
   onSafetyUnitToggle: (option: AccessoryOption) => void;
-  selectedWarrantyOption: WarrantyOption | null;
+  selectedSafetyUpgrades: SafetyUpgradeOption[];
+  onSafetyUpgradeToggle: (option: SafetyUpgradeOption) => void;
+  selectedWarrantyOption: WarrantyOption;
   setSelectedWarrantyOption: (option: WarrantyOption) => void;
   selectedConsumption: string | null;
   onConsumptionSelect: (consumption: string) => void;
   vehiclePrice: number;
-  destinationFee: number;
-  orderFee: number;
   finalPrice: number;
-  setVisualizerView: (view: 'car' | 'wheels') => void;
   recommendedTankId: TankOption['id'] | null;
 }
 
 const Configurator: React.FC<ConfiguratorProps> = ({
+  customerDetails,
   selectedTrim,
   setSelectedTrim,
   selectedTank,
   setSelectedTank,
-  selectedPaint,
-  setSelectedPaint,
-  selectedWheels,
-  setSelectedWheels,
-  selectedInterior,
-  setSelectedInterior,
-  selectedAccessories,
-  onAccessoryToggle,
-  selectedCharging,
-  onChargingToggle,
-  selectedPacks,
-  onPackToggle,
-  selectedIotOptions,
-  onIotToggle,
+  selectedFuelLevelTechnologyOptions,
+  onFuelLevelTechnologyToggle,
   selectedReposOsOptions,
   onReposOsToggle,
+  selectedMechanicalInclusionOptions,
+  onMechanicalInclusionToggle,
   selectedDecantation,
   setSelectedDecantation,
+  selectedDispensingUnit,
+  setSelectedDispensingUnit,
   selectedSafetyUnits,
   onSafetyUnitToggle,
+  selectedSafetyUpgrades,
+  onSafetyUpgradeToggle,
   selectedWarrantyOption,
   setSelectedWarrantyOption,
   selectedConsumption,
   onConsumptionSelect,
   vehiclePrice,
-  destinationFee,
-  orderFee,
   finalPrice,
-  setVisualizerView,
   recommendedTankId,
 }) => {
-  const [configMode, setConfigMode] = useState<'tankCapacity' | 'consumption'>('tankCapacity');
-  const [showPriceDetails, setShowPriceDetails] = useState(true);
-  const [isStickyFooterVisible, setIsStickyFooterVisible] = useState(true);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'upi'>('card');
-  const [isConnectivityModalOpen, setIsConnectivityModalOpen] = useState(false);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
-  const [selectedPackForModal, setSelectedPackForModal] = useState<AccessoryPackOption | null>(null);
-
-
-  const priceDetailsRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const wheelsRef = useRef<HTMLDivElement>(null);
+  const [selectedAction, setSelectedAction] = useState<'quote' | 'contact'>('contact');
   
+  // State for Learn More Modal
+  const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | null>(null);
+
+  // State for UI interactions
+  const [isStickyFooterVisible, setIsStickyFooterVisible] = useState(true);
+  const [isPricingDetailsOpen, setIsPricingDetailsOpen] = useState(true);
+  
+  // Ref for the pricing section to track visibility
+  const pricingSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
-
-    const stickyFooterObserver = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       ([entry]) => {
-        // Hide sticky footer when price breakdown section is in view
+        // If pricing section is visible (intersecting), hide the sticky footer
+        // If it's not visible, show the sticky footer
         setIsStickyFooterVisible(!entry.isIntersecting);
       },
       {
-        root: scrollContainer,
-        rootMargin: '0px',
-        threshold: 0.1, 
+        root: null, // Use the viewport as the root
+        threshold: 0.1, // Trigger when 10% of the target is visible
       }
     );
 
-    const priceRef = priceDetailsRef.current;
-    if (priceRef) {
-      stickyFooterObserver.observe(priceRef);
+    if (pricingSectionRef.current) {
+      observer.observe(pricingSectionRef.current);
     }
 
     return () => {
-      if (priceRef) {
-        stickyFooterObserver.unobserve(priceRef);
+      if (pricingSectionRef.current) {
+        observer.disconnect();
       }
     };
   }, []);
-
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisualizerView('wheels');
-        } else {
-          setVisualizerView('car');
-        }
-      },
-      {
-        root: scrollContainer,
-        threshold: 0,
-      }
-    );
-
-    const wheelsElement = wheelsRef.current;
-    if (wheelsElement) {
-      observer.observe(wheelsElement);
-    }
-
-    return () => {
-      if (wheelsElement) {
-        observer.unobserve(wheelsElement);
-      }
-    };
-  }, [setVisualizerView]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -161,86 +117,231 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     return price === 0 ? formatCurrency(0) : `+${formatCurrency(price)}`;
   };
   
-  const formatLineItemPrice = (price: number) => {
-    return price === 0 ? 'Included' : formatCurrency(price);
-  }
-
-  const ConfiguratorTab: React.FC<{ mode: 'tankCapacity' | 'consumption'; label: string }> = ({ mode, label }) => (
-    <button
-        onClick={() => setConfigMode(mode)}
-        className={`w-1/2 pb-2 text-[14px] leading-[16.8px] font-medium transition-all duration-200 focus:outline-none ${configMode === mode ? 'text-[#171A20] border-b-2 border-[#171A20]' : 'text-[#171A20] opacity-50 hover:opacity-100'}`}
-    >
-        {label}
-    </button>
-  );
-
-  const PriceLineItem: React.FC<{ label: string; value: string | number; bold?: boolean }> = ({ label, value, bold = false }) => (
-    <div className={`flex justify-between items-center text-sm ${bold ? 'font-semibold' : ''}`}>
-      <p className="text-gray-600">{label}</p>
-      <p className="text-gray-800">{typeof value === 'number' ? formatCurrency(value) : value}</p>
-    </div>
-  );
-
   const getTrimDisplayPrice = (trim: TrimOption) => {
     return formatPrice(trim.price);
   };
 
-  const getAccessoryPackImageUrl = (pack: AccessoryPackOption): string => {
-    const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
+  // Helper to calculate the correct image URL for thumbnails based on current config
+  const getSafetyImage = (upgradeId: string) => {
+    const isSmallTank = selectedTank === '22kl' || selectedTank === '30kl';
     const isLargeTank = selectedTank === '45kl' || selectedTank === '60kl';
-
-    if (isLargeTank) {
-      if (pack.id === 'crash-barrier-pack') {
-        return `${s3BaseUrl}30.png`;
-      }
-      if (pack.id === 'fire-extinguisher-pack') {
-        return `${s3BaseUrl}31.png`;
-      }
-    }
+    const isDuWithoutRfid = selectedTrim.id === 'rwd'; // 3 RFID Nozzle
+    const isDuWith1Rfid = selectedTrim.id === 'lr';    // 1 RFID Nozzle
+    const isDuWith2Rfid = selectedTrim.id === 'lr-awd'; // 2 RFID Nozzle
     
-    // Default image for small tanks or when no tank is selected
-    return pack.imageUrl;
+    let baseIndex = 13; // Default fallback
+
+    if (isSmallTank) {
+      if (isDuWithoutRfid) baseIndex = 1;
+      else if (isDuWith1Rfid) baseIndex = 5;
+      else if (isDuWith2Rfid) baseIndex = 9;
+      else baseIndex = 13;
+    } else if (isLargeTank) {
+      if (isDuWithoutRfid) baseIndex = 17;
+      else if (isDuWith1Rfid) baseIndex = 21;
+      else if (isDuWith2Rfid) baseIndex = 25;
+      else baseIndex = 29;
+    }
+
+    // Calculate offset based on the specific upgrade we want to show
+    // Fire System (id: fire-suppression) -> +1
+    // Crash Barrier (id: crash-barrier) -> +2
+    let offset = 0;
+    if (upgradeId === 'fire-suppression') {
+      offset = 1;
+    } else if (upgradeId === 'crash-barrier') {
+      offset = 2;
+    }
+
+    const imageIndex = baseIndex + offset;
+    const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
+    return `${s3BaseUrl}${imageIndex}.png`;
+  };
+
+  const generatePDF = () => {
+    if (!window.jspdf) {
+      alert("PDF library not loaded yet. Please try again.");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Colors
+    const primaryColor = [23, 26, 32]; // #171A20
+    const accentColor = [29, 78, 216]; // Blue
+
+    // Helper to get Y position
+    let finalY = 20;
+
+    // --- Header ---
+    doc.setFontSize(22);
+    doc.setTextColor(...primaryColor);
+    doc.text("PROFORMA INVOICE / QUOTE", 14, finalY);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text("Repos Energy Pvt Limited", 14, finalY + 8);
+    
+    // --- Metadata (Date, Order ID) ---
+    const orderId = `RPS-${Date.now().toString().slice(-6)}`;
+    const date = new Date().toLocaleDateString();
+    
+    doc.setFontSize(10);
+    doc.text(`Date: ${date}`, 150, finalY);
+    doc.text(`Order ID: ${orderId}`, 150, finalY + 6);
+
+    finalY += 25;
+
+    // --- Customer Details ---
+    doc.setFontSize(14);
+    doc.setTextColor(...primaryColor);
+    doc.text("Bill To:", 14, finalY);
+    finalY += 8;
+
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    if (customerDetails) {
+      doc.text(`Name: ${customerDetails.name}`, 14, finalY);
+      doc.text(`Company: ${customerDetails.company}`, 14, finalY + 6);
+      doc.text(`Industry: ${customerDetails.industry}`, 14, finalY + 12);
+      doc.text(`Consumption: ${customerDetails.consumption}`, 14, finalY + 18);
+      doc.text(`Email: ${customerDetails.email}`, 110, finalY);
+      doc.text(`Mobile: ${customerDetails.mobile}`, 110, finalY + 6);
+    } else {
+      doc.text("Customer details not provided.", 14, finalY);
+    }
+
+    finalY += 30;
+
+    // --- Order Summary Table ---
+    const tableColumn = ["Description", "Price (INR)"];
+    const tableRows: any[] = [];
+
+    // 1. Base Price
+    tableRows.push(["RPS Base Price", formatCurrency(BASE_PRICE)]);
+
+    // 2. Dispensing Unit
+    tableRows.push([selectedDispensingUnit.name, selectedDispensingUnit.price === 0 ? 'Included' : formatCurrency(selectedDispensingUnit.price)]);
+
+    // 3. RFID Tech
+    tableRows.push([`RFID Tech: ${selectedTrim.name}`, selectedTrim.price === 0 ? 'Included' : formatCurrency(selectedTrim.price)]);
+
+    // 4. Fuel Level Tech
+    selectedFuelLevelTechnologyOptions.forEach(opt => {
+      tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatCurrency(opt.price)]);
+    });
+
+    // 5. Repos OS
+    selectedReposOsOptions.forEach(opt => {
+      tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatCurrency(opt.price)]);
+    });
+
+    // 6. Decantation
+    tableRows.push([`Decantation: ${selectedDecantation.name}`, selectedDecantation.price === 0 ? 'Included' : formatCurrency(selectedDecantation.price)]);
+
+    // 7. Mechanical Inclusion
+    selectedMechanicalInclusionOptions.forEach(opt => {
+       tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatCurrency(opt.price)]);
+    });
+
+    // 8. Safety Unit
+    selectedSafetyUnits.forEach(opt => {
+       tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatCurrency(opt.price)]);
+    });
+
+    // 9. Safety Upgrades
+    selectedSafetyUpgrades.forEach(opt => {
+       tableRows.push([opt.name, formatCurrency(opt.price)]);
+    });
+
+    // 10. Warranty
+    tableRows.push([`Warranty: ${selectedWarrantyOption.name}`, selectedWarrantyOption.price === 0 ? 'Included' : formatCurrency(selectedWarrantyOption.price)]);
+
+    // Generate Table
+    doc.autoTable({
+      startY: finalY,
+      head: [tableColumn],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: { fillColor: primaryColor, textColor: 255 },
+      styles: { fontSize: 10, cellPadding: 3 },
+    });
+
+    // --- Total ---
+    // @ts-ignore
+    const finalYAfterTable = doc.lastAutoTable.finalY + 10;
+    
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text("Total RPS Price:", 130, finalYAfterTable);
+    doc.setTextColor(...accentColor);
+    doc.setFontSize(14);
+    doc.text(formatCurrency(finalPrice), 170, finalYAfterTable);
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.setFont(undefined, 'normal');
+    doc.text("Thank you for choosing Repos Energy.", 105, 280, { align: 'center' });
+    
+    doc.save(`RPS_Quote_${orderId}.pdf`);
+  };
+
+  const handleViewQuoteClick = () => {
+    setSelectedAction('quote');
+    generatePDF();
   };
 
   return (
-    <div className="bg-white text-gray-800 h-full flex flex-col">
+    <div className="bg-white text-gray-800 h-full flex flex-col relative overflow-hidden">
       {/* Scrollable Content Area */}
-      <div ref={scrollContainerRef} className="flex-grow overflow-y-auto">
-        <div className="p-6 md:p-10">
+      <div className="flex-grow overflow-y-auto scroll-smooth">
+        <div className="p-6 md:p-10 pb-24">
           <h1 className="text-[28px] leading-[48px] font-medium text-center text-[#171A20]">Repos Portable Station</h1>
           <div className="flex justify-around my-8 text-center">
-            {selectedTrim ? (
-              selectedTrim.specs.map(spec => (
-                <div key={spec.label}>
-                  <p className="text-xl sm:text-2xl font-semibold text-gray-900">
-                    {spec.value}
-                  </p>
-                  <p className="text-[14px] leading-[20px] text-[#393C41] mt-1">{spec.label}</p>
-                </div>
-              ))
-            ) : (
-              [
-                { label: 'Speed', value: '120L/m' },
-                { label: 'Tracking', value: '100%' },
-                { label: 'Monitoring', value: '24/7' },
-              ].map(spec => (
-                <div key={spec.label}>
-                  <p className="text-xl sm:text-2xl font-semibold text-gray-900">
-                    {spec.value}
-                  </p>
-                  <p className="text-[14px] leading-[20px] text-[#393C41] mt-1">{spec.label}</p>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="flex justify-around mb-6">
-              <ConfiguratorTab mode="tankCapacity" label="Tank Capacity" />
-              <ConfiguratorTab mode="consumption" label="Consumption" />
+            {[
+              { label: 'Speed', value: '120L/m' },
+              { label: 'Tracking', value: '100%' },
+              { label: 'Monitoring', value: '24/7' },
+            ].map(spec => (
+              <div key={spec.label}>
+                <p className="text-xl sm:text-2xl font-semibold text-gray-900">
+                  {spec.value}
+                </p>
+                <p className="text-[14px] leading-[20px] text-[#393C41] mt-1">{spec.label}</p>
+              </div>
+            ))}
           </div>
           
-          {configMode === 'tankCapacity' && (
-            <div className="space-y-4 mb-[45px]">
+          <div className="mb-[45px]">
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Consumption</h2>
+            <div className="space-y-4">
+              {CONSUMPTION_OPTIONS.map(option => (
+                <button 
+                    key={option}
+                    onClick={() => onConsumptionSelect(option)}
+                    className={`group relative w-full p-4 border rounded-lg text-left transition-all duration-300 ${
+                      selectedConsumption === option 
+                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' 
+                        : 'border-gray-300 hover:border-gray-500'
+                    }`}
+                >
+                    <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">Consumption</p>
+                          <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">Monthly</p>
+                        </div>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option}</p>
+                    </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-[45px]">
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Tank Capacity</h2>
+            <div className="space-y-4">
               {TANK_OPTIONS.map(option => (
                   <button 
                       key={option.id}
@@ -280,34 +381,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </button>
               ))}
             </div>
-          )}
-          
-          {configMode === 'consumption' && (
-            <div className="space-y-4 mb-[45px]">
-              {CONSUMPTION_OPTIONS.map(option => (
-                <button 
-                    key={option}
-                    onClick={() => {
-                      onConsumptionSelect(option);
-                      setConfigMode('tankCapacity');
-                    }}
-                    className={`group relative w-full p-4 border rounded-lg text-left transition-all duration-300 ${
-                      selectedConsumption === option 
-                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' 
-                        : 'border-gray-300 hover:border-gray-500'
-                    }`}
-                >
-                    <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">Consumption</p>
-                          <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">Monthly</p>
-                        </div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option}</p>
-                    </div>
-                </button>
-              ))}
-            </div>
-          )}
+          </div>
 
           <div className="mb-[45px]">
               <button
@@ -324,9 +398,40 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Dispensing Unit</h2>
             <div className="space-y-2">
+              {DISPENSING_UNIT_OPTIONS.map(option => (
+                <button
+                  key={`dispensing-unit-${option.id}`}
+                  onClick={() => setSelectedDispensingUnit(option)}
+                  className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                    selectedDispensingUnit.id === option.id
+                      ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
+                      : 'border-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                        <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
+                      </div>
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
+                    </div>
+                  </div>
+                  {/* Faint overlay */}
+                  {selectedDispensingUnit.id !== option.id && (
+                      <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-[45px]">
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Technology</h2>
+            <div className="space-y-2">
               {TRIM_OPTIONS.filter(option => option.id !== 'p-awd')
                 .sort((a, b) => {
-                  const order: Array<TrimOption['id']> = ['lr-awd', 'lr', 'rwd'];
+                  const order: Array<TrimOption['id']> = ['rwd', 'lr-awd', 'lr'];
                   return order.indexOf(a.id) - order.indexOf(b.id);
                 })
                 .map(option => (
@@ -334,7 +439,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     key={`dispensing-${option.id}`}
                     onClick={() => setSelectedTrim(option)}
                     className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedTrim?.id === option.id 
+                      selectedTrim.id === option.id 
                         ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' 
                         : 'border-gray-300 hover:border-gray-500'
                     }`}
@@ -349,7 +454,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       </div>
                     </div>
                     {/* Faint overlay */}
-                    {selectedTrim && selectedTrim.id !== option.id && (
+                    {selectedTrim.id !== option.id && (
                         <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                     )}
                   </button>
@@ -358,26 +463,32 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           </div>
 
           <div className="mb-[45px]">
-            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">IOT Technology</h2>
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Fuel Level Technology</h2>
             <div className="space-y-2">
-              {IOT_OPTIONS.map(option => (
+              {FUEL_LEVEL_TECHNOLOGY_OPTIONS.map(option => (
                 <button
-                  key={`iot-${option.id}`}
-                  onClick={() => onIotToggle(option)}
-                  className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                    selectedIotOptions.some(o => o.id === option.id)
+                  key={`fuel-level-${option.id}`}
+                  onClick={() => onFuelLevelTechnologyToggle(option)}
+                  className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                    selectedFuelLevelTechnologyOptions.some(o => o.id === option.id)
                       ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
                       : 'border-gray-300 hover:border-gray-500'
                   }`}
                 >
-                  <div className="flex-grow">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                        <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
-                      </div>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
-                    </div>
+                  <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                    selectedFuelLevelTechnologyOptions.some(o => o.id === option.id)
+                      ? 'bg-gray-600 border-gray-600'
+                      : 'bg-white border-gray-300'
+                  }`}>
+                    {selectedFuelLevelTechnologyOptions.some(o => o.id === option.id) && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-grow flex justify-between items-center">
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
                   </div>
                 </button>
               ))}
@@ -425,7 +536,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   key={`decantation-${option.id}`}
                   onClick={() => setSelectedDecantation(option)}
                   className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                    selectedDecantation?.id === option.id
+                    selectedDecantation.id === option.id
                       ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
                       : 'border-gray-300 hover:border-gray-500'
                   }`}
@@ -440,7 +551,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </div>
                   </div>
                   {/* Faint overlay */}
-                  {selectedDecantation && selectedDecantation.id !== option.id && (
+                  {selectedDecantation.id !== option.id && (
                       <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                   )}
                 </button>
@@ -448,61 +559,40 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-          <div className="space-y-[45px]">
-            {/* Safety Section */}
-            <div>
-              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-2">Safety and Compliance</h2>
-              <p className="text-center text-gray-600 mt-1 mb-6">Engineered to be the safest in the world</p>
-              
-              <div className="border border-gray-200 rounded-lg p-6 space-y-6">
-                {/* Feature 1: 360-Degree Visibility */}
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 mt-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+          <div className="mb-[45px]">
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Mechanical Inclusion</h2>
+            <div className="space-y-2">
+              {MECHANICAL_INCLUSION_OPTIONS.map(option => (
+                <button
+                  key={option.id}
+                  onClick={() => onMechanicalInclusionToggle(option)}
+                  className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                    selectedMechanicalInclusionOptions.some(o => o.id === option.id)
+                      ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
+                      : 'border-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                    selectedMechanicalInclusionOptions.some(o => o.id === option.id)
+                      ? 'bg-gray-600 border-gray-600'
+                      : 'bg-white border-gray-300'
+                  }`}>
+                    {selectedMechanicalInclusionOptions.some(o => o.id === option.id) && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">Double Walled Safety</h3>
-                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">High tensile Strength and Durability</p>
+                  <div className="flex-grow flex justify-between items-center">
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
                   </div>
-                </div>
-                
-                {/* Feature 2: Active Safety */}
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 mt-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">Vaccum Valve</h3>
-                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">Automatic Release of excess Vapour Pressure</p>
-                  </div>
-                </div>
-                
-                {/* Feature 3: Passive Safety */}
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 mt-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">PESO Approved</h3>
-                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">Certified for safety and reliability</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-6 text-center">
-                <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-md transition-colors">
-                  Learn More
                 </button>
-              </div>
+              ))}
             </div>
+          </div>
 
+          <div className="space-y-[45px]">
             {/* Safety Unit Section */}
             <div>
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Safety Unit</h2>
@@ -540,90 +630,56 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             {/* Safety Upgrades Section */}
             <div>
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Safety Upgrades</h2>
-              <div className="grid grid-cols-1 gap-8">
-                {ACCESSORY_PACK_OPTIONS.map(option => (
-                  <div key={option.id}>
+              <div className="space-y-6">
+                {SAFETY_UPGRADE_OPTIONS.map(option => (
+                  <div key={option.id} className="flex flex-col">
                     <div
-                      className={`group relative border rounded-lg p-4 cursor-pointer hover:border-gray-500 transition-all duration-300 ${selectedPacks.some(p => p.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300'}`}
-                      onClick={() => onPackToggle(option)}
+                      onClick={() => onSafetyUpgradeToggle(option)}
+                      className={`border rounded-lg p-4 cursor-pointer transition-all duration-300 ${
+                        selectedSafetyUpgrades.some(o => o.id === option.id)
+                          ? 'border-gray-400 ring-1 ring-gray-400'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
                     >
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center">
-                          <div className={`h-6 w-6 border rounded flex-shrink-0 flex items-center justify-center transition-colors ${
-                              selectedPacks.some(p => p.id === option.id)
-                                ? 'bg-gray-600 border-gray-600'
-                                : 'bg-white border-gray-300'
-                            }`}>
-                            {selectedPacks.some(p => p.id === option.id) && (
-                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors ${
+                            selectedSafetyUpgrades.some(o => o.id === option.id)
+                              ? 'bg-gray-600 border-gray-600'
+                              : 'bg-white border-gray-300'
+                          }`}>
+                            {selectedSafetyUpgrades.some(o => o.id === option.id) && (
+                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             )}
                           </div>
-                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20] ml-3">{option.name}</p>
+                          <span className="font-medium text-gray-900">{option.name}</span>
                         </div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatCurrency(option.price)}</p>
+                        <span className="font-medium text-gray-900">{formatPrice(option.price)}</span>
                       </div>
-                      <img
-                        src={getAccessoryPackImageUrl(option)}
-                        alt={option.name}
-                        className="w-full h-auto object-contain rounded"
-                      />
-                      {/* Faint overlay */}
-                      {selectedPacks.length > 0 && !selectedPacks.some(p => p.id === option.id) && (
-                          <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0 pointer-events-none"></div>
-                      )}
+                      
+                      <div className="w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={getSafetyImage(option.id)} 
+                          alt={option.name} 
+                          className="max-h-[150px] w-auto object-contain mix-blend-multiply"
+                        />
+                      </div>
                     </div>
-                    <div className="mt-6 text-center">
+                    <div className="flex justify-center mt-3">
                       <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedPackForModal(option); }}
-                        className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-md transition-colors"
-                        aria-label={`Learn more about ${option.name}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLearnMoreOption(option);
+                        }}
+                        className="bg-gray-100 text-gray-800 px-6 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
                       >
                         Learn More
                       </button>
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-            
-            {/* Warranties Section */}
-            <div>
-              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-2">Warranties</h2>
-              
-              <div className="border border-gray-200 rounded-lg p-6 space-y-6 mt-6">
-                {/* Feature 1: Limited Warranty */}
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 mt-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">Limited Warranty</h3>
-                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">Repairs and Service covered for 1 year</p>
-                  </div>
-                </div>
-                
-                {/* Feature 2: Battery and Drive Unit Warranty */}
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 mt-1">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">Battery and Drive Unit Limited Warranty</h3>
-                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">Covered for 8 years or 120,000 miles, whichever comes first.</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-6 text-center">
-                <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-md transition-colors">
-                  Learn More
-                </button>
               </div>
             </div>
 
@@ -636,7 +692,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     key={`warranty-${option.id}`}
                     onClick={() => setSelectedWarrantyOption(option)}
                     className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedWarrantyOption?.id === option.id
+                      selectedWarrantyOption.id === option.id
                         ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
                         : 'border-gray-300 hover:border-gray-500'
                     }`}
@@ -651,137 +707,195 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       </div>
                     </div>
                     {/* Faint overlay */}
-                    {selectedWarrantyOption && selectedWarrantyOption.id !== option.id && (
+                    {selectedWarrantyOption.id !== option.id && (
                         <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                     )}
                   </button>
                 ))}
               </div>
             </div>
+          </div>
 
-            {/* New Pricing Breakdown Section */}
-            <div ref={priceDetailsRef} className="pt-4 space-y-3">
-              <h2 className="text-2xl font-semibold text-center">Enter Delivery ZIP</h2>
-              <input 
-                type="text" 
-                placeholder="Enter Delivery ZIP" 
-                className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-md text-center focus:ring-1 focus:ring-gray-400 outline-none" 
-              />
-              {showPriceDetails && (
-                <div className="space-y-2 pt-2">
-                  
-                  {selectedTrim && <PriceLineItem label={`${selectedTrim.name} ${selectedTrim.drive}`} value={formatLineItemPrice(selectedTrim.price)} />}
-                  {selectedPaint && selectedPaint.price > 0 && <PriceLineItem label={selectedPaint.name} value={formatLineItemPrice(selectedPaint.price)} />}
-                  {selectedWheels && selectedWheels.price > 0 && <PriceLineItem label={selectedWheels.name} value={formatLineItemPrice(selectedWheels.price)} />}
-                  {selectedInterior && selectedInterior.price > 0 && <PriceLineItem label={selectedInterior.name} value={formatLineItemPrice(selectedInterior.price)} />}
-                  {selectedPacks.map(pack => <PriceLineItem key={pack.id} label={pack.name} value={formatLineItemPrice(pack.price)} />)}
-                  {selectedIotOptions.map(opt => <PriceLineItem key={opt.id} label={opt.name} value={formatLineItemPrice(opt.price)} />)}
-                  {selectedReposOsOptions.map(opt => <PriceLineItem key={opt.id} label={opt.name} value={formatLineItemPrice(opt.price)} />)}
-                  {selectedDecantation && selectedDecantation.price > 0 && <PriceLineItem key={selectedDecantation.id} label={selectedDecantation.name} value={formatLineItemPrice(selectedDecantation.price)} />}
-                  {selectedWarrantyOption && selectedWarrantyOption.price > 0 && <PriceLineItem key={selectedWarrantyOption.id} label={selectedWarrantyOption.name} value={formatLineItemPrice(selectedWarrantyOption.price)} />}
-                  {selectedSafetyUnits.map(unit => <PriceLineItem key={unit.id} label={unit.name} value={formatLineItemPrice(unit.price)} />)}
-                  {selectedAccessories.map(acc => <PriceLineItem key={acc.id} label={acc.name} value={formatLineItemPrice(acc.price)} />)}
-                  {selectedCharging.map(charger => <PriceLineItem key={charger.id} label={charger.name} value={formatLineItemPrice(charger.price)} />)}
-
-                  <hr className="my-2"/>
-                  <PriceLineItem label="RPS Price" value={vehiclePrice} bold />
-                  <PriceLineItem label="Destination Fee" value={destinationFee} />
-                  <PriceLineItem label="Order Fee" value={orderFee} />
-                  <hr className="my-2"/>
-                  <div className="flex justify-between items-center text-lg font-bold text-gray-800">
-                    <p>Ex-Showroom Price</p>
-                    <p>{formatCurrency(finalPrice)}</p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 pt-3">
-                    <button
-                      onClick={() => setSelectedPaymentMethod('card')}
-                      className={`flex-1 font-bold py-3 px-4 rounded-lg transition-colors duration-300 ${
-                        selectedPaymentMethod === 'card'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                      }`}
-                    >
-                      Pay with Card
-                    </button>
-                    <button
-                      onClick={() => setSelectedPaymentMethod('upi')}
-                      className={`flex-1 font-bold py-3 px-4 rounded-lg transition-colors duration-300 ${
-                        selectedPaymentMethod === 'upi'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                      }`}
-                    >
-                      Pay with UPI
-                    </button>
-                  </div>
-                </div>
-              )}
-              <button 
-                onClick={() => setShowPriceDetails(!showPriceDetails)}
-                className="w-full text-center text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center pt-1"
-              >
-                {showPriceDetails ? 'Hide' : 'Show'} Pricing Details
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ml-1 transition-transform ${showPriceDetails ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 20 20" stroke="currentColor">
+          {/* Pricing Breakdown & Actions */}
+          <div ref={pricingSectionRef} className="mt-16 pt-8 border-t border-gray-200">
+            <div 
+              className="flex justify-between items-center mb-6 cursor-pointer group select-none"
+              onClick={() => setIsPricingDetailsOpen(!isPricingDetailsOpen)}
+            >
+              <h2 className="text-xl font-medium text-gray-900">Pricing Details</h2>
+              <div className="p-1 rounded-full group-hover:bg-gray-100 transition-colors">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className={`h-5 w-5 text-gray-500 transition-transform duration-300 ${isPricingDetailsOpen ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-              </button>
+              </div>
+            </div>
+            
+            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isPricingDetailsOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className="space-y-3 text-sm text-gray-600 mb-8">
+                  <div className="flex justify-between">
+                    <span>RPS Base Price</span>
+                    <span>{formatCurrency(BASE_PRICE)}</span>
+                  </div>
+                  
+                  {/* Dispensing Unit */}
+                  <div className="flex justify-between">
+                    <span>{selectedDispensingUnit.name}</span>
+                    <span>{selectedDispensingUnit.price === 0 ? 'Included' : formatCurrency(selectedDispensingUnit.price)}</span>
+                  </div>
+
+                  {/* RFID Tech */}
+                  <div className="flex justify-between">
+                    <span>{selectedTrim.name}</span>
+                    <span>{selectedTrim.price === 0 ? 'Included' : formatCurrency(selectedTrim.price)}</span>
+                  </div>
+
+                   {/* Fuel Level Tech */}
+                   {selectedFuelLevelTechnologyOptions.map(opt => (
+                     <div key={opt.id} className="flex justify-between">
+                       <span>{opt.name}</span>
+                       <span>{opt.price === 0 ? 'Included' : formatCurrency(opt.price)}</span>
+                     </div>
+                  ))}
+
+                  {/* Repos OS */}
+                  {selectedReposOsOptions.map(opt => (
+                     <div key={opt.id} className="flex justify-between">
+                       <span>{opt.name}</span>
+                       <span>{opt.price === 0 ? 'Included' : formatCurrency(opt.price)}</span>
+                     </div>
+                  ))}
+
+                  {/* Decantation */}
+                  <div className="flex justify-between">
+                    <span>{selectedDecantation.name}</span>
+                    <span>{selectedDecantation.price === 0 ? 'Included' : formatCurrency(selectedDecantation.price)}</span>
+                  </div>
+
+                  {/* Mechanical Inclusion */}
+                  {selectedMechanicalInclusionOptions.map(opt => (
+                     <div key={opt.id} className="flex justify-between">
+                       <span>{opt.name}</span>
+                       <span>{opt.price === 0 ? 'Included' : formatCurrency(opt.price)}</span>
+                     </div>
+                  ))}
+
+                  {/* Safety */}
+                  {selectedSafetyUnits.map(opt => (
+                     <div key={opt.id} className="flex justify-between">
+                       <span>{opt.name}</span>
+                       <span>{opt.price === 0 ? 'Included' : formatCurrency(opt.price)}</span>
+                     </div>
+                  ))}
+
+                  {/* Safety Upgrades */}
+                  {selectedSafetyUpgrades.map(opt => (
+                     <div key={opt.id} className="flex justify-between">
+                       <span>{opt.name}</span>
+                       <span>{formatCurrency(opt.price)}</span>
+                     </div>
+                  ))}
+
+                  {/* Warranty */}
+                  <div className="flex justify-between">
+                    <span>{selectedWarrantyOption.name}</span>
+                    <span>{selectedWarrantyOption.price === 0 ? 'Included' : formatCurrency(selectedWarrantyOption.price)}</span>
+                  </div>
+              </div>
+            </div>
+            
+            {/* Total - Always visible */}
+            <div className="flex justify-between items-center pt-4 border-t border-gray-200 mb-8">
+                 <span className="text-lg font-semibold text-gray-900">RPS Price</span>
+                 <span className="text-lg font-bold text-gray-900">{formatCurrency(finalPrice)}</span>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-4">
+                 <button
+                   onClick={() => setSelectedAction('contact')}
+                   className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${
+                     selectedAction === 'contact' 
+                       ? 'bg-blue-600 text-white' 
+                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                   }`}
+                >
+                  Contact Sales
+                </button>
+                 <button
+                   onClick={handleViewQuoteClick}
+                   className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${
+                     selectedAction === 'quote' 
+                       ? 'bg-blue-600 text-white' 
+                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                   }`}
+                >
+                  View Quote
+                </button>
             </div>
           </div>
+
         </div>
       </div>
       
-      {/* Sticky Footer */}
-      {isStickyFooterVisible && (
-        <div className="mx-3.5 mt-0.5 px-6 py-2 bg-white rounded-xl border border-gray-200 shadow-md">
-          <div className="flex justify-between items-center">
-            {/* Left Section: Price and Label */}
-            <div>
-              <div className="flex items-center space-x-2">
-                 <p className="text-2xl font-bold text-black leading-tight">
-                  {formatCurrency(finalPrice)}
-                </p>
-              </div>
-              {/* Subtitle Label */}
-              <p className="text-sm text-gray-500 mt-0">
-                RPS price
-              </p>
-            </div>
-            
-            {/* Right Section: CTA Button */}
-            <button 
-              className="bg-[#3E6AE1] text-white font-semibold py-2 px-5 rounded hover:bg-[#3457b1] transition-colors duration-300"
-            >
-              Order Now
-            </button>
-          </div>
+      {/* Sticky Footer - Floating Card Style */}
+      {/* We use absolute positioning here relative to the container, and transform for sliding */}
+      <div className={`absolute bottom-0 left-0 right-0 p-4 z-20 w-full pointer-events-none transition-transform duration-300 ease-in-out ${isStickyFooterVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}>
+        <div className="bg-white border border-gray-200 shadow-lg rounded-xl p-4 flex justify-between items-center pointer-events-auto">
+           <div>
+             <p className="text-3xl font-bold text-gray-900 tracking-tight">{formatCurrency(finalPrice)}</p>
+             <p className="text-sm text-gray-500 mt-0.5">RPS price</p>
+           </div>
+           <button
+             onClick={handleViewQuoteClick}
+             className="bg-blue-600 text-white py-3 px-8 rounded-md text-base font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
+           >
+             View Quote
+           </button>
         </div>
+      </div>
+
+      {isComparisonModalOpen && (
+        <ComparisonModal onClose={() => setIsComparisonModalOpen(false)} />
       )}
 
-      {isConnectivityModalOpen && <ConnectivityModal onClose={() => setIsConnectivityModalOpen(false)} />}
-      {isComparisonModalOpen && <ComparisonModal onClose={() => setIsComparisonModalOpen(false)} />}
-      
-      {selectedPackForModal && (
+      {/* Learn More Modal */}
+      {learnMoreOption && (
         <div 
-            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in"
-            onClick={() => setSelectedPackForModal(null)}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
+          onClick={() => setLearnMoreOption(null)}
         >
           <div 
-            className="bg-white rounded-lg shadow-xl w-full max-w-md relative p-6 md:p-8"
+            className="bg-white rounded-lg shadow-xl w-full max-w-lg relative p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <button onClick={() => setSelectedPackForModal(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800" aria-label="Close">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            <button 
+              onClick={() => setLearnMoreOption(null)} 
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-            <div className="flex flex-col items-center">
-                <h2 className="text-3xl font-semibold mb-4 text-gray-900">{selectedPackForModal.name}</h2>
-                <img
-                    src={selectedPackForModal.imageUrl}
-                    alt={selectedPackForModal.name}
-                    className="w-full h-auto object-contain rounded mb-6 max-h-64"
-                />
-                <p className="text-gray-600 leading-relaxed text-left w-full">{selectedPackForModal.description}</p>
+
+            <h3 className="text-2xl font-semibold mb-4 text-gray-900 text-center">{learnMoreOption.name}</h3>
+            
+            <div className="flex justify-center mb-6">
+              <img 
+                src={getSafetyImage(learnMoreOption.id)} 
+                alt={learnMoreOption.name} 
+                className="max-h-64 object-contain"
+              />
             </div>
+
+            <p className="text-gray-600 text-center leading-relaxed">
+              {learnMoreOption.description || 'No description available.'}
+            </p>
           </div>
         </div>
       )}

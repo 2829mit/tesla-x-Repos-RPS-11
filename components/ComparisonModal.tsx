@@ -16,15 +16,18 @@ const formatCurrency = (amount: number) => {
 };
 
 const ComparisonModal: React.FC<ComparisonModalProps> = ({ onClose }) => {
-  // We only want to compare the main models, excluding special ones like performance
-  const modelsToCompare = TRIM_OPTIONS.filter(trim => trim.id !== 'p-awd');
+  const modelsToCompare = TRIM_OPTIONS;
+
+  // Dynamically get all unique spec labels from all models
+  const allSpecLabels = [...new Set(modelsToCompare.flatMap(trim => trim.specs.map(spec => spec.label)))];
 
   const features = [
     { label: 'Price', getValue: (trim: TrimOption) => formatCurrency(trim.price) },
     { label: 'Drive', getValue: (trim: TrimOption) => trim.drive },
-    { label: 'Range (WLTP)', getValue: (trim: TrimOption) => trim.specs.find(s => s.label.includes('Range'))?.value || '-' },
-    { label: 'Top Speed', getValue: (trim: TrimOption) => trim.specs.find(s => s.label.includes('Top Speed'))?.value || '-' },
-    { label: '0-100 km/h', getValue: (trim: TrimOption) => trim.specs.find(s => s.label.includes('0-100'))?.value || '-' },
+    ...allSpecLabels.map(label => ({
+      label: label,
+      getValue: (trim: TrimOption) => trim.specs.find(s => s.label === label)?.value || '-'
+    }))
   ];
   
   return (
@@ -59,7 +62,7 @@ const ComparisonModal: React.FC<ComparisonModalProps> = ({ onClose }) => {
                 <tr key={feature.label}>
                   <td className="py-4 px-2 text-sm text-gray-600 border-b border-gray-100 align-middle">{feature.label}</td>
                   {modelsToCompare.map(trim => (
-                    <td key={trim.id} className="py-4 px-2 text-sm font-semibold text-gray-900 text-right border-b border-gray-100 align-middle">
+                    <td key={trim.id} className="py-4 px-2 text-sm font-semibold text-gray-900 text-center border-b border-gray-100 align-middle">
                       {feature.getValue(trim)}
                     </td>
                   ))}

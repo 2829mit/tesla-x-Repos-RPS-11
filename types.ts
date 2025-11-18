@@ -1,3 +1,4 @@
+
 export interface PerformanceSpec {
   value: string;
   label: string;
@@ -13,50 +14,10 @@ export interface TrimOption {
   imageUrl?: string;
 }
 
-export interface PaintOption {
-  id: 'stealth-grey' | 'pearl-white' | 'diamond-black' | 'ultra-red';
-  name: string;
-  price: number;
-  colorCode: string;
-  imageUrls: {
-    [key in TrimOption['id']]: string | string[];
-  };
-}
-
-export interface WheelOption {
-  id: 'gemini' | 'induction';
-  name: string;
-  price: number;
-  imageUrl: string;
-  closeUpImageUrl: string;
-}
-
-export interface InteriorOption {
-  id: 'black' | 'white';
-  name: string;
-  price: number;
-}
-
 export interface AccessoryOption {
   id: string;
   name: string;
   price: number;
-}
-
-export interface ChargingOption {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  imageUrl: string;
-}
-
-export interface AccessoryPackOption {
-  id: string;
-  name: string;
-  price: number;
-  imageUrl: string;
-  description: string;
 }
 
 export interface IotOption {
@@ -78,18 +39,23 @@ export interface WarrantyOption {
   subtext?: string;
 }
 
-export interface SavedBuild {
+export interface DispensingUnitOption {
   id: string;
   name: string;
+  subtext: string;
+  price: number;
+}
+
+export interface SafetyUpgradeOption extends AccessoryOption {
   imageUrl: string;
-  finalPrice: number;
-  config: {
-    selectedTrim: TrimOption;
-    selectedPaint: PaintOption;
-    selectedWheels: WheelOption;
-    selectedInterior: InteriorOption;
-    selectedAccessories: AccessoryOption[];
-    selectedCharging: ChargingOption[];
-    selectedPacks: AccessoryPackOption[];
-  };
+  description?: string;
+}
+
+export interface CustomerDetails {
+  name: string;
+  mobile: string;
+  email: string;
+  company: string;
+  industry: string;
+  consumption: string;
 }
