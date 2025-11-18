@@ -12,7 +12,7 @@ const Header: React.FC = () => {
           {/* Left section: Navigation */}
           <div>
             <nav>
-              <div className="flex items-center text-sm font-semibold text-gray-600 tracking-wider space-x-8">
+              <div className="hidden md:flex items-center text-sm font-semibold text-gray-600 tracking-wider space-x-8">
                 {navItems.map(item => (
                   <a href="#" key={item} className="py-2 hover:text-gray-900 transition-colors">
                     {item.toUpperCase()}
@@ -37,7 +37,8 @@ const Header: React.FC = () => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"></path>
               </svg>
-              <span>Book Demo</span>
+              <span className="hidden sm:inline">Book Demo</span>
+              <span className="sm:hidden">Demo</span>
             </button>
           </div>
         </div>

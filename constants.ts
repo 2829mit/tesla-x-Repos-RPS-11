@@ -58,7 +58,7 @@ export const DISPENSING_UNIT_OPTIONS: DispensingUnitOption[] = [
 ];
 
 export const FUEL_LEVEL_TECHNOLOGY_OPTIONS: AccessoryOption[] = [
-  { id: 'ultraviolet-sensor', name: 'Ultraviolet Sensor', price: 0 },
+  { id: 'ultrasonic-sensor', name: 'Ultrasonic Sensor', price: 0 },
   { id: 'capacitance-sensor', name: 'Capacitance Sensor', price: 0 },
 ];
 
@@ -91,7 +91,6 @@ export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
   { id: 'flame-proof-illumination', name: 'Flame Proof Illumination', price: 0 },
   { id: 'glasswool-shield', name: 'Glasswool Shield', price: 0 },
   { id: 'bollard-barriers', name: 'Bollard Barriers', price: 4999 },
-  { id: 'decantation-metering', name: 'Decantation Metering Counter', price: 9999 },
   { id: 'fire-protection-sensor', name: 'Fire Protection Sensor', price: 4999 },
   { id: 'surveillance-camera', name: 'Surveillance Camera', price: 12999 },
   { id: 'mobile-device', name: 'Mobile Device', price: 20000 },
@@ -99,18 +98,18 @@ export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
 
 export const SAFETY_UPGRADE_OPTIONS: SafetyUpgradeOption[] = [
   { 
-    id: 'crash-barrier', 
-    name: 'Crash Barrier', 
-    price: 350000,
-    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png',
-    description: 'Reinforced protective barriers engineered to safeguard the station against vehicular impact and ensure operational safety.'
-  },
-  { 
     id: 'fire-suppression', 
     name: 'Fire Suppression System', 
     price: 280000,
     imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/2.png',
     description: 'Safety-focused package featuring an integrated fire extinguisher for emergency situations.'
+  },
+  { 
+    id: 'crash-barrier', 
+    name: 'Crash Barrier', 
+    price: 350000,
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png',
+    description: 'Reinforced protective barriers engineered to safeguard the station against vehicular impact and ensure operational safety.'
   },
 ];
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails } from '../types';
 import { TRIM_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, WARRANTY_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, FUEL_LEVEL_TECHNOLOGY_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, BASE_PRICE } from '../constants';
@@ -167,6 +166,14 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
+    // Safe Currency Formatter for PDF to avoid font encoding issues with '₹'
+    const formatPdfCurrency = (amount: number) => {
+      const value = new Intl.NumberFormat('en-IN', {
+        maximumFractionDigits: 0,
+      }).format(amount);
+      return `Rs. ${value}`;
+    };
+
     // Colors
     const primaryColor = [23, 26, 32]; // #171A20
     const accentColor = [29, 78, 216]; // Blue
@@ -219,44 +226,44 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     const tableRows: any[] = [];
 
     // 1. Base Price
-    tableRows.push(["RPS Base Price", formatCurrency(BASE_PRICE)]);
+    tableRows.push(["RPS Base Price", formatPdfCurrency(BASE_PRICE)]);
 
     // 2. Dispensing Unit
-    tableRows.push([selectedDispensingUnit.name, selectedDispensingUnit.price === 0 ? 'Included' : formatCurrency(selectedDispensingUnit.price)]);
+    tableRows.push([selectedDispensingUnit.name, selectedDispensingUnit.price === 0 ? 'Included' : formatPdfCurrency(selectedDispensingUnit.price)]);
 
     // 3. RFID Tech
-    tableRows.push([`RFID Tech: ${selectedTrim.name}`, selectedTrim.price === 0 ? 'Included' : formatCurrency(selectedTrim.price)]);
+    tableRows.push([`RFID Tech: ${selectedTrim.name}`, selectedTrim.price === 0 ? 'Included' : formatPdfCurrency(selectedTrim.price)]);
 
     // 4. Fuel Level Tech
     selectedFuelLevelTechnologyOptions.forEach(opt => {
-      tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatCurrency(opt.price)]);
+      tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
     });
 
     // 5. Repos OS
     selectedReposOsOptions.forEach(opt => {
-      tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatCurrency(opt.price)]);
+      tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
     });
 
     // 6. Decantation
-    tableRows.push([`Decantation: ${selectedDecantation.name}`, selectedDecantation.price === 0 ? 'Included' : formatCurrency(selectedDecantation.price)]);
+    tableRows.push([`Decantation: ${selectedDecantation.name}`, selectedDecantation.price === 0 ? 'Included' : formatPdfCurrency(selectedDecantation.price)]);
 
     // 7. Mechanical Inclusion
     selectedMechanicalInclusionOptions.forEach(opt => {
-       tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatCurrency(opt.price)]);
+       tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
     });
 
     // 8. Safety Unit
     selectedSafetyUnits.forEach(opt => {
-       tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatCurrency(opt.price)]);
+       tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
     });
 
     // 9. Safety Upgrades
     selectedSafetyUpgrades.forEach(opt => {
-       tableRows.push([opt.name, formatCurrency(opt.price)]);
+       tableRows.push([opt.name, formatPdfCurrency(opt.price)]);
     });
 
     // 10. Warranty
-    tableRows.push([`Warranty: ${selectedWarrantyOption.name}`, selectedWarrantyOption.price === 0 ? 'Included' : formatCurrency(selectedWarrantyOption.price)]);
+    tableRows.push([`Warranty: ${selectedWarrantyOption.name}`, selectedWarrantyOption.price === 0 ? 'Included' : formatPdfCurrency(selectedWarrantyOption.price)]);
 
     // Generate Table
     doc.autoTable({
@@ -277,7 +284,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     doc.text("Total RPS Price:", 130, finalYAfterTable);
     doc.setTextColor(...accentColor);
     doc.setFontSize(14);
-    doc.text(formatCurrency(finalPrice), 170, finalYAfterTable);
+    doc.text(formatPdfCurrency(finalPrice), 170, finalYAfterTable);
 
     // Footer
     doc.setFontSize(8);
@@ -294,11 +301,12 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   };
 
   return (
-    <div className="bg-white text-gray-800 h-full flex flex-col relative overflow-hidden">
+    <div className="bg-white text-gray-800 lg:h-full h-auto flex flex-col relative lg:overflow-hidden">
       {/* Scrollable Content Area */}
-      <div className="flex-grow overflow-y-auto scroll-smooth">
+      {/* On desktop, this div scrolls. On mobile, the window scrolls. */}
+      <div className="flex-grow lg:overflow-y-auto overflow-visible scroll-smooth">
         <div className="p-6 md:p-10 pb-24">
-          <h1 className="text-[28px] leading-[48px] font-medium text-center text-[#171A20]">Repos Portable Station</h1>
+          <h1 className="text-2xl md:text-[28px] md:leading-[48px] font-medium text-center text-[#171A20]">Repos Portable Station</h1>
           <div className="flex justify-around my-8 text-center">
             {[
               { label: 'Speed', value: '120L/m' },
@@ -309,7 +317,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 <p className="text-xl sm:text-2xl font-semibold text-gray-900">
                   {spec.value}
                 </p>
-                <p className="text-[14px] leading-[20px] text-[#393C41] mt-1">{spec.label}</p>
+                <p className="text-xs sm:text-[14px] leading-[20px] text-[#393C41] mt-1">{spec.label}</p>
               </div>
             ))}
           </div>
@@ -816,7 +824,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
 
             {/* Buttons */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-col sm:flex-row">
                  <button
                    onClick={() => setSelectedAction('contact')}
                    className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${
@@ -844,16 +852,16 @@ const Configurator: React.FC<ConfiguratorProps> = ({
       </div>
       
       {/* Sticky Footer - Floating Card Style */}
-      {/* We use absolute positioning here relative to the container, and transform for sliding */}
-      <div className={`absolute bottom-0 left-0 right-0 p-4 z-20 w-full pointer-events-none transition-transform duration-300 ease-in-out ${isStickyFooterVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}>
+      {/* On mobile: Fixed to bottom of viewport. On Desktop: Absolute to bottom of panel. */}
+      <div className={`fixed bottom-0 left-0 right-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 p-4 z-20 w-full pointer-events-none transition-transform duration-300 ease-in-out ${isStickyFooterVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}>
         <div className="bg-white border border-gray-200 shadow-lg rounded-xl p-4 flex justify-between items-center pointer-events-auto">
            <div>
-             <p className="text-3xl font-bold text-gray-900 tracking-tight">{formatCurrency(finalPrice)}</p>
-             <p className="text-sm text-gray-500 mt-0.5">RPS price</p>
+             <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{formatCurrency(finalPrice)}</p>
+             <p className="text-xs sm:text-sm text-gray-500 mt-0.5">RPS price</p>
            </div>
            <button
              onClick={handleViewQuoteClick}
-             className="bg-blue-600 text-white py-3 px-8 rounded-md text-base font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
+             className="bg-blue-600 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-md text-sm sm:text-base font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
            >
              View Quote
            </button>

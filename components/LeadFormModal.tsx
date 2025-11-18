@@ -32,21 +32,21 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
       className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-[10px] flex items-center justify-center z-50 p-4 animate-fade-in"
     >
       <div
-        className="bg-white rounded-lg shadow-2xl border border-gray-200 w-full max-w-[772px] relative p-12"
+        className="bg-white rounded-lg shadow-2xl border border-gray-200 w-full max-w-[772px] relative p-6 md:p-12 overflow-y-auto max-h-full"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button removed to enforce data collection, or kept if optional */}
         {/* <button onClick={() => onSubmit()} className="absolute top-6 right-6 text-gray-400 hover:text-gray-800" aria-label="Close">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button> */}
-        <h2 className="text-3xl font-semibold mb-2 text-left text-gray-900">Contact Form</h2>
+        <h2 className="text-2xl md:text-3xl font-semibold mb-2 text-left text-gray-900">Contact Form</h2>
         <p className="text-sm text-gray-600 mb-6 text-left">
           Registration in Mumbai, Pune, Delhi and Gurugram will be prioritized for delivery. State or territory location are used to estimate your on-road price. Final prices may vary due to individual circumstances.
         </p>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 mb-6">
             {/* Row 1: Name | Mobile */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                 <input
@@ -76,7 +76,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
             </div>
 
             {/* Row 2: Email */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email ID</label>
                 <input
@@ -93,7 +93,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
             </div>
 
             {/* Row 3: Company | Industry */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-6">
               <div>
                 <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
                 <input
@@ -121,7 +121,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
             </div>
 
             {/* Row 4: Consumption */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-6">
               <div>
                 <label htmlFor="consumption" className="block text-sm font-medium text-gray-700 mb-1">Monthly Consumption</label>
                 <select

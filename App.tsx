@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import Header from './components/Header.tsx';
 import CarVisualizer from './components/CarVisualizer.tsx';
@@ -188,14 +187,14 @@ const App: React.FC = () => {
       {isLeadFormOpen && <LeadFormModal onSubmit={handleLeadFormClose} />}
       <Header />
       <main className="flex flex-col lg:flex-row">
-        <div className="lg:w-3/4 w-full lg:h-[calc(100vh-72px)] lg:sticky lg:top-[72px]">
+        <div className="w-full lg:flex-1 lg:h-[calc(100vh-72px)] lg:sticky lg:top-[72px] h-[45vh] min-h-[300px] relative z-0 bg-gray-100">
           <CarVisualizer 
             trim={selectedTrim}
             tank={selectedTank}
             safetyUpgrades={selectedSafetyUpgrades}
           />
         </div>
-        <div className="lg:w-1/4 w-full lg:h-[calc(100vh-72px)]">
+        <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">
           <Configurator
             customerDetails={customerDetails}
             selectedTrim={selectedTrim}
