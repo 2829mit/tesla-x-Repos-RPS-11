@@ -602,7 +602,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-800">Limited Warranty</h3>
-                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">Repairs and replacements covered for 4 years or 50,000 miles, whichever comes first.</p>
+                    <p className="text-[14px] leading-[20px] text-[#5C5E62] mt-1">Repairs and Service covered for 1 year</p>
                   </div>
                 </div>
                 
