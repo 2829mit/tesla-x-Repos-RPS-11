@@ -70,7 +70,13 @@ export const REPOS_OS_OPTIONS: AccessoryOption[] = [
 ];
 
 export const DECANTATION_OPTIONS: IotOption[] = [
-  { id: 'advanced-skid', name: 'Advanced Skid', subtext: 'Flow meter Included', price: 25000 },
+  { 
+    id: 'advanced-skid', 
+    name: 'Advanced Skid', 
+    subtext: 'With Flow Meter', 
+    price: 25000,
+    description: 'A Flow Meter is a high-precision instrument used to measure the volume of fuel being unloaded (decanted) into the station. It ensures accurate quantity verification, transparency, and prevents pilferage during the refilling process.'
+  },
   { id: 'basic-skid', name: 'Basic Skid', subtext: 'Already Included', price: 0 },
 ];
 
@@ -79,20 +85,20 @@ export const MECHANICAL_INCLUSION_OPTIONS: AccessoryOption[] = [
   { id: 'peso-manhole', name: 'PESO Approved Manhole Assembly', price: 0 },
   { id: 'weather-proof-canopy', name: 'Weather Proof Modular Canopy', price: 0 },
   { id: 'ss-pipeline', name: 'Stainless Steel Pipeline', price: 0 },
-  { id: 'galvanized-surface', name: 'Galvanized Surface', price: 0 },
+  { id: 'galvanized-surface', name: 'Rustfree Surface Treatment', price: 0 },
   { id: 'filtration-mechanism', name: 'Filtration Mechanism', price: 0 },
 ];
 
 export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
   { id: 'iot-controller-safety', name: 'IOT Controller', price: 0 },
-  { id: 'leak-detection', name: 'Leak Detection System', price: 0 },
+  { id: 'leak-detection', name: 'PESO Approved', price: 0 },
   { id: 'overfill-sensors', name: 'Overfill Sensors', price: 0 },
   { id: 'decantation-cutoff', name: 'Decantation Cutoff', price: 0 },
   { id: 'flame-proof-illumination', name: 'Flame Proof Illumination', price: 0 },
   { id: 'glasswool-shield', name: 'Glasswool Shield', price: 0 },
   { id: 'bollard-barriers', name: 'Bollard Barriers', price: 4999 },
   { id: 'surveillance-camera', name: 'Surveillance Camera', price: 12999 },
-  { id: 'mobile-device', name: 'Mobile Device', price: 20000 },
+  { id: 'mobile-device', name: 'Wireless Synchronised Mobile', price: 20000 },
 ];
 
 export const SAFETY_UPGRADE_OPTIONS: SafetyUpgradeOption[] = [
@@ -113,10 +119,10 @@ export const SAFETY_UPGRADE_OPTIONS: SafetyUpgradeOption[] = [
 ];
 
 export const LICENSE_OPTIONS: LicenseOption[] = [
-  { id: 'drawing-layout', name: 'Drawing Layout Creation', price: 0 },
-  { id: 'prior-approval', name: 'Prior Approval (9A)', price: 0 },
-  { id: 'dm-noc', name: 'DM NOC', price: 0, isCompulsory: true },
-  { id: 'final-grant', name: 'Final Grant', price: 0 },
+  { id: 'drawing-layout', name: 'Drawing Layout Creation', price: 0, subtext: 'Scope Repos' },
+  { id: 'prior-approval', name: 'Prior Approval', price: 0, subtext: 'Scope Repos' },
+  { id: 'dm-noc', name: 'DM NOC', price: 0, subtext: 'Scope Customer' },
+  { id: 'final-grant', name: 'Final Grant', price: 0, subtext: 'Scope Customer' },
 ];
 
 export const TANK_OPTIONS: TankOption[] = [
@@ -134,10 +140,7 @@ export const CONSUMPTION_OPTIONS: string[] = [
 ];
 
 export const WARRANTY_OPTIONS: WarrantyOption[] = [
-  { id: 'limited-1-year', name: 'Limited 1 Year', price: 0 },
-  { id: '1-year-amc', name: '1 Year AMC', price: 25000 },
-  { id: '2-year-amc', name: '2 Year AMC', price: 30000 },
+  { id: 'standard-1-year', name: 'Standard 1 Year', price: 0 },
+  { id: 'extended-1-year', name: 'Extended 1 Year', price: 25000 },
+  { id: 'extended-2-year', name: 'Extended 2 Year', price: 30000 },
 ];
-
-export const DESTINATION_FEE = 125000;
-export const ORDER_FEE = 25000;

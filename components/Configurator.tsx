@@ -12,8 +12,8 @@ interface ConfiguratorProps {
   setSelectedTrim: (trim: TrimOption) => void;
   selectedTank: TankOption['id'];
   setSelectedTank: (tankId: TankOption['id']) => void;
-  selectedFuelLevelTechnologyOptions: AccessoryOption[];
-  onFuelLevelTechnologyToggle: (option: AccessoryOption) => void;
+  selectedFuelLevelTechnology: AccessoryOption;
+  setSelectedFuelLevelTechnology: (option: AccessoryOption) => void;
   selectedReposOsOptions: AccessoryOption[];
   onReposOsToggle: (option: AccessoryOption) => void;
   selectedMechanicalInclusionOptions: AccessoryOption[];
@@ -43,8 +43,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   setSelectedTrim,
   selectedTank,
   setSelectedTank,
-  selectedFuelLevelTechnologyOptions,
-  onFuelLevelTechnologyToggle,
+  selectedFuelLevelTechnology,
+  setSelectedFuelLevelTechnology,
   selectedReposOsOptions,
   onReposOsToggle,
   selectedMechanicalInclusionOptions,
@@ -70,8 +70,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<'quote' | 'contact'>('contact');
   
-  // State for Learn More Modal
-  const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | null>(null);
+  // State for Learn More Modal - can be SafetyUpgrade or IotOption
+  const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | IotOption | null>(null);
 
   // State for UI interactions
   const [isStickyFooterVisible, setIsStickyFooterVisible] = useState(true);
@@ -143,11 +143,12 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     }
 
     // Calculate offset based on the specific upgrade we want to show
+    // Logic matched with CarVisualizer: Fire adds 1, Barrier adds 2
     let offset = 0;
     if (upgradeId === 'fire-suppression') {
-      offset = 2;
-    } else if (upgradeId === 'crash-barrier') {
       offset = 1;
+    } else if (upgradeId === 'crash-barrier') {
+      offset = 2;
     }
 
     const imageIndex = baseIndex + offset;
@@ -167,7 +168,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
         dispensingUnit: selectedDispensingUnit,
         decantation: selectedDecantation,
         accessories: {
-          fuelLevel: selectedFuelLevelTechnologyOptions,
+          fuelLevel: selectedFuelLevelTechnology,
           reposOs: selectedReposOsOptions,
           mechanical: selectedMechanicalInclusionOptions,
           safetyUnits: selectedSafetyUnits,
@@ -190,13 +191,12 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     { name: 'RPS Base Price', price: BASE_PRICE },
     { name: selectedDispensingUnit.name, price: selectedDispensingUnit.price },
     { name: selectedTrim.name, price: selectedTrim.price },
-    ...selectedFuelLevelTechnologyOptions.map(opt => ({ name: opt.name, price: opt.price })),
+    { name: selectedFuelLevelTechnology.name, price: selectedFuelLevelTechnology.price },
     ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price })),
     { name: selectedDecantation.name, price: selectedDecantation.price },
     ...selectedMechanicalInclusionOptions.map(opt => ({ name: opt.name, price: opt.price })),
     ...selectedSafetyUnits.map(opt => ({ name: opt.name, price: opt.price })),
     ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price })),
-    ...selectedLicenseOptions.map(opt => ({ name: opt.name, price: opt.price })),
     { name: selectedWarrantyOption.name, price: selectedWarrantyOption.price },
   ];
 
@@ -378,28 +378,25 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               {FUEL_LEVEL_TECHNOLOGY_OPTIONS.map(option => (
                 <button
                   key={`fuel-level-${option.id}`}
-                  onClick={() => onFuelLevelTechnologyToggle(option)}
-                  className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                    selectedFuelLevelTechnologyOptions.some(o => o.id === option.id)
+                  onClick={() => setSelectedFuelLevelTechnology(option)}
+                  className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                    selectedFuelLevelTechnology.id === option.id
                       ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
                       : 'border-gray-300 hover:border-gray-500'
                   }`}
                 >
-                  <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                    selectedFuelLevelTechnologyOptions.some(o => o.id === option.id)
-                      ? 'bg-gray-600 border-gray-600'
-                      : 'bg-white border-gray-300'
-                  }`}>
-                    {selectedFuelLevelTechnologyOptions.some(o => o.id === option.id) && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                      </div>
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
+                    </div>
                   </div>
-                  <div className="flex-grow flex justify-between items-center">
-                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
-                  </div>
+                  {/* Faint overlay */}
+                  {selectedFuelLevelTechnology.id !== option.id && (
+                      <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
+                  )}
                 </button>
               ))}
             </div>
@@ -442,29 +439,45 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Decantation Unit</h2>
             <div className="space-y-2">
               {DECANTATION_OPTIONS.map(option => (
-                <button
-                  key={`decantation-${option.id}`}
-                  onClick={() => setSelectedDecantation(option)}
-                  className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                    selectedDecantation.id === option.id
-                      ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                      : 'border-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="flex-grow">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                        <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
+                <div key={`decantation-${option.id}`} className="flex flex-col">
+                  <button
+                    onClick={() => setSelectedDecantation(option)}
+                    className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                      selectedDecantation.id === option.id
+                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
+                        : 'border-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                          <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
+                        </div>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
                       </div>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
                     </div>
-                  </div>
-                  {/* Faint overlay */}
-                  {selectedDecantation.id !== option.id && (
-                      <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
+                    {/* Faint overlay */}
+                    {selectedDecantation.id !== option.id && (
+                        <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
+                    )}
+                  </button>
+                  
+                  {/* Learn More Button for Advanced Skid */}
+                  {option.id === 'advanced-skid' && (
+                    <div className="flex justify-end mt-2 mr-1">
+                       <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLearnMoreOption(option);
+                        }}
+                        className="text-xs font-medium text-gray-500 hover:text-blue-600 underline transition-colors"
+                      >
+                        What is a Flow Meter?
+                      </button>
+                    </div>
                   )}
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -505,7 +518,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           <div className="space-y-[45px]">
             {/* Safety Unit Section */}
             <div>
-              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Safety Unit</h2>
+              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Sensors and Controller Unit</h2>
               <div className="space-y-2">
                 {SAFETY_UNIT_OPTIONS.map(option => (
                   <button
@@ -627,33 +640,18 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             
             {/* Licenses Section */}
             <div>
-              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses</h2>
+              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
               <div className="space-y-3 mt-6">
                 {LICENSE_OPTIONS.map(option => (
-                  <button
+                  <div
                     key={`license-${option.id}`}
-                    onClick={() => onLicenseOptionToggle(option)}
-                    className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedLicenseOptions.some(o => o.id === option.id)
-                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                        : 'border-gray-300 hover:border-gray-500'
-                    }`}
+                    className="w-full flex items-center p-4 border border-gray-300 rounded-lg text-left bg-gray-50"
                   >
-                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                      selectedLicenseOptions.some(o => o.id === option.id)
-                        ? 'bg-gray-600 border-gray-600'
-                        : 'bg-white border-gray-300'
-                    }`}>
-                      {selectedLicenseOptions.some(o => o.id === option.id) && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
                     <div className="flex-grow flex justify-between items-center">
-                      <span className="font-medium text-gray-900">{option.name} {option.isCompulsory && <span className="text-xs text-red-500 ml-1">(Compulsory)</span>}</span>
+                      <span className="font-medium text-gray-900">{option.name}</span>
+                      {option.subtext && <span className="text-sm text-gray-500 font-medium">{option.subtext}</span>}
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -674,7 +672,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   viewBox="0 0 24 24" 
                   stroke="currentColor"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
                 </svg>
               </div>
             </div>
@@ -723,7 +721,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             
             {/* Total - Always visible */}
             <div className="flex justify-between items-center pt-4 border-t border-gray-200 mb-8">
-                 <span className="text-lg font-semibold text-gray-900">RPS Price</span>
+                 <span className="text-lg font-semibold text-gray-900">RPS Base Price</span>
                  <span className="text-lg font-bold text-gray-900">{formatCurrency(finalPrice)}</span>
             </div>
 
@@ -796,16 +794,28 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 
             <h3 className="text-2xl font-semibold mb-4 text-gray-900 text-center">{learnMoreOption.name}</h3>
             
-            <div className="flex justify-center mb-6">
-              <img 
-                src={getSafetyImage(learnMoreOption.id)} 
-                alt={learnMoreOption.name} 
-                className="max-h-64 object-contain"
-              />
-            </div>
+            {/* Conditionally render image only if present in the option (Safety Upgrade or specific IotOption) */}
+            {(learnMoreOption as any).imageUrl ? (
+               <div className="flex justify-center mb-6">
+                <img 
+                  src={(learnMoreOption as SafetyUpgradeOption).id.includes('fire') || (learnMoreOption as SafetyUpgradeOption).id.includes('crash') 
+                      ? getSafetyImage((learnMoreOption as SafetyUpgradeOption).id) 
+                      : (learnMoreOption as any).imageUrl}
+                  alt={learnMoreOption.name} 
+                  className="max-h-64 object-contain"
+                />
+              </div>
+            ) : (
+              // If no image, maybe show a placeholder or just description. 
+              // For Flow Meter, we might not have an image, so we handle it gracefully.
+              // Actually, IotOption in types.ts has optional imageUrl.
+              // If provided in constants, use it. Otherwise, don't render img.
+              null
+            )}
+           
 
             <p className="text-gray-600 text-center leading-relaxed">
-              {learnMoreOption.description || 'No description available.'}
+              {(learnMoreOption as any).description || 'No description available.'}
             </p>
           </div>
         </div>

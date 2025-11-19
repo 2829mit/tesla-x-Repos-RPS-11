@@ -35,8 +35,8 @@ const App: React.FC = () => {
 
   const [selectedTank, setSelectedTank] = useState<TankOption['id']>('22kl');
   
-  const [selectedFuelLevelTechnologyOptions, setSelectedFuelLevelTechnologyOptions] = useState<AccessoryOption[]>(() => 
-    Array.isArray(FUEL_LEVEL_TECHNOLOGY_OPTIONS) ? FUEL_LEVEL_TECHNOLOGY_OPTIONS : []
+  const [selectedFuelLevelTechnology, setSelectedFuelLevelTechnology] = useState<AccessoryOption>(() => 
+    FUEL_LEVEL_TECHNOLOGY_OPTIONS[0] || { id: 'ultrasonic', name: 'Ultrasonic', price: 0 }
   );
   
   const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>(() => 
@@ -65,9 +65,8 @@ const App: React.FC = () => {
   const [selectedSafetyUpgrades, setSelectedSafetyUpgrades] = useState<SafetyUpgradeOption[]>([]);
   
   const [selectedLicenseOptions, setSelectedLicenseOptions] = useState<LicenseOption[]>(() => {
-      const options = LICENSE_OPTIONS || [];
-      // Default to DM NOC as it's compulsory/standard default
-      return options.filter(o => o.id === 'dm-noc');
+      // Select all license options by default as they are informational/scopes
+      return LICENSE_OPTIONS || [];
   });
 
   const [selectedWarrantyOption, setSelectedWarrantyOption] = useState<WarrantyOption>(() => {
@@ -139,14 +138,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleFuelLevelTechnologyToggle = (option: AccessoryOption) => {
-    setSelectedFuelLevelTechnologyOptions(prev =>
-      prev.find(o => o.id === option.id)
-        ? prev.filter(o => o.id !== option.id)
-        : [...prev, option]
-    );
-  };
-
   const handleReposOsToggle = (option: AccessoryOption) => {
     setSelectedReposOsOptions(prev =>
       prev.find(o => o.id === option.id)
@@ -180,6 +171,8 @@ const App: React.FC = () => {
   };
 
   const handleLicenseOptionToggle = (option: LicenseOption) => {
+    // This is technically not needed anymore if the UI is read-only, 
+    // but kept for compatibility if we revert to selectable
     setSelectedLicenseOptions(prev => 
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -190,7 +183,7 @@ const App: React.FC = () => {
   const vehiclePrice = useMemo(() => {
     let price = BASE_PRICE + (selectedTrim?.price || 0);
     price += selectedDispensingUnit?.price || 0;
-    price += (selectedFuelLevelTechnologyOptions || []).reduce((total, opt) => total + opt.price, 0);
+    price += selectedFuelLevelTechnology.price || 0;
     price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedMechanicalInclusionOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedDecantation?.price || 0;
@@ -199,7 +192,7 @@ const App: React.FC = () => {
     price += selectedLicenseOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedWarrantyOption?.price || 0;
     return price;
-  }, [selectedTrim, selectedDispensingUnit, selectedFuelLevelTechnologyOptions, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions, selectedWarrantyOption]);
+  }, [selectedTrim, selectedDispensingUnit, selectedFuelLevelTechnology, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions, selectedWarrantyOption]);
 
   const finalPrice = vehiclePrice;
 
@@ -222,8 +215,8 @@ const App: React.FC = () => {
             setSelectedTrim={setSelectedTrim}
             selectedTank={selectedTank}
             setSelectedTank={setSelectedTank}
-            selectedFuelLevelTechnologyOptions={selectedFuelLevelTechnologyOptions}
-            onFuelLevelTechnologyToggle={handleFuelLevelTechnologyToggle}
+            selectedFuelLevelTechnology={selectedFuelLevelTechnology}
+            setSelectedFuelLevelTechnology={setSelectedFuelLevelTechnology}
             selectedReposOsOptions={selectedReposOsOptions}
             onReposOsToggle={handleReposOsToggle}
             selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}

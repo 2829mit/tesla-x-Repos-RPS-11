@@ -17,7 +17,7 @@ export interface QuoteData {
     dispensingUnit: DispensingUnitOption;
     decantation: IotOption;
     accessories: {
-      fuelLevel: AccessoryOption[];
+      fuelLevel: AccessoryOption;
       reposOs: AccessoryOption[];
       mechanical: AccessoryOption[];
       safetyUnits: AccessoryOption[];

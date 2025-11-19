@@ -25,6 +25,8 @@ export interface IotOption {
   name: string;
   price: number;
   subtext: string;
+  description?: string;
+  imageUrl?: string;
 }
 
 export interface TankOption {
@@ -44,6 +46,7 @@ export interface LicenseOption {
   name: string;
   price: number;
   isCompulsory?: boolean;
+  subtext?: string;
 }
 
 export interface DispensingUnitOption {

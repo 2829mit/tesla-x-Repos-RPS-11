@@ -131,9 +131,8 @@ export const generateQuotePDF = async (data: QuoteData) => {
   tableRows.push([`RFID Tech: ${trim.name}`, trim.price === 0 ? 'Included' : formatPdfCurrency(trim.price)]);
 
   // 4. Fuel Level Tech
-  data.configuration.accessories.fuelLevel.forEach(opt => {
-    tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
-  });
+  const { fuelLevel } = data.configuration.accessories;
+  tableRows.push([fuelLevel.name, fuelLevel.price === 0 ? 'Included' : formatPdfCurrency(fuelLevel.price)]);
 
   // 5. Repos OS
   data.configuration.accessories.reposOs.forEach(opt => {
