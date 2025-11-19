@@ -23,7 +23,11 @@ const App: React.FC = () => {
   
   // Use safe initialization with fallbacks to prevent crashes
   const [selectedTrim, setSelectedTrim] = useState<TrimOption>(() => {
-    if (TRIM_OPTIONS && TRIM_OPTIONS.length > 0) return TRIM_OPTIONS[0];
+    if (TRIM_OPTIONS && TRIM_OPTIONS.length > 0) {
+      // Default to '2 RFID Nozzle' (id: 'lr-awd') if available
+      const defaultOption = TRIM_OPTIONS.find(t => t.id === 'lr-awd');
+      return defaultOption || TRIM_OPTIONS[0];
+    }
     return { id: 'rwd', name: '3 RFID Nozzle', drive: '', price: 0, financePerMonth: 0, specs: [] };
   });
 
