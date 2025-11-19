@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CONSUMPTION_OPTIONS } from '../constants';
 import type { CustomerDetails } from '../types';
+import { submitLead } from '../services/api';
 
 interface LeadFormModalProps {
   onSubmit: (data?: CustomerDetails) => void;
@@ -16,15 +17,51 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
     consumption: '',
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    // Clear error when user starts typing in mobile field
+    if (name === 'mobile') {
+      setError(null);
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = (): boolean => {
+    // Mobile Validation: Exactly 10 digits
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(formData.mobile)) {
+      setError('Mobile number must be exactly 10 digits.');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the data to a server
-    onSubmit(formData);
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Call backend API service
+      await submitLead(formData);
+      // On success, pass data up to parent
+      onSubmit(formData);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to submit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -35,14 +72,26 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
         className="bg-white rounded-lg shadow-2xl border border-gray-200 w-full max-w-[772px] relative p-6 md:p-12 overflow-y-auto max-h-full"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button removed to enforce data collection, or kept if optional */}
-        {/* <button onClick={() => onSubmit()} className="absolute top-6 right-6 text-gray-400 hover:text-gray-800" aria-label="Close">
+        {/* Close button enabled for testing purposes */}
+        <button 
+          onClick={() => onSubmit()} 
+          className="absolute top-6 right-6 text-gray-400 hover:text-gray-800 disabled:opacity-50" 
+          aria-label="Close"
+          disabled={isSubmitting}
+        >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-        </button> */}
+        </button>
         <h2 className="text-2xl md:text-3xl font-semibold mb-2 text-left text-gray-900">Contact Form</h2>
         <p className="text-sm text-gray-600 mb-6 text-left">
           Registration in Mumbai, Pune, Delhi and Gurugram will be prioritized for delivery. State or territory location are used to estimate your on-road price. Final prices may vary due to individual circumstances.
         </p>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-200 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 mb-6">
             {/* Row 1: Name | Mobile */}
@@ -69,7 +118,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   value={formData.mobile}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition"
+                  className={`w-full px-4 py-2 bg-gray-100 border rounded-md focus:ring-1 outline-none transition ${error && error.includes('Mobile') ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-gray-400'}`}
                   placeholder="e.g., 9876543210"
                 />
               </div>
@@ -149,9 +198,10 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 hover:scale-105"
+              disabled={isSubmitting}
+              className={`w-full bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 hover:scale-105 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'}`}
             >
-              Submit
+              {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
           </div>
         </form>

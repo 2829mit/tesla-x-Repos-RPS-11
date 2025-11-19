@@ -16,7 +16,8 @@ const formatCurrency = (amount: number) => {
 };
 
 const ComparisonModal: React.FC<ComparisonModalProps> = ({ onClose }) => {
-  const modelsToCompare = TRIM_OPTIONS;
+  // Filter out the 'Performance' model (id: 'p-awd')
+  const modelsToCompare = TRIM_OPTIONS.filter(trim => trim.id !== 'p-awd');
 
   // Dynamically get all unique spec labels from all models
   const allSpecLabels = [...new Set(modelsToCompare.flatMap(trim => trim.specs.map(spec => spec.label)))];

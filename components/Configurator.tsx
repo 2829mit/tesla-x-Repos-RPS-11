@@ -2,13 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails } from '../types';
 import { TRIM_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, WARRANTY_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, FUEL_LEVEL_TECHNOLOGY_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, BASE_PRICE } from '../constants';
 import ComparisonModal from './ComparisonModal.tsx';
-
-// Declare jsPDF on window since we are using CDN
-declare global {
-  interface Window {
-    jspdf: any;
-  }
-}
+import { generateQuotePDF } from '../utils/pdfGenerator';
+import { logQuoteGeneration, QuoteData } from '../services/api';
 
 interface ConfiguratorProps {
   customerDetails: CustomerDetails | null;
@@ -84,7 +79,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     const observer = new IntersectionObserver(
       ([entry]) => {
         // If pricing section is visible (intersecting), hide the sticky footer
-        // If it's not visible, show the sticky footer
         setIsStickyFooterVisible(!entry.isIntersecting);
       },
       {
@@ -143,8 +137,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     }
 
     // Calculate offset based on the specific upgrade we want to show
-    // Fire System (id: fire-suppression) -> +1
-    // Crash Barrier (id: crash-barrier) -> +2
     let offset = 0;
     if (upgradeId === 'fire-suppression') {
       offset = 1;
@@ -157,153 +149,38 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     return `${s3BaseUrl}${imageIndex}.png`;
   };
 
-  const generatePDF = () => {
-    if (!window.jspdf) {
-      alert("PDF library not loaded yet. Please try again.");
-      return;
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    // Safe Currency Formatter for PDF to avoid font encoding issues with '₹'
-    const formatPdfCurrency = (amount: number) => {
-      const value = new Intl.NumberFormat('en-IN', {
-        maximumFractionDigits: 0,
-      }).format(amount);
-      return `Rs. ${value}`;
+  const handleViewQuoteClick = async () => {
+    setSelectedAction('quote');
+    
+    const quoteData: QuoteData = {
+      customerDetails,
+      totalPrice: finalPrice,
+      configuration: {
+        trim: selectedTrim,
+        tank: selectedTank,
+        dispensingUnit: selectedDispensingUnit,
+        decantation: selectedDecantation,
+        accessories: {
+          fuelLevel: selectedFuelLevelTechnologyOptions,
+          reposOs: selectedReposOsOptions,
+          mechanical: selectedMechanicalInclusionOptions,
+          safetyUnits: selectedSafetyUnits,
+          safetyUpgrades: selectedSafetyUpgrades,
+        },
+        warranty: selectedWarrantyOption,
+      }
     };
 
-    // Colors
-    const primaryColor = [23, 26, 32]; // #171A20
-    const accentColor = [29, 78, 216]; // Blue
+    // Generate PDF using utility
+    await generateQuotePDF(quoteData);
 
-    // Helper to get Y position
-    let finalY = 20;
-
-    // --- Header ---
-    doc.setFontSize(22);
-    doc.setTextColor(...primaryColor);
-    doc.text("PROFORMA INVOICE / QUOTE", 14, finalY);
-    
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.text("Repos Energy Pvt Limited", 14, finalY + 8);
-    
-    // --- Metadata (Date, Order ID) ---
-    const orderId = `RPS-${Date.now().toString().slice(-6)}`;
-    const date = new Date().toLocaleDateString();
-    
-    doc.setFontSize(10);
-    doc.text(`Date: ${date}`, 150, finalY);
-    doc.text(`Order ID: ${orderId}`, 150, finalY + 6);
-
-    finalY += 25;
-
-    // --- Customer Details ---
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.text("Bill To:", 14, finalY);
-    finalY += 8;
-
-    doc.setFontSize(10);
-    doc.setTextColor(0);
-    if (customerDetails) {
-      doc.text(`Name: ${customerDetails.name}`, 14, finalY);
-      doc.text(`Company: ${customerDetails.company}`, 14, finalY + 6);
-      doc.text(`Industry: ${customerDetails.industry}`, 14, finalY + 12);
-      doc.text(`Consumption: ${customerDetails.consumption}`, 14, finalY + 18);
-      doc.text(`Email: ${customerDetails.email}`, 110, finalY);
-      doc.text(`Mobile: ${customerDetails.mobile}`, 110, finalY + 6);
-    } else {
-      doc.text("Customer details not provided.", 14, finalY);
-    }
-
-    finalY += 30;
-
-    // --- Order Summary Table ---
-    const tableColumn = ["Description", "Price (INR)"];
-    const tableRows: any[] = [];
-
-    // 1. Base Price
-    tableRows.push(["RPS Base Price", formatPdfCurrency(BASE_PRICE)]);
-
-    // 2. Dispensing Unit
-    tableRows.push([selectedDispensingUnit.name, selectedDispensingUnit.price === 0 ? 'Included' : formatPdfCurrency(selectedDispensingUnit.price)]);
-
-    // 3. RFID Tech
-    tableRows.push([`RFID Tech: ${selectedTrim.name}`, selectedTrim.price === 0 ? 'Included' : formatPdfCurrency(selectedTrim.price)]);
-
-    // 4. Fuel Level Tech
-    selectedFuelLevelTechnologyOptions.forEach(opt => {
-      tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
-    });
-
-    // 5. Repos OS
-    selectedReposOsOptions.forEach(opt => {
-      tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
-    });
-
-    // 6. Decantation
-    tableRows.push([`Decantation: ${selectedDecantation.name}`, selectedDecantation.price === 0 ? 'Included' : formatPdfCurrency(selectedDecantation.price)]);
-
-    // 7. Mechanical Inclusion
-    selectedMechanicalInclusionOptions.forEach(opt => {
-       tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
-    });
-
-    // 8. Safety Unit
-    selectedSafetyUnits.forEach(opt => {
-       tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
-    });
-
-    // 9. Safety Upgrades
-    selectedSafetyUpgrades.forEach(opt => {
-       tableRows.push([opt.name, formatPdfCurrency(opt.price)]);
-    });
-
-    // 10. Warranty
-    tableRows.push([`Warranty: ${selectedWarrantyOption.name}`, selectedWarrantyOption.price === 0 ? 'Included' : formatPdfCurrency(selectedWarrantyOption.price)]);
-
-    // Generate Table
-    doc.autoTable({
-      startY: finalY,
-      head: [tableColumn],
-      body: tableRows,
-      theme: 'grid',
-      headStyles: { fillColor: primaryColor, textColor: 255 },
-      styles: { fontSize: 10, cellPadding: 3 },
-    });
-
-    // --- Total ---
-    // @ts-ignore
-    const finalYAfterTable = doc.lastAutoTable.finalY + 10;
-    
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text("Total RPS Price:", 130, finalYAfterTable);
-    doc.setTextColor(...accentColor);
-    doc.setFontSize(14);
-    doc.text(formatPdfCurrency(finalPrice), 170, finalYAfterTable);
-
-    // Footer
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.setFont(undefined, 'normal');
-    doc.text("Thank you for choosing Repos Energy.", 105, 280, { align: 'center' });
-    
-    doc.save(`RPS_Quote_${orderId}.pdf`);
-  };
-
-  const handleViewQuoteClick = () => {
-    setSelectedAction('quote');
-    generatePDF();
+    // Log to backend
+    logQuoteGeneration(quoteData);
   };
 
   return (
     <div className="bg-white text-gray-800 lg:h-full h-auto flex flex-col relative lg:overflow-hidden">
       {/* Scrollable Content Area */}
-      {/* On desktop, this div scrolls. On mobile, the window scrolls. */}
       <div className="flex-grow lg:overflow-y-auto overflow-visible scroll-smooth">
         <div className="p-6 md:p-10 pb-24">
           <h1 className="text-2xl md:text-[28px] md:leading-[48px] font-medium text-center text-[#171A20]">Repos Portable Station</h1>
