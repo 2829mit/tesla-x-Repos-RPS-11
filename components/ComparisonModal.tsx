@@ -1,29 +1,31 @@
+
 import React from 'react';
 import { TRIM_OPTIONS } from '../constants';
 import type { TrimOption } from '../types';
 
 interface ComparisonModalProps {
   onClose: () => void;
+  showPrices: boolean;
 }
 
-const formatCurrency = (amount: number) => {
-  if (amount === 0) return 'Standard';
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-  }).format(amount);
-};
-
-const ComparisonModal: React.FC<ComparisonModalProps> = ({ onClose }) => {
+const ComparisonModal: React.FC<ComparisonModalProps> = ({ onClose, showPrices }) => {
   // Filter out the 'Performance' model (id: 'p-awd')
   const modelsToCompare = TRIM_OPTIONS.filter(trim => trim.id !== 'p-awd');
 
   // Dynamically get all unique spec labels from all models
   const allSpecLabels = [...new Set(modelsToCompare.flatMap(trim => trim.specs.map(spec => spec.label)))];
 
+  const formatCurrency = (amount: number) => {
+    if (amount === 0) return 'Standard';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
   const features = [
-    { label: 'Price', getValue: (trim: TrimOption) => formatCurrency(trim.price) },
+    ...(showPrices ? [{ label: 'Price', getValue: (trim: TrimOption) => formatCurrency(trim.price) }] : []),
     { label: 'Drive', getValue: (trim: TrimOption) => trim.drive },
     ...allSpecLabels.map(label => ({
       label: label,

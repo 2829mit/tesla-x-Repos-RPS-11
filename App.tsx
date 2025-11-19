@@ -4,6 +4,7 @@ import Header from './components/Header.tsx';
 import CarVisualizer from './components/CarVisualizer.tsx';
 import Configurator from './components/Configurator.tsx';
 import LeadFormModal from './components/LeadFormModal.tsx';
+import LoginModal from './components/LoginModal.tsx';
 import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
 import { 
   TRIM_OPTIONS,
@@ -20,8 +21,13 @@ import {
 } from './constants';
 
 const App: React.FC = () => {
-  const [isLeadFormOpen, setIsLeadFormOpen] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
+  const [userRole, setUserRole] = useState<'sales' | 'guest' | null>(null);
+  const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null);
+  
+  // Payment Mode State
+  const [paymentMode, setPaymentMode] = useState<'outright' | 'installments'>('outright');
   
   // Use safe initialization with fallbacks to prevent crashes
   const [selectedTrim, setSelectedTrim] = useState<TrimOption>(() => {
@@ -88,8 +94,13 @@ const App: React.FC = () => {
       const img = new Image();
       img.src = url;
     });
-  }, []); // The empty dependency array ensures this runs only once when the component mounts.
+  }, []);
 
+  const handleLogin = (role: 'sales' | 'guest') => {
+    setUserRole(role);
+    setIsLoginModalOpen(false);
+    setIsLeadFormOpen(true);
+  };
 
   const handleLeadFormClose = (details?: CustomerDetails) => {
     setIsLeadFormOpen(false);
@@ -171,8 +182,6 @@ const App: React.FC = () => {
   };
 
   const handleLicenseOptionToggle = (option: LicenseOption) => {
-    // This is technically not needed anymore if the UI is read-only, 
-    // but kept for compatibility if we revert to selectable
     setSelectedLicenseOptions(prev => 
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -196,8 +205,12 @@ const App: React.FC = () => {
 
   const finalPrice = vehiclePrice;
 
+  // Determine if prices should be shown (only for 'sales' role)
+  const showPrices = userRole === 'sales';
+
   return (
     <div className="min-h-screen bg-stone-50 font-sans text-gray-800">
+      {isLoginModalOpen && <LoginModal onLogin={handleLogin} />}
       {isLeadFormOpen && <LeadFormModal onSubmit={handleLeadFormClose} />}
       <Header />
       <main className="flex flex-col lg:flex-row">
@@ -211,6 +224,8 @@ const App: React.FC = () => {
         <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">
           <Configurator
             customerDetails={customerDetails}
+            paymentMode={paymentMode}
+            setPaymentMode={setPaymentMode}
             selectedTrim={selectedTrim}
             setSelectedTrim={setSelectedTrim}
             selectedTank={selectedTank}
@@ -238,6 +253,7 @@ const App: React.FC = () => {
             vehiclePrice={vehiclePrice}
             finalPrice={finalPrice}
             recommendedTankId={recommendedTankId}
+            showPrices={showPrices}
           />
         </div>
       </main>

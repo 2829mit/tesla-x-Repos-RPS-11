@@ -8,6 +8,8 @@ import { logQuoteGeneration, QuoteData } from '../services/api';
 
 interface ConfiguratorProps {
   customerDetails: CustomerDetails | null;
+  paymentMode: 'outright' | 'installments';
+  setPaymentMode: (mode: 'outright' | 'installments') => void;
   selectedTrim: TrimOption;
   setSelectedTrim: (trim: TrimOption) => void;
   selectedTank: TankOption['id'];
@@ -35,10 +37,13 @@ interface ConfiguratorProps {
   vehiclePrice: number;
   finalPrice: number;
   recommendedTankId: TankOption['id'] | null;
+  showPrices: boolean;
 }
 
 const Configurator: React.FC<ConfiguratorProps> = ({
   customerDetails,
+  paymentMode,
+  setPaymentMode,
   selectedTrim,
   setSelectedTrim,
   selectedTank,
@@ -66,6 +71,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   vehiclePrice,
   finalPrice,
   recommendedTankId,
+  showPrices,
 }) => {
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<'quote' | 'contact'>('contact');
@@ -105,6 +111,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   }, []);
 
   const formatCurrency = (amount: number) => {
+    if (!showPrices) return '';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -113,12 +120,18 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   };
 
   const formatPrice = (price: number) => {
+    if (!showPrices) return '';
     return price === 0 ? formatCurrency(0) : `+${formatCurrency(price)}`;
   };
   
   const getTrimDisplayPrice = (trim: TrimOption) => {
     return formatPrice(trim.price);
   };
+
+  // Calculated values for Payment Mode
+  const monthlyPrice = Math.round(finalPrice / 36);
+  const displayedPrice = paymentMode === 'outright' ? finalPrice : monthlyPrice;
+  const displayedPriceLabel = paymentMode === 'outright' ? 'RPS price' : 'Monthly (36 mo)';
 
   // Helper to calculate the correct image URL for thumbnails based on current config
   const getSafetyImage = (upgradeId: string) => {
@@ -143,7 +156,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     }
 
     // Calculate offset based on the specific upgrade we want to show
-    // Logic matched with CarVisualizer: Fire adds 1, Barrier adds 2
+    // Logic matched with CarVisualizer: Fire adds 2 (offset 1 logic in visualizer was swapped), Barrier adds 1
     let offset = 0;
     if (upgradeId === 'fire-suppression') {
       offset = 1;
@@ -157,10 +170,17 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   };
 
   const handleViewQuoteClick = async () => {
+    // If prices are hidden, maybe we shouldn't allow quote generation or generate a restricted quote
+    // For now, assuming PDF generation is allowed but might need adjustments if prices should be hidden in PDF too.
+    // Based on "show website without prices", let's proceed but user might see prices in PDF if not handled. 
+    // But for guest flow usually they just browse. 
+    
     setSelectedAction('quote');
     
     const quoteData: QuoteData = {
       customerDetails,
+      paymentMode,
+      monthlyPrice,
       totalPrice: finalPrice,
       configuration: {
         trim: selectedTrim,
@@ -180,6 +200,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     };
 
     // Generate PDF using utility
+    // Note: If showPrices is false, the PDF utility will still generate prices unless we pass this flag or modify utility.
+    // Assuming strictly "website without prices" for now.
     await generateQuotePDF(quoteData);
 
     // Log to backend
@@ -324,7 +346,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                         <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
                         <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
                       </div>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                        {showPrices ? formatPrice(option.price) : ''}
+                      </p>
                     </div>
                   </div>
                   {/* Faint overlay */}
@@ -360,7 +384,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                           <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
                           <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.drive}</p>
                         </div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{getTrimDisplayPrice(option)}</p>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                          {showPrices ? getTrimDisplayPrice(option) : ''}
+                        </p>
                       </div>
                     </div>
                     {/* Faint overlay */}
@@ -390,7 +416,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       <div>
                         <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
                       </div>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                        {showPrices ? formatPrice(option.price) : ''}
+                      </p>
                     </div>
                   </div>
                   {/* Faint overlay */}
@@ -428,7 +456,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </div>
                   <div className="flex-grow flex justify-between items-center">
                     <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                      {showPrices ? formatPrice(option.price) : ''}
+                    </p>
                   </div>
                 </button>
               ))}
@@ -454,7 +484,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                           <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
                           <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
                         </div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                          {showPrices ? formatPrice(option.price) : ''}
+                        </p>
                       </div>
                     </div>
                     {/* Faint overlay */}
@@ -508,7 +540,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </div>
                   <div className="flex-grow flex justify-between items-center">
                     <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                      {showPrices ? formatPrice(option.price) : ''}
+                    </p>
                   </div>
                 </button>
               ))}
@@ -543,7 +577,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </div>
                     <div className="flex-grow flex justify-between items-center">
                       <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                        {showPrices ? formatPrice(option.price) : ''}
+                      </p>
                     </div>
                   </button>
                 ))}
@@ -579,7 +615,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                           </div>
                           <span className="font-medium text-gray-900">{option.name}</span>
                         </div>
-                        <span className="font-medium text-gray-900">{formatPrice(option.price)}</span>
+                        <span className="font-medium text-gray-900">
+                          {showPrices ? formatPrice(option.price) : ''}
+                        </span>
                       </div>
                       
                       <div className="w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
@@ -626,7 +664,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                           <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
                           {option.subtext && <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>}
                         </div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{formatPrice(option.price)}</p>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                          {showPrices ? formatPrice(option.price) : ''}
+                        </p>
                       </div>
                     </div>
                     {/* Faint overlay */}
@@ -657,120 +697,167 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-          {/* Pricing Breakdown & Actions */}
-          <div ref={pricingSectionRef} className="mt-16 pt-8 border-t border-gray-200">
-            <div 
-              className="flex justify-between items-center mb-6 cursor-pointer group select-none"
-              onClick={() => setIsPricingDetailsOpen(!isPricingDetailsOpen)}
-            >
-              <h2 className="text-xl font-medium text-gray-900">Pricing Details</h2>
-              <div className="p-1 rounded-full group-hover:bg-gray-100 transition-colors">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className={`h-5 w-5 text-gray-500 transition-transform duration-300 ${isPricingDetailsOpen ? 'rotate-180' : ''}`} 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
-                </svg>
+          {/* Payment Mode Toggle - Only show if prices are visible */}
+          {showPrices && (
+            <div className="mt-16 mb-8">
+              <h2 className="text-xl font-medium text-gray-900 mb-4">Payment Mode</h2>
+              <div className="bg-gray-100 p-1 rounded-lg flex">
+                 <button
+                   onClick={() => setPaymentMode('outright')}
+                   className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all duration-200 ${
+                     paymentMode === 'outright' 
+                       ? 'bg-white shadow text-blue-600' 
+                       : 'text-gray-600 hover:text-gray-900'
+                   }`}
+                 >
+                   Outright (Full Amount)
+                 </button>
+                 <button
+                   onClick={() => setPaymentMode('installments')}
+                   className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all duration-200 ${
+                     paymentMode === 'installments' 
+                       ? 'bg-white shadow text-blue-600' 
+                       : 'text-gray-600 hover:text-gray-900'
+                   }`}
+                 >
+                   Easy Installments (36 mo)
+                 </button>
               </div>
             </div>
-            
-            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isPricingDetailsOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'}`}>
-              <div className="space-y-3 text-sm text-gray-600 mb-8">
-                  {/* Paid Items - Always Visible */}
-                  {paidItems.map((item, idx) => (
-                    <div key={`paid-${idx}`} className="flex justify-between">
-                      <span>{item.name}</span>
-                      <span>{formatCurrency(item.price)}</span>
-                    </div>
-                  ))}
-                  
-                  {/* Included Items Toggle */}
-                  {includedItems.length > 0 && (
-                    <div className="mt-4 border-t border-gray-100 pt-2">
-                       <button 
-                        onClick={() => setShowIncludedOptions(!showIncludedOptions)}
-                        className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 mb-2"
-                       >
-                         {showIncludedOptions ? 'Hide included features' : 'Show included features'}
-                         <svg 
-                           xmlns="http://www.w3.org/2000/svg" 
-                           className={`h-3 w-3 ml-1 transition-transform ${showIncludedOptions ? 'rotate-180' : ''}`} 
-                           fill="none" 
-                           viewBox="0 0 24 24" 
-                           stroke="currentColor"
-                         >
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
-                         </svg>
-                       </button>
-                       
-                       <div className={`space-y-2 pl-2 transition-all duration-300 overflow-hidden ${showIncludedOptions ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                         {includedItems.map((item, idx) => (
-                           <div key={`inc-${idx}`} className="flex justify-between text-gray-500">
-                             <span>{item.name}</span>
-                             <span>Included</span>
-                           </div>
-                         ))}
-                       </div>
-                    </div>
-                  )}
-              </div>
-            </div>
-            
-            {/* Total - Always visible */}
-            <div className="flex justify-between items-center pt-4 border-t border-gray-200 mb-8">
-                 <span className="text-lg font-semibold text-gray-900">RPS Base Price</span>
-                 <span className="text-lg font-bold text-gray-900">{formatCurrency(finalPrice)}</span>
-            </div>
+          )}
 
-            {/* Buttons */}
-            <div className="flex gap-4 flex-col sm:flex-row">
-                 <button
-                   onClick={() => setSelectedAction('contact')}
-                   className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${
-                     selectedAction === 'contact' 
-                       ? 'bg-blue-600 text-white' 
-                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                   }`}
-                >
-                  Contact Sales
-                </button>
-                 <button
-                   onClick={handleViewQuoteClick}
-                   className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${
-                     selectedAction === 'quote' 
-                       ? 'bg-blue-600 text-white' 
-                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                   }`}
-                >
-                  View Quote
-                </button>
+          {/* Pricing Breakdown & Actions */}
+          {showPrices ? (
+            <div ref={pricingSectionRef} className="pt-8 border-t border-gray-200">
+              <div 
+                className="flex justify-between items-center mb-6 cursor-pointer group select-none"
+                onClick={() => setIsPricingDetailsOpen(!isPricingDetailsOpen)}
+              >
+                <h2 className="text-xl font-medium text-gray-900">Pricing Details</h2>
+                <div className="p-1 rounded-full group-hover:bg-gray-100 transition-colors">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className={`h-5 w-5 text-gray-500 transition-transform duration-300 ${isPricingDetailsOpen ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+              
+              <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isPricingDetailsOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="space-y-3 text-sm text-gray-600 mb-8">
+                    {/* Paid Items - Always Visible */}
+                    {paidItems.map((item, idx) => (
+                      <div key={`paid-${idx}`} className="flex justify-between">
+                        <span>{item.name}</span>
+                        <span>{formatCurrency(item.price)}</span>
+                      </div>
+                    ))}
+                    
+                    {/* Included Items Toggle */}
+                    {includedItems.length > 0 && (
+                      <div className="mt-4 border-t border-gray-100 pt-2">
+                         <button 
+                          onClick={() => setShowIncludedOptions(!showIncludedOptions)}
+                          className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 mb-2"
+                         >
+                           {showIncludedOptions ? 'Hide included features' : 'Show included features'}
+                           <svg 
+                             xmlns="http://www.w3.org/2000/svg" 
+                             className={`h-3 w-3 ml-1 transition-transform ${showIncludedOptions ? 'rotate-180' : ''}`} 
+                             fill="none" 
+                             viewBox="0 0 24 24" 
+                             stroke="currentColor"
+                           >
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
+                           </svg>
+                         </button>
+                         
+                         <div className={`space-y-2 pl-2 transition-all duration-300 overflow-hidden ${showIncludedOptions ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                           {includedItems.map((item, idx) => (
+                             <div key={`inc-${idx}`} className="flex justify-between text-gray-500">
+                               <span>{item.name}</span>
+                               <span>Included</span>
+                             </div>
+                           ))}
+                         </div>
+                      </div>
+                    )}
+                </div>
+              </div>
+              
+              {/* Total - Always visible */}
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200 mb-8">
+                   <span className="text-lg font-semibold text-gray-900">{displayedPriceLabel}</span>
+                   <span className="text-lg font-bold text-gray-900">{formatCurrency(displayedPrice)}</span>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-4 flex-col sm:flex-row">
+                   <button
+                     onClick={() => setSelectedAction('contact')}
+                     className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${
+                       selectedAction === 'contact' 
+                         ? 'bg-blue-600 text-white' 
+                         : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                     }`}
+                  >
+                    Contact Sales
+                  </button>
+                   <button
+                     onClick={handleViewQuoteClick}
+                     className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${
+                       selectedAction === 'quote' 
+                         ? 'bg-blue-600 text-white' 
+                         : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                     }`}
+                  >
+                    View Quote
+                  </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="pt-8 border-t border-gray-200 mb-8">
+                <div className="flex gap-4 flex-col sm:flex-row">
+                   <button
+                     className="w-full py-3 px-4 rounded text-sm font-semibold bg-blue-600 text-white transition-colors hover:bg-blue-700"
+                     onClick={() => {
+                       // Generic action for guests
+                       alert("Thank you for your interest. Our sales team will contact you shortly.");
+                     }}
+                  >
+                    Contact Sales
+                  </button>
+                </div>
+            </div>
+          )}
 
         </div>
       </div>
       
-      {/* Sticky Footer - Floating Card Style */}
-      <div className={`fixed bottom-0 left-0 right-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 p-4 z-20 w-full pointer-events-none transition-transform duration-300 ease-in-out ${isStickyFooterVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}>
-        <div className="bg-white border border-gray-200 shadow-lg rounded-xl p-4 flex justify-between items-center pointer-events-auto">
-           <div>
-             <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{formatCurrency(finalPrice)}</p>
-             <p className="text-xs sm:text-sm text-gray-500 mt-0.5">RPS price</p>
-           </div>
-           <button
-             onClick={handleViewQuoteClick}
-             className="bg-blue-600 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-md text-sm sm:text-base font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
-           >
-             View Quote
-           </button>
+      {/* Sticky Footer - Floating Card Style (Only show if prices are allowed) */}
+      {showPrices && (
+        <div className={`fixed bottom-0 left-0 right-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 p-4 z-20 w-full pointer-events-none transition-transform duration-300 ease-in-out ${isStickyFooterVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}>
+          <div className="bg-white border border-gray-200 shadow-lg rounded-xl p-4 flex justify-between items-center pointer-events-auto">
+             <div>
+               <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{formatCurrency(displayedPrice)}</p>
+               <p className="text-xs sm:text-sm text-gray-500 mt-0.5">{displayedPriceLabel}</p>
+             </div>
+             <button
+               onClick={handleViewQuoteClick}
+               className="bg-blue-600 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-md text-sm sm:text-base font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
+             >
+               View Quote
+             </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {isComparisonModalOpen && (
-        <ComparisonModal onClose={() => setIsComparisonModalOpen(false)} />
+        <ComparisonModal onClose={() => setIsComparisonModalOpen(false)} showPrices={showPrices} />
       )}
 
       {/* Learn More Modal */}
@@ -805,13 +892,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   className="max-h-64 object-contain"
                 />
               </div>
-            ) : (
-              // If no image, maybe show a placeholder or just description. 
-              // For Flow Meter, we might not have an image, so we handle it gracefully.
-              // Actually, IotOption in types.ts has optional imageUrl.
-              // If provided in constants, use it. Otherwise, don't render img.
-              null
-            )}
+            ) : null}
            
 
             <p className="text-gray-600 text-center leading-relaxed">

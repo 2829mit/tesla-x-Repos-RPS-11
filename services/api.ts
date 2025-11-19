@@ -11,6 +11,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export interface QuoteData {
   customerDetails: CustomerDetails | null;
+  paymentMode: 'outright' | 'installments';
   configuration: {
     trim: TrimOption;
     tank: TankOption['id'];
@@ -27,6 +28,7 @@ export interface QuoteData {
     warranty: WarrantyOption;
   };
   totalPrice: number;
+  monthlyPrice?: number;
 }
 
 /**

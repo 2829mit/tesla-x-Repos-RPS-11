@@ -91,6 +91,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
   doc.setFontSize(10);
   doc.text(`Date: ${date}`, 150, finalY);
   doc.text(`Order ID: ${orderId}`, 150, finalY + 6);
+  doc.text(`Payment Mode: ${data.paymentMode === 'installments' ? 'Easy Installments' : 'Outright'}`, 150, finalY + 12);
 
   finalY += 25;
 
@@ -187,6 +188,23 @@ export const generateQuotePDF = async (data: QuoteData) => {
   doc.setTextColor(...accentColor);
   doc.setFontSize(14);
   doc.text(formatPdfCurrency(data.totalPrice), 170, finalYAfterTable);
+
+  // --- Payment Mode Details ---
+  if (data.paymentMode === 'installments' && data.monthlyPrice) {
+    const emiY = finalYAfterTable + 8;
+    doc.setFontSize(11);
+    doc.setTextColor(...primaryColor);
+    doc.text("Payment Mode: Easy Installments (36 Months)", 130, emiY);
+    
+    doc.setFont(undefined, 'bold');
+    doc.text(`Monthly Payment: ${formatPdfCurrency(data.monthlyPrice)}`, 130, emiY + 6);
+  } else {
+      const modeY = finalYAfterTable + 8;
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.setFont(undefined, 'normal');
+      doc.text("Payment Mode: Outright (Full Amount)", 130, modeY);
+  }
 
   // Footer
   doc.setFontSize(8);
