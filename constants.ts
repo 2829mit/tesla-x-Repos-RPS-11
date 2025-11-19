@@ -1,5 +1,5 @@
 
-import type { PerformanceSpec, TrimOption, IotOption, TankOption, WarrantyOption, AccessoryOption, DispensingUnitOption, SafetyUpgradeOption } from './types';
+import type { PerformanceSpec, TrimOption, IotOption, TankOption, WarrantyOption, AccessoryOption, DispensingUnitOption, SafetyUpgradeOption, LicenseOption } from './types';
 
 export const BASE_PRICE = 3500000;
 export const BASE_FINANCE_PER_MONTH = 48000;
@@ -100,16 +100,23 @@ export const SAFETY_UPGRADE_OPTIONS: SafetyUpgradeOption[] = [
     id: 'fire-suppression', 
     name: 'Fire Suppression System', 
     price: 280000,
-    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/2.png',
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png',
     description: 'Safety-focused package featuring an integrated fire extinguisher for emergency situations.'
   },
   { 
     id: 'crash-barrier', 
     name: 'Crash Barrier', 
     price: 350000,
-    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png',
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/2.png',
     description: 'Reinforced protective barriers engineered to safeguard the station against vehicular impact and ensure operational safety.'
   },
+];
+
+export const LICENSE_OPTIONS: LicenseOption[] = [
+  { id: 'drawing-layout', name: 'Drawing Layout Creation', price: 0 },
+  { id: 'prior-approval', name: 'Prior Approval (9A)', price: 0 },
+  { id: 'dm-noc', name: 'DM NOC', price: 0, isCompulsory: true },
+  { id: 'final-grant', name: 'Final Grant', price: 0 },
 ];
 
 export const TANK_OPTIONS: TankOption[] = [

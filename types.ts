@@ -39,6 +39,13 @@ export interface WarrantyOption {
   subtext?: string;
 }
 
+export interface LicenseOption {
+  id: string;
+  name: string;
+  price: number;
+  isCompulsory?: boolean;
+}
+
 export interface DispensingUnitOption {
   id: string;
   name: string;

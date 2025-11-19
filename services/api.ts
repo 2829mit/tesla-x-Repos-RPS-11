@@ -1,4 +1,5 @@
-import { CustomerDetails, TrimOption, TankOption, AccessoryOption, DispensingUnitOption, IotOption, WarrantyOption, SafetyUpgradeOption } from "../types";
+
+import { CustomerDetails, TrimOption, TankOption, AccessoryOption, DispensingUnitOption, IotOption, WarrantyOption, SafetyUpgradeOption, LicenseOption } from "../types";
 
 // In a real production build, this would be an environment variable
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.reposenergy.com/v1';
@@ -22,6 +23,7 @@ export interface QuoteData {
       safetyUnits: AccessoryOption[];
       safetyUpgrades: SafetyUpgradeOption[];
     };
+    licenses: LicenseOption[];
     warranty: WarrantyOption;
   };
   totalPrice: number;

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CONSUMPTION_OPTIONS } from '../constants';
 import type { CustomerDetails } from '../types';
@@ -118,6 +119,8 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   value={formData.mobile}
                   onChange={handleChange}
                   required
+                  maxLength={10}
+                  pattern="[0-9]{10}"
                   className={`w-full px-4 py-2 bg-gray-100 border rounded-md focus:ring-1 outline-none transition ${error && error.includes('Mobile') ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-gray-400'}`}
                   placeholder="e.g., 9876543210"
                 />

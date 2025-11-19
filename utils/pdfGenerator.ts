@@ -1,3 +1,4 @@
+
 import { BASE_PRICE } from '../constants';
 import { QuoteData } from '../services/api';
 
@@ -157,8 +158,13 @@ export const generateQuotePDF = async (data: QuoteData) => {
   data.configuration.accessories.safetyUpgrades.forEach(opt => {
      tableRows.push([opt.name, formatPdfCurrency(opt.price)]);
   });
+  
+  // 10. Licenses
+  data.configuration.licenses.forEach(opt => {
+    tableRows.push([`License: ${opt.name}`, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
+  });
 
-  // 10. Warranty
+  // 11. Warranty
   const { warranty } = data.configuration;
   tableRows.push([`Warranty: ${warranty.name}`, warranty.price === 0 ? 'Included' : formatPdfCurrency(warranty.price)]);
 

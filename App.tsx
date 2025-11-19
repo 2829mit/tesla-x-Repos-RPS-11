@@ -1,9 +1,10 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import Header from './components/Header.tsx';
 import CarVisualizer from './components/CarVisualizer.tsx';
 import Configurator from './components/Configurator.tsx';
 import LeadFormModal from './components/LeadFormModal.tsx';
-import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails } from './types';
+import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
 import { 
   TRIM_OPTIONS,
   BASE_PRICE,
@@ -14,7 +15,8 @@ import {
   DISPENSING_UNIT_OPTIONS,
   FUEL_LEVEL_TECHNOLOGY_OPTIONS,
   MECHANICAL_INCLUSION_OPTIONS,
-  SAFETY_UPGRADE_OPTIONS
+  SAFETY_UPGRADE_OPTIONS,
+  LICENSE_OPTIONS
 } from './constants';
 
 const App: React.FC = () => {
@@ -62,6 +64,12 @@ const App: React.FC = () => {
 
   const [selectedSafetyUpgrades, setSelectedSafetyUpgrades] = useState<SafetyUpgradeOption[]>([]);
   
+  const [selectedLicenseOptions, setSelectedLicenseOptions] = useState<LicenseOption[]>(() => {
+      const options = LICENSE_OPTIONS || [];
+      // Default to DM NOC as it's compulsory/standard default
+      return options.filter(o => o.id === 'dm-noc');
+  });
+
   const [selectedWarrantyOption, setSelectedWarrantyOption] = useState<WarrantyOption>(() => {
     const options = WARRANTY_OPTIONS || [];
     return options.find(o => o.price === 0) || options[0] || { id: 'basic', name: 'Basic', price: 0 };
@@ -171,6 +179,14 @@ const App: React.FC = () => {
     );
   };
 
+  const handleLicenseOptionToggle = (option: LicenseOption) => {
+    setSelectedLicenseOptions(prev => 
+      prev.find(o => o.id === option.id)
+        ? prev.filter(o => o.id !== option.id)
+        : [...prev, option]
+    );
+  };
+
   const vehiclePrice = useMemo(() => {
     let price = BASE_PRICE + (selectedTrim?.price || 0);
     price += selectedDispensingUnit?.price || 0;
@@ -180,9 +196,10 @@ const App: React.FC = () => {
     price += selectedDecantation?.price || 0;
     price += selectedSafetyUnits.reduce((total, unit) => total + unit.price, 0);
     price += selectedSafetyUpgrades.reduce((total, unit) => total + unit.price, 0);
+    price += selectedLicenseOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedWarrantyOption?.price || 0;
     return price;
-  }, [selectedTrim, selectedDispensingUnit, selectedFuelLevelTechnologyOptions, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedWarrantyOption]);
+  }, [selectedTrim, selectedDispensingUnit, selectedFuelLevelTechnologyOptions, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions, selectedWarrantyOption]);
 
   const finalPrice = vehiclePrice;
 
@@ -219,6 +236,8 @@ const App: React.FC = () => {
             onSafetyUnitToggle={handleSafetyUnitToggle}
             selectedSafetyUpgrades={selectedSafetyUpgrades}
             onSafetyUpgradeToggle={handleSafetyUpgradeToggle}
+            selectedLicenseOptions={selectedLicenseOptions}
+            onLicenseOptionToggle={handleLicenseOptionToggle}
             selectedWarrantyOption={selectedWarrantyOption}
             setSelectedWarrantyOption={setSelectedWarrantyOption}
             selectedConsumption={selectedConsumption}

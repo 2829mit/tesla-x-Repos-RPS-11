@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails } from '../types';
-import { TRIM_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, WARRANTY_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, FUEL_LEVEL_TECHNOLOGY_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, BASE_PRICE } from '../constants';
+import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
+import { TRIM_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, WARRANTY_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, FUEL_LEVEL_TECHNOLOGY_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS, BASE_PRICE } from '../constants';
 import ComparisonModal from './ComparisonModal.tsx';
 import { generateQuotePDF } from '../utils/pdfGenerator';
 import { logQuoteGeneration, QuoteData } from '../services/api';
@@ -25,6 +26,8 @@ interface ConfiguratorProps {
   onSafetyUnitToggle: (option: AccessoryOption) => void;
   selectedSafetyUpgrades: SafetyUpgradeOption[];
   onSafetyUpgradeToggle: (option: SafetyUpgradeOption) => void;
+  selectedLicenseOptions: LicenseOption[];
+  onLicenseOptionToggle: (option: LicenseOption) => void;
   selectedWarrantyOption: WarrantyOption;
   setSelectedWarrantyOption: (option: WarrantyOption) => void;
   selectedConsumption: string | null;
@@ -54,6 +57,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   onSafetyUnitToggle,
   selectedSafetyUpgrades,
   onSafetyUpgradeToggle,
+  selectedLicenseOptions,
+  onLicenseOptionToggle,
   selectedWarrantyOption,
   setSelectedWarrantyOption,
   selectedConsumption,
@@ -71,6 +76,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   // State for UI interactions
   const [isStickyFooterVisible, setIsStickyFooterVisible] = useState(true);
   const [isPricingDetailsOpen, setIsPricingDetailsOpen] = useState(true);
+  const [showIncludedOptions, setShowIncludedOptions] = useState(false);
   
   // Ref for the pricing section to track visibility
   const pricingSectionRef = useRef<HTMLDivElement>(null);
@@ -139,9 +145,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     // Calculate offset based on the specific upgrade we want to show
     let offset = 0;
     if (upgradeId === 'fire-suppression') {
-      offset = 1;
-    } else if (upgradeId === 'crash-barrier') {
       offset = 2;
+    } else if (upgradeId === 'crash-barrier') {
+      offset = 1;
     }
 
     const imageIndex = baseIndex + offset;
@@ -167,6 +173,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           safetyUnits: selectedSafetyUnits,
           safetyUpgrades: selectedSafetyUpgrades,
         },
+        licenses: selectedLicenseOptions,
         warranty: selectedWarrantyOption,
       }
     };
@@ -177,6 +184,24 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     // Log to backend
     logQuoteGeneration(quoteData);
   };
+
+  // Group pricing items
+  const pricingItems = [
+    { name: 'RPS Base Price', price: BASE_PRICE },
+    { name: selectedDispensingUnit.name, price: selectedDispensingUnit.price },
+    { name: selectedTrim.name, price: selectedTrim.price },
+    ...selectedFuelLevelTechnologyOptions.map(opt => ({ name: opt.name, price: opt.price })),
+    ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price })),
+    { name: selectedDecantation.name, price: selectedDecantation.price },
+    ...selectedMechanicalInclusionOptions.map(opt => ({ name: opt.name, price: opt.price })),
+    ...selectedSafetyUnits.map(opt => ({ name: opt.name, price: opt.price })),
+    ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price })),
+    ...selectedLicenseOptions.map(opt => ({ name: opt.name, price: opt.price })),
+    { name: selectedWarrantyOption.name, price: selectedWarrantyOption.price },
+  ];
+
+  const paidItems = pricingItems.filter(item => item.price > 0);
+  const includedItems = pricingItems.filter(item => item.price === 0);
 
   return (
     <div className="bg-white text-gray-800 lg:h-full h-auto flex flex-col relative lg:overflow-hidden">
@@ -599,6 +624,39 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 ))}
               </div>
             </div>
+            
+            {/* Licenses Section */}
+            <div>
+              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses</h2>
+              <div className="space-y-3 mt-6">
+                {LICENSE_OPTIONS.map(option => (
+                  <button
+                    key={`license-${option.id}`}
+                    onClick={() => onLicenseOptionToggle(option)}
+                    className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                      selectedLicenseOptions.some(o => o.id === option.id)
+                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
+                        : 'border-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                      selectedLicenseOptions.some(o => o.id === option.id)
+                        ? 'bg-gray-600 border-gray-600'
+                        : 'bg-white border-gray-300'
+                    }`}>
+                      {selectedLicenseOptions.some(o => o.id === option.id) && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-grow flex justify-between items-center">
+                      <span className="font-medium text-gray-900">{option.name} {option.isCompulsory && <span className="text-xs text-red-500 ml-1">(Compulsory)</span>}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Pricing Breakdown & Actions */}
@@ -623,74 +681,43 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isPricingDetailsOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="space-y-3 text-sm text-gray-600 mb-8">
-                  <div className="flex justify-between">
-                    <span>RPS Base Price</span>
-                    <span>{formatCurrency(BASE_PRICE)}</span>
-                  </div>
+                  {/* Paid Items - Always Visible */}
+                  {paidItems.map((item, idx) => (
+                    <div key={`paid-${idx}`} className="flex justify-between">
+                      <span>{item.name}</span>
+                      <span>{formatCurrency(item.price)}</span>
+                    </div>
+                  ))}
                   
-                  {/* Dispensing Unit */}
-                  <div className="flex justify-between">
-                    <span>{selectedDispensingUnit.name}</span>
-                    <span>{selectedDispensingUnit.price === 0 ? 'Included' : formatCurrency(selectedDispensingUnit.price)}</span>
-                  </div>
-
-                  {/* RFID Tech */}
-                  <div className="flex justify-between">
-                    <span>{selectedTrim.name}</span>
-                    <span>{selectedTrim.price === 0 ? 'Included' : formatCurrency(selectedTrim.price)}</span>
-                  </div>
-
-                   {/* Fuel Level Tech */}
-                   {selectedFuelLevelTechnologyOptions.map(opt => (
-                     <div key={opt.id} className="flex justify-between">
-                       <span>{opt.name}</span>
-                       <span>{opt.price === 0 ? 'Included' : formatCurrency(opt.price)}</span>
-                     </div>
-                  ))}
-
-                  {/* Repos OS */}
-                  {selectedReposOsOptions.map(opt => (
-                     <div key={opt.id} className="flex justify-between">
-                       <span>{opt.name}</span>
-                       <span>{opt.price === 0 ? 'Included' : formatCurrency(opt.price)}</span>
-                     </div>
-                  ))}
-
-                  {/* Decantation */}
-                  <div className="flex justify-between">
-                    <span>{selectedDecantation.name}</span>
-                    <span>{selectedDecantation.price === 0 ? 'Included' : formatCurrency(selectedDecantation.price)}</span>
-                  </div>
-
-                  {/* Mechanical Inclusion */}
-                  {selectedMechanicalInclusionOptions.map(opt => (
-                     <div key={opt.id} className="flex justify-between">
-                       <span>{opt.name}</span>
-                       <span>{opt.price === 0 ? 'Included' : formatCurrency(opt.price)}</span>
-                     </div>
-                  ))}
-
-                  {/* Safety */}
-                  {selectedSafetyUnits.map(opt => (
-                     <div key={opt.id} className="flex justify-between">
-                       <span>{opt.name}</span>
-                       <span>{opt.price === 0 ? 'Included' : formatCurrency(opt.price)}</span>
-                     </div>
-                  ))}
-
-                  {/* Safety Upgrades */}
-                  {selectedSafetyUpgrades.map(opt => (
-                     <div key={opt.id} className="flex justify-between">
-                       <span>{opt.name}</span>
-                       <span>{formatCurrency(opt.price)}</span>
-                     </div>
-                  ))}
-
-                  {/* Warranty */}
-                  <div className="flex justify-between">
-                    <span>{selectedWarrantyOption.name}</span>
-                    <span>{selectedWarrantyOption.price === 0 ? 'Included' : formatCurrency(selectedWarrantyOption.price)}</span>
-                  </div>
+                  {/* Included Items Toggle */}
+                  {includedItems.length > 0 && (
+                    <div className="mt-4 border-t border-gray-100 pt-2">
+                       <button 
+                        onClick={() => setShowIncludedOptions(!showIncludedOptions)}
+                        className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 mb-2"
+                       >
+                         {showIncludedOptions ? 'Hide included features' : 'Show included features'}
+                         <svg 
+                           xmlns="http://www.w3.org/2000/svg" 
+                           className={`h-3 w-3 ml-1 transition-transform ${showIncludedOptions ? 'rotate-180' : ''}`} 
+                           fill="none" 
+                           viewBox="0 0 24 24" 
+                           stroke="currentColor"
+                         >
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
+                         </svg>
+                       </button>
+                       
+                       <div className={`space-y-2 pl-2 transition-all duration-300 overflow-hidden ${showIncludedOptions ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                         {includedItems.map((item, idx) => (
+                           <div key={`inc-${idx}`} className="flex justify-between text-gray-500">
+                             <span>{item.name}</span>
+                             <span>Included</span>
+                           </div>
+                         ))}
+                       </div>
+                    </div>
+                  )}
               </div>
             </div>
             
@@ -729,7 +756,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
       </div>
       
       {/* Sticky Footer - Floating Card Style */}
-      {/* On mobile: Fixed to bottom of viewport. On Desktop: Absolute to bottom of panel. */}
       <div className={`fixed bottom-0 left-0 right-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 p-4 z-20 w-full pointer-events-none transition-transform duration-300 ease-in-out ${isStickyFooterVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}>
         <div className="bg-white border border-gray-200 shadow-lg rounded-xl p-4 flex justify-between items-center pointer-events-auto">
            <div>
