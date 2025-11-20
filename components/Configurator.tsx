@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import type { TrimOption, AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
-import { TRIM_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS } from '../constants';
+import type { RfidOption, AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
+import { RFID_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS } from '../constants';
 import ComparisonModal from './ComparisonModal.tsx';
 import { generateQuotePDF } from '../utils/pdfGenerator';
 import { logQuoteGeneration, QuoteData } from '../services/api';
@@ -11,8 +11,8 @@ interface ConfiguratorProps {
   customerDetails: CustomerDetails | null;
   paymentMode: 'outright' | 'installments';
   setPaymentMode: (mode: 'outright' | 'installments') => void;
-  selectedTrim: TrimOption | null;
-  setSelectedTrim: (trim: TrimOption | null) => void;
+  selectedRfidOption: RfidOption | null;
+  setSelectedRfidOption: (option: RfidOption | null) => void;
   selectedTank: TankOption['id'];
   setSelectedTank: (tankId: TankOption['id']) => void;
   selectedReposOsOptions: AccessoryOption[];
@@ -31,10 +31,9 @@ interface ConfiguratorProps {
   selectedConsumption: string | null;
   onConsumptionSelect: (consumption: string) => void;
   
-  // Updated Pricing Props
-  totalContractValue: number; // Excl Tax
+  totalContractValue: number; 
   gstAmount: number;
-  finalPrice: number; // Display Price (Total Inc Tax OR Monthly)
+  finalPrice: number; 
   
   recommendedTankId: TankOption['id'] | null;
   showPrices: boolean;
@@ -56,8 +55,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   customerDetails,
   paymentMode,
   setPaymentMode,
-  selectedTrim,
-  setSelectedTrim,
+  selectedRfidOption,
+  setSelectedRfidOption,
   selectedTank,
   setSelectedTank,
   selectedReposOsOptions,
@@ -85,11 +84,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 }) => {
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<'quote' | 'contact'>('contact');
-  
-  // State for Learn More Modal
   const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | IotOption | null>(null);
 
-  // State for UI interactions
   const [isStickyFooterVisible, setIsStickyFooterVisible] = useState(true);
   const [isPricingDetailsOpen, setIsPricingDetailsOpen] = useState(true);
   const [showIncludedOptions, setShowIncludedOptions] = useState(false);
@@ -97,35 +93,22 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   const pricingSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Only setup observer if prices are shown (and thus the element exists)
     if (!showPrices) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Hide footer when pricing section is visible (intersecting)
         setIsStickyFooterVisible(!entry.isIntersecting);
       },
-      { 
-        root: null, 
-        threshold: 0.1, // Trigger as soon as 10% of the pricing section is visible
-        rootMargin: "0px" 
-      }
+      { root: null, threshold: 0.1, rootMargin: "0px" }
     );
 
     const currentRef = pricingSectionRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
+    if (currentRef) observer.observe(currentRef);
 
     return () => {
-      if (currentRef) {
-        observer.disconnect();
-      }
+      if (currentRef) observer.disconnect();
     };
-  }, [showPrices]); // Add showPrices dependency so observer re-runs when user logs in
-
-  // Multiplier for UI display of individual options (Always show full contract value per item)
-  const priceMultiplier = 36; 
+  }, [showPrices]);
 
   const formatCurrency = (amount: number) => {
     if (!showPrices) return '';
@@ -137,40 +120,30 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     }).format(amount);
   };
 
-  // Helper to show price based on payment mode for individual options in the list
-  // NOTE: User requested to multiply monthly by 36 for Outright.
-  // For consistency in "Pricing Details" breakdown, we usually show the full value.
   const formatPrice = (monthlyPrice: number) => {
     if (!showPrices) return '';
-    
-    // If payment mode is outright, we show the full cost (monthly * 36)
     if (paymentMode === 'outright') {
         const fullPrice = monthlyPrice * 36;
         return fullPrice === 0 ? formatCurrency(0) : `+${formatCurrency(fullPrice)}`;
     }
-    
-    // If installments, we show monthly price
     return monthlyPrice === 0 ? formatCurrency(0) : `+${formatCurrency(monthlyPrice)}`;
   };
   
   const currentTank = TANK_OPTIONS.find(t => t.id === selectedTank);
 
   const handleViewQuoteClick = async () => {
-    // Trim can be null, which is valid.
-    
     setSelectedAction('quote');
     
     const quoteData: QuoteData = {
       customerDetails,
       paymentMode,
-      // Pass pre-calculated totals to PDF generator
-      totalPrice: finalPrice, // Display Price
+      totalPrice: finalPrice,
       gstAmount: gstAmount,
       totalContractValue: totalContractValue,
       monthlyPrice: paymentMode === 'installments' ? finalPrice : undefined,
       
       configuration: {
-        trim: selectedTrim!,
+        rfidOption: selectedRfidOption!,
         tank: selectedTank,
         dispensingUnit: selectedDispensingUnit,
         decantation: selectedDecantation,
@@ -190,12 +163,10 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 
   const tankBasePrice = currentTank ? currentTank.price : 0;
 
-  // Calculate individual item total costs (Monthly * 36) for the breakdown list
-  // Regardless of payment mode, the breakdown shows the value contribution to the total contract
   let pricingItems = [
     { name: `RPS Base Price (${currentTank?.name || ''} Tank)`, price: tankBasePrice * 36 },
     { name: selectedDispensingUnit.name, price: selectedDispensingUnit.price * 36 },
-    ...(selectedTrim ? [{ name: selectedTrim.name, price: selectedTrim.price * 36 }] : []),
+    ...(selectedRfidOption ? [{ name: selectedRfidOption.name, price: selectedRfidOption.price * 36 }] : []),
     ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price * 36 })),
     { name: selectedDecantation.name, price: selectedDecantation.price * 36 },
     ...selectedMechanicalInclusionOptions.map(opt => ({ name: opt.name, price: opt.price * 36 })),
@@ -203,20 +174,16 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price * 36 })),
   ];
 
-  // Filter out Base Price always as requested ("Dont show tank quantity in pricing details")
   pricingItems = pricingItems.filter(item => !item.name.includes('RPS Base Price'));
 
   const paidItems = pricingItems.filter(item => item.price > 0);
   const includedItems = pricingItems.filter(item => item.price === 0);
 
   const displayedPriceLabel = paymentMode === 'outright' ? 'Total RPS Price (Inc. GST)' : 'Monthly Payment (36 mo)';
-
-  // For sticky footer in Outright mode, we show price Excl. GST (totalContractValue)
   const footerPrice = paymentMode === 'outright' ? totalContractValue : finalPrice;
 
   return (
     <div className="bg-white text-gray-800 lg:h-full h-auto flex flex-col relative lg:overflow-hidden">
-      {/* Scrollable Content Area */}
       <div className="flex-grow lg:overflow-y-auto overflow-visible scroll-smooth pb-24">
         <div className="p-6 md:p-10">
           <h1 className="text-2xl md:text-[28px] md:leading-[48px] font-medium text-center text-[#171A20]">Repos Portable Station</h1>
@@ -227,9 +194,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               { label: 'Monitoring', value: '24/7' },
             ].map(spec => (
               <div key={spec.label}>
-                <p className="text-xl sm:text-2xl font-semibold text-gray-900">
-                  {spec.value}
-                </p>
+                <p className="text-xl sm:text-2xl font-semibold text-gray-900">{spec.value}</p>
                 <p className="text-xs sm:text-[14px] leading-[20px] text-[#393C41] mt-1">{spec.label}</p>
               </div>
             ))}
@@ -277,17 +242,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   >
                       {recommendedTankId === option.id && (
                           <div className="absolute top-0 right-0 text-white text-xs font-semibold z-10">
-                              <div className="relative bg-blue-600 px-2.5 py-0.5 rounded-tr-lg shadow">
-                                  Recommended
-                              </div>
-                              <div 
-                                  className="absolute top-full left-0 w-0 h-0"
-                                  style={{
-                                      borderStyle: 'solid',
-                                      borderWidth: '0 6px 6px 0',
-                                      borderColor: 'transparent #1d4ed8 transparent transparent'
-                                  }}
-                              />
+                              <div className="relative bg-blue-600 px-2.5 py-0.5 rounded-tr-lg shadow">Recommended</div>
+                              <div className="absolute top-full left-0 w-0 h-0" style={{ borderStyle: 'solid', borderWidth: '0 6px 6px 0', borderColor: 'transparent #1d4ed8 transparent transparent' }} />
                           </div>
                       )}
                       <div className="flex justify-between items-center">
@@ -353,24 +309,23 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Technology</h2>
             <div className="space-y-2">
-              {TRIM_OPTIONS.filter(option => option.id !== 'p-awd')
+              {RFID_OPTIONS.filter(option => option.id !== 'performance-test')
                 .sort((a, b) => {
-                  const order: Array<TrimOption['id']> = ['lr-awd', 'lr'];
+                  const order: Array<RfidOption['id']> = ['2-active-reader', '1-active-reader'];
                   return order.indexOf(a.id) - order.indexOf(b.id);
                 })
                 .map(option => (
                   <button
                     key={`dispensing-${option.id}`}
                     onClick={() => {
-                        // Toggle selection: if already selected, set to null
-                        if (selectedTrim?.id === option.id) {
-                            setSelectedTrim(null);
+                        if (selectedRfidOption?.id === option.id) {
+                            setSelectedRfidOption(null);
                         } else {
-                            setSelectedTrim(option);
+                            setSelectedRfidOption(option);
                         }
                     }}
                     className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedTrim?.id === option.id 
+                      selectedRfidOption?.id === option.id 
                         ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' 
                         : 'border-gray-300 hover:border-gray-500'
                     }`}
@@ -386,7 +341,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                         </p>
                       </div>
                     </div>
-                    {selectedTrim?.id !== option.id && (
+                    {selectedRfidOption?.id !== option.id && (
                         <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                     )}
                   </button>
@@ -409,9 +364,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   }`}
                 >
                   <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                    selectedReposOsOptions.some(o => o.id === option.id)
-                      ? 'bg-gray-600 border-gray-600'
-                      : 'bg-white border-gray-300'
+                    selectedReposOsOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
                   }`}>
                     {selectedReposOsOptions.some(o => o.id === option.id) && (
                       <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
@@ -421,17 +374,15 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </div>
                   <div className="flex-grow flex justify-between items-center">
                     <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
-                      {showPrices ? formatPrice(option.price) : ''}
-                    </p>
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
                   </div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Decantation Unit */}
-          <div className="mb-[45px]">
+           {/* Decantation Unit */}
+           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Decantation Unit</h2>
             <div className="space-y-2">
               {DECANTATION_OPTIONS.map(option => (
@@ -487,15 +438,11 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   key={option.id}
                   onClick={() => onMechanicalInclusionToggle(option)}
                   className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                    selectedMechanicalInclusionOptions.some(o => o.id === option.id)
-                      ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                      : 'border-gray-300 hover:border-gray-500'
+                    selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
                   }`}
                 >
                   <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                    selectedMechanicalInclusionOptions.some(o => o.id === option.id)
-                      ? 'bg-gray-600 border-gray-600'
-                      : 'bg-white border-gray-300'
+                    selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
                   }`}>
                     {selectedMechanicalInclusionOptions.some(o => o.id === option.id) && (
                       <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
@@ -505,9 +452,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </div>
                   <div className="flex-grow flex justify-between items-center">
                     <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
-                      {showPrices ? formatPrice(option.price) : ''}
-                    </p>
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
                   </div>
                 </button>
               ))}
@@ -523,15 +468,11 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     key={option.id}
                     onClick={() => onSafetyUnitToggle(option)}
                     className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedSafetyUnits.some(o => o.id === option.id)
-                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                        : 'border-gray-300 hover:border-gray-500'
+                      selectedSafetyUnits.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
                     }`}
                   >
                     <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                      selectedSafetyUnits.some(o => o.id === option.id)
-                        ? 'bg-gray-600 border-gray-600'
-                        : 'bg-white border-gray-300'
+                      selectedSafetyUnits.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
                     }`}>
                       {selectedSafetyUnits.some(o => o.id === option.id) && (
                         <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
@@ -541,9 +482,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </div>
                     <div className="flex-grow flex justify-between items-center">
                       <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
-                        {showPrices ? formatPrice(option.price) : ''}
-                      </p>
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
                     </div>
                   </button>
                 ))}
@@ -559,17 +498,13 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     <div
                       onClick={() => onSafetyUpgradeToggle(option)}
                       className={`border rounded-lg p-4 cursor-pointer transition-all duration-300 ${
-                        selectedSafetyUpgrades.some(o => o.id === option.id)
-                          ? 'border-gray-400 ring-1 ring-gray-400'
-                          : 'border-gray-300 hover:border-gray-400'
+                        selectedSafetyUpgrades.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400' : 'border-gray-300 hover:border-gray-400'
                       }`}
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
                           <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors ${
-                            selectedSafetyUpgrades.some(o => o.id === option.id)
-                              ? 'bg-gray-600 border-gray-600'
-                              : 'bg-white border-gray-300'
+                            selectedSafetyUpgrades.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
                           }`}>
                             {selectedSafetyUpgrades.some(o => o.id === option.id) && (
                               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
@@ -579,14 +514,12 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                           </div>
                           <span className="font-medium text-gray-900">{option.name}</span>
                         </div>
-                        <span className="font-medium text-gray-900">
-                          {showPrices ? formatPrice(option.price) : ''}
-                        </span>
+                        <span className="font-medium text-gray-900">{showPrices ? formatPrice(option.price) : ''}</span>
                       </div>
                       
                       <div className="w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
                         <img 
-                          src={getSafetyImage(selectedTrim, selectedTank, option.id)} 
+                          src={getSafetyImage(selectedRfidOption, selectedTank, option.id)} 
                           alt={option.name} 
                           className="max-h-[150px] w-auto object-contain mix-blend-multiply"
                         />
@@ -613,10 +546,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
             <div className="space-y-3 mt-6">
               {LICENSE_OPTIONS.map(option => (
-                <div
-                  key={`license-${option.id}`}
-                  className="w-full flex items-center p-4 border border-gray-300 rounded-lg text-left bg-gray-50"
-                >
+                <div key={`license-${option.id}`} className="w-full flex items-center p-4 border border-gray-300 rounded-lg text-left bg-gray-50">
                   <div className="flex-grow flex justify-between items-center">
                     <span className="font-medium text-gray-900">{option.name}</span>
                     {option.subtext && <span className="text-sm text-gray-500 font-medium">{option.subtext}</span>}
@@ -643,13 +573,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                                 e.stopPropagation();
                                 setPaymentMode(paymentMode === 'installments' ? 'outright' : 'installments');
                             }}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                                paymentMode === 'outright' ? 'bg-blue-600' : 'bg-gray-300'
-                            }`}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${paymentMode === 'outright' ? 'bg-blue-600' : 'bg-gray-300'}`}
                         >
-                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                                paymentMode === 'outright' ? 'translate-x-5' : 'translate-x-1'
-                            }`} />
+                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${paymentMode === 'outright' ? 'translate-x-5' : 'translate-x-1'}`} />
                         </button>
                         <span className={`${paymentMode === 'outright' ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>Full Price</span>
                     </div>
@@ -747,21 +673,13 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               <div className="flex gap-4 flex-col sm:flex-row">
                    <button
                      onClick={() => setSelectedAction('contact')}
-                     className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${
-                       selectedAction === 'contact' 
-                         ? 'bg-blue-600 text-white' 
-                         : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                     }`}
+                     className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${selectedAction === 'contact' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
                   >
                     Contact Sales
                   </button>
                    <button
                      onClick={handleViewQuoteClick}
-                     className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${
-                       selectedAction === 'quote' 
-                         ? 'bg-blue-600 text-white' 
-                         : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                     }`}
+                     className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${selectedAction === 'quote' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
                   >
                     View Quote
                   </button>
@@ -772,9 +690,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 <div className="flex gap-4 flex-col sm:flex-row">
                    <button
                      className="w-full py-3 px-4 rounded text-sm font-semibold bg-blue-600 text-white transition-colors hover:bg-blue-700"
-                     onClick={() => {
-                       alert("Thank you for your interest. Our sales team will contact you shortly.");
-                     }}
+                     onClick={() => { alert("Thank you for your interest. Our sales team will contact you shortly."); }}
                   >
                     Contact Sales
                   </button>
@@ -815,26 +731,17 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
           onClick={() => setLearnMoreOption(null)}
         >
-          <div 
-            className="bg-white rounded-lg shadow-xl w-full max-w-lg relative p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button 
-              onClick={() => setLearnMoreOption(null)} 
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg relative p-6" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setLearnMoreOption(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-
             <h3 className="text-2xl font-semibold mb-4 text-gray-900 text-center">{learnMoreOption.name}</h3>
             
             {(learnMoreOption as any).imageUrl ? (
                <div className="flex justify-center mb-6">
                 <img 
                   src={(learnMoreOption as SafetyUpgradeOption).id.includes('fire') || (learnMoreOption as SafetyUpgradeOption).id.includes('crash') 
-                      ? getSafetyImage(selectedTrim, selectedTank, (learnMoreOption as SafetyUpgradeOption).id) 
+                      ? getSafetyImage(selectedRfidOption, selectedTank, (learnMoreOption as SafetyUpgradeOption).id) 
                       : (learnMoreOption as any).imageUrl}
                   alt={learnMoreOption.name} 
                   className="max-h-64 object-contain"

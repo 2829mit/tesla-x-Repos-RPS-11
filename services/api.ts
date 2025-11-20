@@ -1,5 +1,5 @@
 
-import { CustomerDetails, TrimOption, TankOption, AccessoryOption, DispensingUnitOption, IotOption, SafetyUpgradeOption, LicenseOption } from "../types";
+import { CustomerDetails, RfidOption, TankOption, AccessoryOption, DispensingUnitOption, IotOption, SafetyUpgradeOption, LicenseOption } from "../types";
 
 // In a real production build, this would be an environment variable
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.reposenergy.com/v1';
@@ -13,7 +13,7 @@ export interface QuoteData {
   customerDetails: CustomerDetails | null;
   paymentMode: 'outright' | 'installments';
   configuration: {
-    trim: TrimOption;
+    rfidOption: RfidOption;
     tank: TankOption['id'];
     dispensingUnit: DispensingUnitOption;
     decantation: IotOption;
@@ -27,7 +27,6 @@ export interface QuoteData {
   };
   totalPrice: number;
   monthlyPrice?: number;
-  // Added Tax fields
   gstAmount?: number;
   totalContractValue?: number;
 }
@@ -49,15 +48,6 @@ export const login = async (userId: string, password: string): Promise<{ success
  */
 export const submitLead = async (data: CustomerDetails): Promise<{ success: boolean; message: string }> => {
   try {
-    // PRODUCTION CODE:
-    // const response = await fetch(`${API_BASE_URL}/leads`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data),
-    // });
-    // if (!response.ok) throw new Error('Failed to submit lead');
-    // return await response.json();
-
     // SIMULATION:
     console.log('API: Submitting lead...', data);
     await delay(1500); // Simulate network latency
@@ -73,16 +63,10 @@ export const submitLead = async (data: CustomerDetails): Promise<{ success: bool
  */
 export const logQuoteGeneration = async (data: QuoteData): Promise<void> => {
   try {
-    // PRODUCTION CODE:
-    // navigator.sendBeacon(`${API_BASE_URL}/quotes/log`, JSON.stringify(data));
-
     // SIMULATION:
     console.log('API: Logging quote generation...', data);
-    
-    // Simulate Email Notification Trigger
     console.log(`API: Triggering email to adityakotagire142@gmail.com with lead: ${data.customerDetails?.name}`);
   } catch (error) {
-    // Non-blocking error logging
     console.error('Failed to log quote', error);
   }
 };

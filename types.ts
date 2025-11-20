@@ -4,10 +4,11 @@ export interface PerformanceSpec {
   label: string;
 }
 
-export interface TrimOption {
-  id: 'rwd' | 'lr' | 'lr-awd' | 'p-awd';
+// Renamed from TrimOption to RfidOption to match domain
+export interface RfidOption {
+  id: '1-active-reader' | '2-active-reader' | 'performance-test'; 
   name: string;
-  drive: string;
+  drive: string; // Keeping 'drive' as a generic subtitle field for now, could be renamed to 'tagCapacity'
   price: number;
   financePerMonth: number;
   specs: PerformanceSpec[];

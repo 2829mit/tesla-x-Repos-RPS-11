@@ -1,6 +1,6 @@
 
 import { CONSUMPTION_OPTIONS } from '../constants';
-import { TrimOption, TankOption, SafetyUpgradeOption } from '../types';
+import { RfidOption, TankOption, SafetyUpgradeOption } from '../types';
 
 export const getRecommendedTankId = (consumption: string): TankOption['id'] => {
   const index = CONSUMPTION_OPTIONS.indexOf(consumption);
@@ -12,19 +12,21 @@ export const getRecommendedTankId = (consumption: string): TankOption['id'] => {
 };
 
 export const getVehicleImageUrl = (
-  trim: TrimOption | null,
+  rfidOption: RfidOption | null,
   tank: TankOption['id'],
   safetyUpgrades: SafetyUpgradeOption[]
 ): string => {
     const isSmallTank = tank === '22kl' || tank === '30kl';
     const isLargeTank = tank === '45kl' || tank === '60kl';
     
-    // Handle null trim (default to standard look)
-    const isDuWithoutRfid = !trim || trim.id === 'rwd'; // 3 RFID Nozzle (Default)
-    const isDuWith1Rfid = trim?.id === 'lr';    // 1 RFID Nozzle
-    const isDuWith2Rfid = trim?.id === 'lr-awd'; // 2 RFID Nozzle
+    // Handle null selection (default to standard look)
+    // 'rwd' is gone, now checking if NO rfidOption is selected implies standard 3-RFID-like visual
+    const isStandardVisual = !rfidOption; 
     
-    // Check for IDs matching the new Sane Constants
+    // Map new IDs to Logic
+    const is1ActiveReader = rfidOption?.id === '1-active-reader';
+    const is2ActiveReader = rfidOption?.id === '2-active-reader';
+    
     const hasFireSystem = safetyUpgrades.some(u => u.id === 'fire-suppression');
     const hasBarrier = safetyUpgrades.some(u => u.id === 'crash-barrier');
 
@@ -32,29 +34,29 @@ export const getVehicleImageUrl = (
 
     // Determine base index based on Tank Size and RFID selection
     if (isSmallTank) {
-      if (isDuWithoutRfid) baseIndex = 13;     // 3 RFID (Default)
-      else if (isDuWith1Rfid) baseIndex = 5;   // 1 RFID
-      else if (isDuWith2Rfid) baseIndex = 9;   // 2 RFID
-      else baseIndex = 1;                      // Fallback
+      if (isStandardVisual) baseIndex = 13;      // Default Visual
+      else if (is1ActiveReader) baseIndex = 5;   // 1 Reader
+      else if (is2ActiveReader) baseIndex = 9;   // 2 Readers
+      else baseIndex = 1;                        // Fallback
     } else if (isLargeTank) {
-      if (isDuWithoutRfid) baseIndex = 29;     // 3 RFID
-      else if (isDuWith1Rfid) baseIndex = 21;  // 1 RFID
-      else if (isDuWith2Rfid) baseIndex = 25;  // 2 RFID
-      else baseIndex = 17;                     // Fallback
+      if (isStandardVisual) baseIndex = 29;      // Default Visual
+      else if (is1ActiveReader) baseIndex = 21;  // 1 Reader
+      else if (is2ActiveReader) baseIndex = 25;  // 2 Readers
+      else baseIndex = 17;                       // Fallback
     }
 
     // Apply offsets based on Safety Upgrades
-    // Offset 1: Barrier Only (Image ...2.png)
-    // Offset 2: Fire Only (Image ...3.png)
-    // Offset 3: Both (Image ...4.png)
+    // Offset 1: Barrier Only
+    // Offset 2: Fire Only
+    // Offset 3: Both
     
     let offset = 0;
     if (hasBarrier && !hasFireSystem) {
-      offset = 1; // Barrier only
+      offset = 1; 
     } else if (!hasBarrier && hasFireSystem) {
-      offset = 2; // Fire only
+      offset = 2; 
     } else if (hasBarrier && hasFireSystem) {
-      offset = 3; // Both
+      offset = 3; 
     }
 
     const imageIndex = baseIndex + offset;
@@ -64,12 +66,11 @@ export const getVehicleImageUrl = (
 };
 
 export const getSafetyImage = (
-  trim: TrimOption | null,
+  rfidOption: RfidOption | null,
   tank: TankOption['id'],
   upgradeId: string
 ): string => {
     // Simulate a configuration where only this upgrade is selected to get its thumbnail
-    // We pass a dummy upgrade object with the ID
     const dummyUpgrade = { id: upgradeId } as SafetyUpgradeOption;
-    return getVehicleImageUrl(trim, tank, [dummyUpgrade]);
+    return getVehicleImageUrl(rfidOption, tank, [dummyUpgrade]);
 };

@@ -1,16 +1,16 @@
 
 import React from 'react';
-import type { TrimOption, TankOption, SafetyUpgradeOption } from '../types';
+import type { RfidOption, TankOption, SafetyUpgradeOption } from '../types';
 import { getVehicleImageUrl } from '../utils/vehicleHelpers';
 
 interface CarVisualizerProps {
-  trim: TrimOption | null;
+  rfidOption: RfidOption | null;
   tank: TankOption['id'];
   safetyUpgrades: SafetyUpgradeOption[];
 }
 
-const CarVisualizer: React.FC<CarVisualizerProps> = ({ trim, tank, safetyUpgrades }) => {
-  const imageUrl = getVehicleImageUrl(trim, tank, safetyUpgrades);
+const CarVisualizer: React.FC<CarVisualizerProps> = ({ rfidOption, tank, safetyUpgrades }) => {
+  const imageUrl = getVehicleImageUrl(rfidOption, tank, safetyUpgrades);
 
   return (
     <div className="relative w-full h-full flex items-center justify-center bg-white overflow-hidden group">

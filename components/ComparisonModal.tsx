@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { TRIM_OPTIONS } from '../constants';
-import type { TrimOption } from '../types';
+import { RFID_OPTIONS } from '../constants';
+import type { RfidOption } from '../types';
 
 interface ComparisonModalProps {
   onClose: () => void;
@@ -9,8 +9,8 @@ interface ComparisonModalProps {
 }
 
 const ComparisonModal: React.FC<ComparisonModalProps> = ({ onClose, showPrices }) => {
-  // Filter out the 'Performance' model (id: 'p-awd')
-  const modelsToCompare = TRIM_OPTIONS.filter(trim => trim.id !== 'p-awd');
+  // Filter out the 'Performance' model based on new ID
+  const modelsToCompare = RFID_OPTIONS.filter(trim => trim.id !== 'performance-test');
 
   // Dynamically get all unique spec labels from all models
   const allSpecLabels = [...new Set(modelsToCompare.flatMap(trim => trim.specs.map(spec => spec.label)))];
@@ -25,11 +25,11 @@ const ComparisonModal: React.FC<ComparisonModalProps> = ({ onClose, showPrices }
   };
 
   const features = [
-    ...(showPrices ? [{ label: 'Price', getValue: (trim: TrimOption) => formatCurrency(trim.price) }] : []),
-    { label: 'Drive', getValue: (trim: TrimOption) => trim.drive },
+    ...(showPrices ? [{ label: 'Price', getValue: (trim: RfidOption) => formatCurrency(trim.price) }] : []),
+    { label: 'Drive', getValue: (trim: RfidOption) => trim.drive },
     ...allSpecLabels.map(label => ({
       label: label,
-      getValue: (trim: TrimOption) => trim.specs.find(s => s.label === label)?.value || '-'
+      getValue: (trim: RfidOption) => trim.specs.find(s => s.label === label)?.value || '-'
     }))
   ];
   
