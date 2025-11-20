@@ -116,14 +116,16 @@ export const generateQuotePDF = async (data: QuoteData) => {
     doc.text(`Name: ${data.customerDetails.name}`, 14, finalY);
     doc.text(`Company: ${data.customerDetails.company}`, 14, finalY + 6);
     doc.text(`Industry: ${data.customerDetails.industry}`, 14, finalY + 12);
-    doc.text(`Consumption: ${data.customerDetails.consumption}`, 14, finalY + 18);
+    doc.text(`State: ${data.customerDetails.state || 'N/A'}`, 14, finalY + 18);
+    doc.text(`Consumption: ${data.customerDetails.consumption}`, 14, finalY + 24);
+    
     doc.text(`Email: ${data.customerDetails.email}`, 110, finalY);
     doc.text(`Mobile: ${data.customerDetails.mobile}`, 110, finalY + 6);
   } else {
     doc.text("Customer details not provided.", 14, finalY);
   }
 
-  finalY += 30;
+  finalY += 36;
 
   // --- Order Summary Table ---
   const tableColumn = ["Description", "Price (INR)"];
@@ -140,7 +142,9 @@ export const generateQuotePDF = async (data: QuoteData) => {
 
   // 3. RFID Tech
   const { trim } = data.configuration;
-  tableRows.push([`RFID Tech: ${trim.name}`, getItemPrice(trim.price)]);
+  if (trim) {
+      tableRows.push([`RFID Tech: ${trim.name}`, getItemPrice(trim.price)]);
+  }
 
   // 4. Repos OS
   data.configuration.accessories.reposOs.forEach(opt => {

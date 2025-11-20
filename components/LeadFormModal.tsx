@@ -17,6 +17,16 @@ const INDUSTRY_OPTIONS = [
   'Others'
 ];
 
+const STATE_OPTIONS = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 
+  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 
+  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 
+  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 
+  'West Bengal',
+  'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 
+  'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+].sort();
+
 const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState<CustomerDetails>({
     name: '',
@@ -24,6 +34,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
     email: '',
     company: '',
     industry: '',
+    state: '',
     consumption: '',
   });
 
@@ -191,8 +202,30 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
               </div>
             </div>
 
-            {/* Row 4: Consumption */}
+            {/* Row 4: State | Consumption */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-6">
+              <div>
+                <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">State / UT</label>
+                <select
+                  name="state"
+                  id="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition appearance-none"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                  }}
+                >
+                  <option value="" disabled>Select State</option>
+                  {STATE_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label htmlFor="consumption" className="block text-sm font-medium text-gray-700 mb-1">Monthly Consumption</label>
                 <select

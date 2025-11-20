@@ -62,5 +62,6 @@ export interface CustomerDetails {
   email: string;
   company: string;
   industry: string;
+  state: string;
   consumption: string;
 }

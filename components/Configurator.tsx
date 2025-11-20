@@ -203,10 +203,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price * 36 })),
   ];
 
-  // Filter out Base Price if in installments mode as requested
-  if (paymentMode === 'installments') {
-    pricingItems = pricingItems.filter(item => !item.name.includes('RPS Base Price'));
-  }
+  // Filter out Base Price always as requested ("Dont show tank quantity in pricing details")
+  pricingItems = pricingItems.filter(item => !item.name.includes('RPS Base Price'));
 
   const paidItems = pricingItems.filter(item => item.price > 0);
   const includedItems = pricingItems.filter(item => item.price === 0);
@@ -628,36 +626,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-          {/* Payment Mode Toggle - Only show if prices are visible */}
-          {showPrices && (
-            <div className="mt-16 mb-8">
-              <h2 className="text-xl font-medium text-gray-900 mb-4">Payment Mode</h2>
-              <div className="relative w-full bg-gray-200 p-1 rounded-lg flex h-12">
-                 <div
-                   className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-md shadow transition-all duration-300 ease-in-out ${
-                     paymentMode === 'installments' ? 'left-[calc(50%+2px)]' : 'left-1'
-                   }`}
-                 ></div>
-                 <button
-                   onClick={() => setPaymentMode('outright')}
-                   className={`relative z-10 flex-1 flex items-center justify-center text-sm font-semibold transition-colors duration-300 ${
-                     paymentMode === 'outright' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'
-                   }`}
-                 >
-                   Outright (Full Amount)
-                 </button>
-                 <button
-                   onClick={() => setPaymentMode('installments')}
-                   className={`relative z-10 flex-1 flex items-center justify-center text-sm font-semibold transition-colors duration-300 ${
-                     paymentMode === 'installments' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'
-                   }`}
-                 >
-                   Easy Installments (36 mo)
-                 </button>
-              </div>
-            </div>
-          )}
-
           {/* Pricing Breakdown & Actions */}
           {showPrices ? (
             <div ref={pricingSectionRef} className="pt-8 border-t border-gray-200">
@@ -666,8 +634,29 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 onClick={() => setIsPricingDetailsOpen(!isPricingDetailsOpen)}
               >
                 <h2 className="text-xl font-medium text-gray-900">Pricing Details</h2>
-                <div className="p-1 rounded-full group-hover:bg-gray-100 transition-colors">
-                  {isPricingDetailsOpen ? <ChevronUp /> : <ChevronDown />}
+                <div className="flex items-center gap-4">
+                    {/* Small Circular Toggle for Payment Mode */}
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className={`${paymentMode === 'installments' ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>Monthly</span>
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setPaymentMode(paymentMode === 'installments' ? 'outright' : 'installments');
+                            }}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                                paymentMode === 'outright' ? 'bg-blue-600' : 'bg-gray-300'
+                            }`}
+                        >
+                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                                paymentMode === 'outright' ? 'translate-x-5' : 'translate-x-1'
+                            }`} />
+                        </button>
+                        <span className={`${paymentMode === 'outright' ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>Full Price</span>
+                    </div>
+                    
+                    <div className="p-1 rounded-full group-hover:bg-gray-100 transition-colors">
+                      {isPricingDetailsOpen ? <ChevronUp /> : <ChevronDown />}
+                    </div>
                 </div>
               </div>
               
