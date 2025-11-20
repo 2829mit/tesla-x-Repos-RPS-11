@@ -89,18 +89,18 @@ export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
 
 export const SAFETY_UPGRADE_OPTIONS: SafetyUpgradeOption[] = [
   { 
-    id: 'crash-barrier', 
-    name: 'Crash Barrier', 
-    price: 5499, 
-    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/2.png', 
-    description: 'Reinforced protective barriers engineered to safeguard the station against vehicular impact and ensure operational safety.'
-  },
-  { 
     id: 'fire-suppression', 
     name: 'Fire Suppression System', 
     price: 2999, 
     imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png', 
     description: 'Safety-focused package featuring an integrated fire extinguisher for emergency situations.'
+  },
+  { 
+    id: 'crash-barrier', 
+    name: 'Crash Barrier', 
+    price: 5499, 
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/2.png', 
+    description: 'Reinforced protective barriers engineered to safeguard the station against vehicular impact and ensure operational safety.'
   },
 ];
 

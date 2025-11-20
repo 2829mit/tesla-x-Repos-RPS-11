@@ -20,16 +20,12 @@ export const getVehicleImageUrl = (
     const isLargeTank = tank === '45kl' || tank === '60kl';
     
     // Handle null selection (default to standard look)
-    // 'rwd' is gone, now checking if NO rfidOption is selected implies standard 3-RFID-like visual
     const isStandardVisual = !rfidOption; 
     
     // Map new IDs to Logic
     const is1ActiveReader = rfidOption?.id === '1-active-reader';
     const is2ActiveReader = rfidOption?.id === '2-active-reader';
     
-    const hasFireSystem = safetyUpgrades.some(u => u.id === 'fire-suppression');
-    const hasBarrier = safetyUpgrades.some(u => u.id === 'crash-barrier');
-
     let baseIndex = 13; // Default fallback
 
     // Determine base index based on Tank Size and RFID selection
@@ -46,15 +42,30 @@ export const getVehicleImageUrl = (
     }
 
     // Apply offsets based on Safety Upgrades
-    // Offset 1: Barrier Only
-    // Offset 2: Fire Only
-    // Offset 3: Both
+    const hasFireSystem = safetyUpgrades.some(u => u.id === 'fire-suppression');
+    const hasBarrier = safetyUpgrades.some(u => u.id === 'crash-barrier');
+
+    // DEFAULT MAPPING (Matches Standard Visuals: Base 13, 29)
+    // Offset 1 (+1) -> Crash Barrier
+    // Offset 2 (+2) -> Fire Suppression System
+    let barrierOffset = 1;
+    let fireOffset = 2;
+
+    // ASSET CORRECTION:
+    // The image sets for RFID Trims (Base 5, 9, 21, 25) have inverted layering.
+    // For these sets: Offset 1 is Fire, Offset 2 is Barrier.
+    const rfidBaseIndices = [5, 9, 21, 25];
     
+    if (rfidBaseIndices.includes(baseIndex)) {
+        barrierOffset = 2;
+        fireOffset = 1;
+    }
+
     let offset = 0;
     if (hasBarrier && !hasFireSystem) {
-      offset = 1; 
+      offset = barrierOffset; 
     } else if (!hasBarrier && hasFireSystem) {
-      offset = 2; 
+      offset = fireOffset; 
     } else if (hasBarrier && hasFireSystem) {
       offset = 3; 
     }
