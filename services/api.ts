@@ -29,7 +29,22 @@ export interface QuoteData {
   };
   totalPrice: number;
   monthlyPrice?: number;
+  // Added Tax fields
+  gstAmount?: number;
+  totalContractValue?: number;
 }
+
+/**
+ * Authenticates a user
+ */
+export const login = async (userId: string, password: string): Promise<{ success: boolean; role?: 'sales' | 'guest'; message?: string }> => {
+  // SIMULATION:
+  await delay(800); 
+  if (userId === 'salesrepos' && password === 'Repos@123') {
+    return { success: true, role: 'sales' };
+  }
+  return { success: false, message: 'Invalid credentials' };
+};
 
 /**
  * Submits lead form data to the backend CRM or Database
@@ -65,6 +80,9 @@ export const logQuoteGeneration = async (data: QuoteData): Promise<void> => {
 
     // SIMULATION:
     console.log('API: Logging quote generation...', data);
+    
+    // Simulate Email Notification Trigger
+    console.log(`API: Triggering email to adityakotagire142@gmail.com with lead: ${data.customerDetails?.name}`);
   } catch (error) {
     // Non-blocking error logging
     console.error('Failed to log quote', error);

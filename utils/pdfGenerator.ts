@@ -1,5 +1,5 @@
 
-import { BASE_PRICE } from '../constants';
+import { TANK_OPTIONS } from '../constants';
 import { QuoteData } from '../services/api';
 
 // Declare jsPDF on window since we are using CDN
@@ -61,6 +61,15 @@ export const generateQuotePDF = async (data: QuoteData) => {
     return `Rs. ${value}`;
   };
 
+  // Multiplier based on payment mode - standardizing breakdown to full value always
+  const multiplier = 36;
+  
+  // Helper to calculate displayed price for an item
+  const getItemPrice = (price: number) => {
+    if (price === 0) return 'Included';
+    return formatPdfCurrency(price * multiplier);
+  };
+
   // Colors
   const primaryColor = [23, 26, 32]; // #171A20
   const accentColor = [29, 78, 216]; // Blue
@@ -120,53 +129,55 @@ export const generateQuotePDF = async (data: QuoteData) => {
   const tableColumn = ["Description", "Price (INR)"];
   const tableRows: any[] = [];
 
-  // 1. Base Price
-  tableRows.push(["RPS Base Price", formatPdfCurrency(BASE_PRICE)]);
+  // 1. Tank Base Price
+  const tank = TANK_OPTIONS.find(t => t.id === data.configuration.tank);
+  const tankPrice = tank ? tank.price : 0;
+  tableRows.push([`RPS Base Price (${tank?.name || ''} Tank)`, getItemPrice(tankPrice)]);
 
   // 2. Dispensing Unit
   const { dispensingUnit } = data.configuration;
-  tableRows.push([dispensingUnit.name, dispensingUnit.price === 0 ? 'Included' : formatPdfCurrency(dispensingUnit.price)]);
+  tableRows.push([dispensingUnit.name, getItemPrice(dispensingUnit.price)]);
 
   // 3. RFID Tech
   const { trim } = data.configuration;
-  tableRows.push([`RFID Tech: ${trim.name}`, trim.price === 0 ? 'Included' : formatPdfCurrency(trim.price)]);
+  tableRows.push([`RFID Tech: ${trim.name}`, getItemPrice(trim.price)]);
 
   // 4. Fuel Level Tech
   const { fuelLevel } = data.configuration.accessories;
-  tableRows.push([fuelLevel.name, fuelLevel.price === 0 ? 'Included' : formatPdfCurrency(fuelLevel.price)]);
+  tableRows.push([fuelLevel.name, getItemPrice(fuelLevel.price)]);
 
   // 5. Repos OS
   data.configuration.accessories.reposOs.forEach(opt => {
-    tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
+    tableRows.push([opt.name, getItemPrice(opt.price)]);
   });
 
   // 6. Decantation
   const { decantation } = data.configuration;
-  tableRows.push([`Decantation: ${decantation.name}`, decantation.price === 0 ? 'Included' : formatPdfCurrency(decantation.price)]);
+  tableRows.push([`Decantation: ${decantation.name}`, getItemPrice(decantation.price)]);
 
   // 7. Mechanical Inclusion
   data.configuration.accessories.mechanical.forEach(opt => {
-     tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
+     tableRows.push([opt.name, getItemPrice(opt.price)]);
   });
 
   // 8. Safety Unit
   data.configuration.accessories.safetyUnits.forEach(opt => {
-     tableRows.push([opt.name, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
+     tableRows.push([opt.name, getItemPrice(opt.price)]);
   });
 
   // 9. Safety Upgrades
   data.configuration.accessories.safetyUpgrades.forEach(opt => {
-     tableRows.push([opt.name, formatPdfCurrency(opt.price)]);
+     tableRows.push([opt.name, getItemPrice(opt.price)]);
   });
   
   // 10. Licenses
   data.configuration.licenses.forEach(opt => {
-    tableRows.push([`License: ${opt.name}`, opt.price === 0 ? 'Included' : formatPdfCurrency(opt.price)]);
+    tableRows.push([`License: ${opt.name}`, getItemPrice(opt.price)]);
   });
 
   // 11. Warranty
   const { warranty } = data.configuration;
-  tableRows.push([`Warranty: ${warranty.name}`, warranty.price === 0 ? 'Included' : formatPdfCurrency(warranty.price)]);
+  tableRows.push([`Warranty: ${warranty.name}`, getItemPrice(warranty.price)]);
 
   // Generate Table
   doc.autoTable({
@@ -178,32 +189,52 @@ export const generateQuotePDF = async (data: QuoteData) => {
     styles: { fontSize: 10, cellPadding: 3 },
   });
 
-  // --- Total ---
+  // --- Total Calculations ---
   // @ts-ignore
   const finalYAfterTable = doc.lastAutoTable.finalY + 10;
   
+  // Subtotal (Excl Tax)
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text("Subtotal (Excl. GST):", 130, finalYAfterTable);
+  doc.text(formatPdfCurrency(data.totalContractValue || 0), 170, finalYAfterTable, { align: 'right' });
+  
+  // GST
+  doc.text("GST (18%):", 130, finalYAfterTable + 6);
+  doc.text(formatPdfCurrency(data.gstAmount || 0), 170, finalYAfterTable + 6, { align: 'right' });
+
+  const totalY = finalYAfterTable + 14;
+
+  // Grand Total
   doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
-  doc.text("Total RPS Price:", 130, finalYAfterTable);
+  doc.setTextColor(...primaryColor);
+  doc.text("Total (Inc. GST):", 130, totalY);
   doc.setTextColor(...accentColor);
-  doc.setFontSize(14);
-  doc.text(formatPdfCurrency(data.totalPrice), 170, finalYAfterTable);
+  // Total Price (Inc GST) = totalContractValue + gstAmount
+  const totalIncTax = (data.totalContractValue || 0) + (data.gstAmount || 0);
+  doc.text(formatPdfCurrency(totalIncTax), 170, totalY, { align: 'right' });
 
   // --- Payment Mode Details ---
-  if (data.paymentMode === 'installments' && data.monthlyPrice) {
-    const emiY = finalYAfterTable + 8;
+  const modeY = totalY + 10;
+
+  if (data.paymentMode === 'installments') {
     doc.setFontSize(11);
     doc.setTextColor(...primaryColor);
-    doc.text("Payment Mode: Easy Installments (36 Months)", 130, emiY);
+    doc.text("Payment Mode: Easy Installments (36 Months)", 14, modeY);
     
+    doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text(`Monthly Payment: ${formatPdfCurrency(data.monthlyPrice)}`, 130, emiY + 6);
+    doc.text(`Monthly Payment: ${formatPdfCurrency(data.totalPrice)}`, 14, modeY + 6);
+
+    // Down Payment Note
+    doc.setFont(undefined, 'italic');
+    doc.setTextColor(100);
+    doc.text(`* Down Payment (GST Amount): ${formatPdfCurrency(data.gstAmount || 0)}`, 14, modeY + 12);
   } else {
-      const modeY = finalYAfterTable + 8;
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.setFont(undefined, 'normal');
-      doc.text("Payment Mode: Outright (Full Amount)", 130, modeY);
+      doc.setFontSize(11);
+      doc.setTextColor(...primaryColor);
+      doc.text("Payment Mode: Outright (Full Amount)", 14, modeY);
   }
 
   // Footer

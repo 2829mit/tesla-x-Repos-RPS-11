@@ -1,16 +1,17 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
-import { TRIM_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, WARRANTY_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, FUEL_LEVEL_TECHNOLOGY_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS, BASE_PRICE } from '../constants';
+import { TRIM_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, WARRANTY_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, FUEL_LEVEL_TECHNOLOGY_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS } from '../constants';
 import ComparisonModal from './ComparisonModal.tsx';
 import { generateQuotePDF } from '../utils/pdfGenerator';
 import { logQuoteGeneration, QuoteData } from '../services/api';
+import { getSafetyImage } from '../utils/vehicleHelpers';
 
 interface ConfiguratorProps {
   customerDetails: CustomerDetails | null;
   paymentMode: 'outright' | 'installments';
   setPaymentMode: (mode: 'outright' | 'installments') => void;
-  selectedTrim: TrimOption;
+  selectedTrim: TrimOption | null;
   setSelectedTrim: (trim: TrimOption) => void;
   selectedTank: TankOption['id'];
   setSelectedTank: (tankId: TankOption['id']) => void;
@@ -29,16 +30,31 @@ interface ConfiguratorProps {
   selectedSafetyUpgrades: SafetyUpgradeOption[];
   onSafetyUpgradeToggle: (option: SafetyUpgradeOption) => void;
   selectedLicenseOptions: LicenseOption[];
-  onLicenseOptionToggle: (option: LicenseOption) => void;
   selectedWarrantyOption: WarrantyOption;
   setSelectedWarrantyOption: (option: WarrantyOption) => void;
   selectedConsumption: string | null;
   onConsumptionSelect: (consumption: string) => void;
-  vehiclePrice: number;
-  finalPrice: number;
+  
+  // Updated Pricing Props
+  totalContractValue: number; // Excl Tax
+  gstAmount: number;
+  finalPrice: number; // Display Price (Total Inc Tax OR Monthly)
+  
   recommendedTankId: TankOption['id'] | null;
   showPrices: boolean;
 }
+
+const ChevronUp: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+  </svg>
+);
+
+const ChevronDown: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
 
 const Configurator: React.FC<ConfiguratorProps> = ({
   customerDetails,
@@ -63,20 +79,22 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   selectedSafetyUpgrades,
   onSafetyUpgradeToggle,
   selectedLicenseOptions,
-  onLicenseOptionToggle,
   selectedWarrantyOption,
   setSelectedWarrantyOption,
   selectedConsumption,
   onConsumptionSelect,
-  vehiclePrice,
+  
+  totalContractValue,
+  gstAmount,
   finalPrice,
+  
   recommendedTankId,
   showPrices,
 }) => {
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<'quote' | 'contact'>('contact');
   
-  // State for Learn More Modal - can be SafetyUpgrade or IotOption
+  // State for Learn More Modal
   const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | IotOption | null>(null);
 
   // State for UI interactions
@@ -84,19 +102,14 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   const [isPricingDetailsOpen, setIsPricingDetailsOpen] = useState(true);
   const [showIncludedOptions, setShowIncludedOptions] = useState(false);
   
-  // Ref for the pricing section to track visibility
   const pricingSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // If pricing section is visible (intersecting), hide the sticky footer
         setIsStickyFooterVisible(!entry.isIntersecting);
       },
-      {
-        root: null, // Use the viewport as the root
-        threshold: 0.1, // Trigger when 10% of the target is visible
-      }
+      { root: null, threshold: 0.1 }
     );
 
     if (pricingSectionRef.current) {
@@ -110,78 +123,54 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     };
   }, []);
 
+  // Multiplier for UI display of individual options (Always show full contract value per item)
+  const priceMultiplier = 36; 
+
   const formatCurrency = (amount: number) => {
     if (!showPrices) return '';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
-  const formatPrice = (price: number) => {
+  // Helper to show price based on payment mode for individual options in the list
+  // NOTE: User requested to multiply monthly by 36 for Outright.
+  // For consistency in "Pricing Details" breakdown, we usually show the full value.
+  const formatPrice = (monthlyPrice: number) => {
     if (!showPrices) return '';
-    return price === 0 ? formatCurrency(0) : `+${formatCurrency(price)}`;
+    
+    // If payment mode is outright, we show the full cost (monthly * 36)
+    if (paymentMode === 'outright') {
+        const fullPrice = monthlyPrice * 36;
+        return fullPrice === 0 ? formatCurrency(0) : `+${formatCurrency(fullPrice)}`;
+    }
+    
+    // If installments, we show monthly price
+    return monthlyPrice === 0 ? formatCurrency(0) : `+${formatCurrency(monthlyPrice)}`;
   };
   
-  const getTrimDisplayPrice = (trim: TrimOption) => {
-    return formatPrice(trim.price);
-  };
-
-  // Calculated values for Payment Mode
-  const monthlyPrice = Math.round(finalPrice / 36);
-  const displayedPrice = paymentMode === 'outright' ? finalPrice : monthlyPrice;
-  const displayedPriceLabel = paymentMode === 'outright' ? 'RPS price' : 'Monthly (36 mo)';
-
-  // Helper to calculate the correct image URL for thumbnails based on current config
-  const getSafetyImage = (upgradeId: string) => {
-    const isSmallTank = selectedTank === '22kl' || selectedTank === '30kl';
-    const isLargeTank = selectedTank === '45kl' || selectedTank === '60kl';
-    const isDuWithoutRfid = selectedTrim.id === 'rwd'; // 3 RFID Nozzle
-    const isDuWith1Rfid = selectedTrim.id === 'lr';    // 1 RFID Nozzle
-    const isDuWith2Rfid = selectedTrim.id === 'lr-awd'; // 2 RFID Nozzle
-    
-    let baseIndex = 13; // Default fallback
-
-    if (isSmallTank) {
-      if (isDuWithoutRfid) baseIndex = 1;
-      else if (isDuWith1Rfid) baseIndex = 5;
-      else if (isDuWith2Rfid) baseIndex = 9;
-      else baseIndex = 13;
-    } else if (isLargeTank) {
-      if (isDuWithoutRfid) baseIndex = 17;
-      else if (isDuWith1Rfid) baseIndex = 21;
-      else if (isDuWith2Rfid) baseIndex = 25;
-      else baseIndex = 29;
-    }
-
-    // Calculate offset based on the specific upgrade we want to show
-    // Logic matched with CarVisualizer: Fire adds 2 (offset 1 logic in visualizer was swapped), Barrier adds 1
-    let offset = 0;
-    if (upgradeId === 'fire-suppression') {
-      offset = 1;
-    } else if (upgradeId === 'crash-barrier') {
-      offset = 2;
-    }
-
-    const imageIndex = baseIndex + offset;
-    const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
-    return `${s3BaseUrl}${imageIndex}.png`;
-  };
+  const currentTank = TANK_OPTIONS.find(t => t.id === selectedTank);
 
   const handleViewQuoteClick = async () => {
-    // If prices are hidden, maybe we shouldn't allow quote generation or generate a restricted quote
-    // For now, assuming PDF generation is allowed but might need adjustments if prices should be hidden in PDF too.
-    // Based on "show website without prices", let's proceed but user might see prices in PDF if not handled. 
-    // But for guest flow usually they just browse. 
+    if (!selectedTrim) {
+        alert("Please select an RFID Technology option before viewing quote.");
+        return;
+    }
     
     setSelectedAction('quote');
     
     const quoteData: QuoteData = {
       customerDetails,
       paymentMode,
-      monthlyPrice,
-      totalPrice: finalPrice,
+      // Pass pre-calculated totals to PDF generator
+      totalPrice: finalPrice, // Display Price
+      gstAmount: gstAmount,
+      totalContractValue: totalContractValue,
+      monthlyPrice: paymentMode === 'installments' ? finalPrice : undefined,
+      
       configuration: {
         trim: selectedTrim,
         tank: selectedTank,
@@ -199,31 +188,32 @@ const Configurator: React.FC<ConfiguratorProps> = ({
       }
     };
 
-    // Generate PDF using utility
-    // Note: If showPrices is false, the PDF utility will still generate prices unless we pass this flag or modify utility.
-    // Assuming strictly "website without prices" for now.
     await generateQuotePDF(quoteData);
-
-    // Log to backend
     logQuoteGeneration(quoteData);
   };
 
-  // Group pricing items
+  const tankBasePrice = currentTank ? currentTank.price : 0;
+
+  // Calculate individual item total costs (Monthly * 36) for the breakdown list
+  // Regardless of payment mode, the breakdown shows the value contribution to the total contract
   const pricingItems = [
-    { name: 'RPS Base Price', price: BASE_PRICE },
-    { name: selectedDispensingUnit.name, price: selectedDispensingUnit.price },
-    { name: selectedTrim.name, price: selectedTrim.price },
-    { name: selectedFuelLevelTechnology.name, price: selectedFuelLevelTechnology.price },
-    ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price })),
-    { name: selectedDecantation.name, price: selectedDecantation.price },
-    ...selectedMechanicalInclusionOptions.map(opt => ({ name: opt.name, price: opt.price })),
-    ...selectedSafetyUnits.map(opt => ({ name: opt.name, price: opt.price })),
-    ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price })),
-    { name: selectedWarrantyOption.name, price: selectedWarrantyOption.price },
+    { name: `RPS Base Price (${currentTank?.name || ''} Tank)`, price: tankBasePrice * 36 },
+    { name: selectedDispensingUnit.name, price: selectedDispensingUnit.price * 36 },
+    ...(selectedTrim ? [{ name: selectedTrim.name, price: selectedTrim.price * 36 }] : []),
+    { name: selectedFuelLevelTechnology.name, price: selectedFuelLevelTechnology.price * 36 },
+    ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price * 36 })),
+    { name: selectedDecantation.name, price: selectedDecantation.price * 36 },
+    ...selectedMechanicalInclusionOptions.map(opt => ({ name: opt.name, price: opt.price * 36 })),
+    ...selectedSafetyUnits.map(opt => ({ name: opt.name, price: opt.price * 36 })),
+    ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price * 36 })),
+    // Licenses removed from pricing details as requested
+    { name: selectedWarrantyOption.name, price: selectedWarrantyOption.price * 36 },
   ];
 
   const paidItems = pricingItems.filter(item => item.price > 0);
   const includedItems = pricingItems.filter(item => item.price === 0);
+
+  const displayedPriceLabel = paymentMode === 'outright' ? 'Total RPS Price (Inc. GST)' : 'Monthly Payment (36 mo)';
 
   return (
     <div className="bg-white text-gray-800 lg:h-full h-auto flex flex-col relative lg:overflow-hidden">
@@ -246,6 +236,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             ))}
           </div>
           
+          {/* Consumption */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Consumption</h2>
             <div className="space-y-4">
@@ -271,6 +262,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
+          {/* Tank Capacity */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Tank Capacity</h2>
             <div className="space-y-4">
@@ -301,12 +293,10 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       )}
                       <div className="flex justify-between items-center">
                           <div>
-                            <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">Tank</p>
-                            <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">Capacity</p>
+                            <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                            {option.dimensions && <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.dimensions}</p>}
                           </div>
-                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
                       </div>
-                      {/* Faint overlay */}
                       {selectedTank && selectedTank !== option.id && (
                           <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                       )}
@@ -327,6 +317,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </button>
           </div>
 
+          {/* Dispensing Unit */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Dispensing Unit</h2>
             <div className="space-y-2">
@@ -351,7 +342,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       </p>
                     </div>
                   </div>
-                  {/* Faint overlay */}
                   {selectedDispensingUnit.id !== option.id && (
                       <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                   )}
@@ -360,6 +350,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
+          {/* RFID Technology */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Technology</h2>
             <div className="space-y-2">
@@ -373,7 +364,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     key={`dispensing-${option.id}`}
                     onClick={() => setSelectedTrim(option)}
                     className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedTrim.id === option.id 
+                      selectedTrim?.id === option.id 
                         ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' 
                         : 'border-gray-300 hover:border-gray-500'
                     }`}
@@ -385,12 +376,11 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                           <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.drive}</p>
                         </div>
                         <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
-                          {showPrices ? getTrimDisplayPrice(option) : ''}
+                          {showPrices ? formatPrice(option.price) : ''}
                         </p>
                       </div>
                     </div>
-                    {/* Faint overlay */}
-                    {selectedTrim.id !== option.id && (
+                    {selectedTrim?.id !== option.id && (
                         <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                     )}
                   </button>
@@ -398,6 +388,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
+          {/* Fuel Level Technology */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Fuel Level Technology</h2>
             <div className="space-y-2">
@@ -421,7 +412,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       </p>
                     </div>
                   </div>
-                  {/* Faint overlay */}
                   {selectedFuelLevelTechnology.id !== option.id && (
                       <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                   )}
@@ -430,6 +420,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
+          {/* Repos OS */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Repos OS</h2>
             <div className="space-y-2">
@@ -465,6 +456,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
+          {/* Decantation Unit */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Decantation Unit</h2>
             <div className="space-y-2">
@@ -489,13 +481,11 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                         </p>
                       </div>
                     </div>
-                    {/* Faint overlay */}
                     {selectedDecantation.id !== option.id && (
                         <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                     )}
                   </button>
                   
-                  {/* Learn More Button for Advanced Skid */}
                   {option.id === 'advanced-skid' && (
                     <div className="flex justify-end mt-2 mr-1">
                        <button 
@@ -514,6 +504,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
+          {/* Mechanical Inclusion */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Mechanical Inclusion</h2>
             <div className="space-y-2">
@@ -549,9 +540,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-          <div className="space-y-[45px]">
-            {/* Safety Unit Section */}
-            <div>
+          {/* Sensors and Controller Unit */}
+          <div className="mb-[45px]">
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Sensors and Controller Unit</h2>
               <div className="space-y-2">
                 {SAFETY_UNIT_OPTIONS.map(option => (
@@ -584,10 +574,10 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </button>
                 ))}
               </div>
-            </div>
+          </div>
 
-            {/* Safety Upgrades Section */}
-            <div>
+          {/* Safety Upgrades */}
+          <div className="mb-[45px]">
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Safety Upgrades</h2>
               <div className="space-y-6">
                 {SAFETY_UPGRADE_OPTIONS.map(option => (
@@ -622,7 +612,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       
                       <div className="w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
                         <img 
-                          src={getSafetyImage(option.id)} 
+                          src={getSafetyImage(selectedTrim, selectedTank, option.id)} 
                           alt={option.name} 
                           className="max-h-[150px] w-auto object-contain mix-blend-multiply"
                         />
@@ -642,58 +632,56 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   </div>
                 ))}
               </div>
-            </div>
+          </div>
 
-            {/* Warranty Options Section */}
-            <div>
-              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-2">Warranty Options</h2>
-              <div className="space-y-2 mt-6">
-                {WARRANTY_OPTIONS.map(option => (
-                  <button
-                    key={`warranty-${option.id}`}
-                    onClick={() => setSelectedWarrantyOption(option)}
-                    className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedWarrantyOption.id === option.id
-                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                        : 'border-gray-300 hover:border-gray-500'
-                    }`}
-                  >
-                    <div className="flex-grow">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                          {option.subtext && <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>}
-                        </div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
-                          {showPrices ? formatPrice(option.price) : ''}
-                        </p>
+          {/* Warranty Options */}
+          <div className="mb-[45px]">
+            <h2 className="text-2xl font-semibold text-center text-gray-900 mt-2">Warranty Options</h2>
+            <div className="space-y-2 mt-6">
+              {WARRANTY_OPTIONS.map(option => (
+                <button
+                  key={`warranty-${option.id}`}
+                  onClick={() => setSelectedWarrantyOption(option)}
+                  className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                    selectedWarrantyOption.id === option.id
+                      ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
+                      : 'border-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                        {option.subtext && <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>}
                       </div>
-                    </div>
-                    {/* Faint overlay */}
-                    {selectedWarrantyOption.id !== option.id && (
-                        <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Licenses Section */}
-            <div>
-              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
-              <div className="space-y-3 mt-6">
-                {LICENSE_OPTIONS.map(option => (
-                  <div
-                    key={`license-${option.id}`}
-                    className="w-full flex items-center p-4 border border-gray-300 rounded-lg text-left bg-gray-50"
-                  >
-                    <div className="flex-grow flex justify-between items-center">
-                      <span className="font-medium text-gray-900">{option.name}</span>
-                      {option.subtext && <span className="text-sm text-gray-500 font-medium">{option.subtext}</span>}
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                        {showPrices ? formatPrice(option.price) : ''}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                  {selectedWarrantyOption.id !== option.id && (
+                      <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+            
+          {/* Licenses Section */}
+          <div className="mb-[45px]">
+            <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
+            <div className="space-y-3 mt-6">
+              {LICENSE_OPTIONS.map(option => (
+                <div
+                  key={`license-${option.id}`}
+                  className="w-full flex items-center p-4 border border-gray-300 rounded-lg text-left bg-gray-50"
+                >
+                  <div className="flex-grow flex justify-between items-center">
+                    <span className="font-medium text-gray-900">{option.name}</span>
+                    {option.subtext && <span className="text-sm text-gray-500 font-medium">{option.subtext}</span>}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -735,21 +723,12 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               >
                 <h2 className="text-xl font-medium text-gray-900">Pricing Details</h2>
                 <div className="p-1 rounded-full group-hover:bg-gray-100 transition-colors">
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className={`h-5 w-5 text-gray-500 transition-transform duration-300 ${isPricingDetailsOpen ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
-                  </svg>
+                  {isPricingDetailsOpen ? <ChevronUp /> : <ChevronDown />}
                 </div>
               </div>
               
               <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isPricingDetailsOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="space-y-3 text-sm text-gray-600 mb-8">
-                    {/* Paid Items - Always Visible */}
                     {paidItems.map((item, idx) => (
                       <div key={`paid-${idx}`} className="flex justify-between">
                         <span>{item.name}</span>
@@ -757,7 +736,39 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       </div>
                     ))}
                     
-                    {/* Included Items Toggle */}
+                    {/* Subtotal, GST, Total logic */}
+                    <div className="border-t border-gray-200 my-3 pt-3">
+                        <div className="flex justify-between font-semibold text-gray-800">
+                            <span>Subtotal (Excl. GST)</span>
+                            <span>{formatCurrency(totalContractValue)}</span>
+                        </div>
+                        
+                        {/* For Outright, show GST clearly */}
+                        {paymentMode === 'outright' && (
+                          <div className="flex justify-between text-gray-600 mt-1">
+                              <span>GST (18%)</span>
+                              <span>{formatCurrency(gstAmount)}</span>
+                          </div>
+                        )}
+
+                        {/* For Installments, hide plain GST row, show Down Payment row instead */}
+                        {paymentMode === 'installments' && (
+                           <>
+                             <div className="flex justify-between text-blue-600 font-medium mt-2 text-sm">
+                                <span>Down Payment (GST Amount)</span>
+                                <span>{formatCurrency(gstAmount)}</span>
+                             </div>
+                             <div className="flex justify-between text-gray-600 mt-1 text-sm">
+                                <span>Tenure</span>
+                                <span>36 Months</span>
+                             </div>
+                             <div className="mt-2 text-xs text-gray-500 italic text-right">
+                                Subject to approval from Partnered Bank
+                             </div>
+                           </>
+                        )}
+                    </div>
+
                     {includedItems.length > 0 && (
                       <div className="mt-4 border-t border-gray-100 pt-2">
                          <button 
@@ -765,15 +776,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                           className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 mb-2"
                          >
                            {showIncludedOptions ? 'Hide included features' : 'Show included features'}
-                           <svg 
-                             xmlns="http://www.w3.org/2000/svg" 
-                             className={`h-3 w-3 ml-1 transition-transform ${showIncludedOptions ? 'rotate-180' : ''}`} 
-                             fill="none" 
-                             viewBox="0 0 24 24" 
-                             stroke="currentColor"
-                           >
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
-                           </svg>
+                           <span className="ml-1">
+                            {showIncludedOptions ? <ChevronUp /> : <ChevronDown />}
+                           </span>
                          </button>
                          
                          <div className={`space-y-2 pl-2 transition-all duration-300 overflow-hidden ${showIncludedOptions ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -789,13 +794,16 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 </div>
               </div>
               
-              {/* Total - Always visible */}
               <div className="flex justify-between items-center pt-4 border-t border-gray-200 mb-8">
                    <span className="text-lg font-semibold text-gray-900">{displayedPriceLabel}</span>
-                   <span className="text-lg font-bold text-gray-900">{formatCurrency(displayedPrice)}</span>
+                   <div className="text-right">
+                      <span className="text-lg font-bold text-gray-900">{formatCurrency(finalPrice)}</span>
+                      {paymentMode === 'outright' && (
+                          <p className="text-xs text-gray-500 font-normal">Inclusive of GST</p>
+                      )}
+                   </div>
               </div>
 
-              {/* Buttons */}
               <div className="flex gap-4 flex-col sm:flex-row">
                    <button
                      onClick={() => setSelectedAction('contact')}
@@ -825,7 +833,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                    <button
                      className="w-full py-3 px-4 rounded text-sm font-semibold bg-blue-600 text-white transition-colors hover:bg-blue-700"
                      onClick={() => {
-                       // Generic action for guests
                        alert("Thank you for your interest. Our sales team will contact you shortly.");
                      }}
                   >
@@ -838,20 +845,21 @@ const Configurator: React.FC<ConfiguratorProps> = ({
         </div>
       </div>
       
-      {/* Sticky Footer - Floating Card Style (Only show if prices are allowed) */}
       {showPrices && (
         <div className={`fixed bottom-0 left-0 right-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 p-4 z-20 w-full pointer-events-none transition-transform duration-300 ease-in-out ${isStickyFooterVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}>
-          <div className="bg-white border border-gray-200 shadow-lg rounded-xl p-4 flex justify-between items-center pointer-events-auto">
-             <div>
-               <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{formatCurrency(displayedPrice)}</p>
-               <p className="text-xs sm:text-sm text-gray-500 mt-0.5">{displayedPriceLabel}</p>
+          <div className="bg-white border border-gray-200 shadow-lg rounded-xl p-4 pointer-events-auto">
+             <div className="flex justify-between items-center mb-2">
+                <div>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{formatCurrency(finalPrice)}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5">{paymentMode === 'outright' ? 'Excl. GST' : 'Per Month'}</p>
+                </div>
+                <button
+                  onClick={handleViewQuoteClick}
+                  className="bg-blue-600 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-md text-sm sm:text-base font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
+                >
+                  View Quote
+                </button>
              </div>
-             <button
-               onClick={handleViewQuoteClick}
-               className="bg-blue-600 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-md text-sm sm:text-base font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
-             >
-               View Quote
-             </button>
           </div>
         </div>
       )}
@@ -860,7 +868,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
         <ComparisonModal onClose={() => setIsComparisonModalOpen(false)} showPrices={showPrices} />
       )}
 
-      {/* Learn More Modal */}
       {learnMoreOption && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
@@ -881,12 +888,11 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 
             <h3 className="text-2xl font-semibold mb-4 text-gray-900 text-center">{learnMoreOption.name}</h3>
             
-            {/* Conditionally render image only if present in the option (Safety Upgrade or specific IotOption) */}
             {(learnMoreOption as any).imageUrl ? (
                <div className="flex justify-center mb-6">
                 <img 
                   src={(learnMoreOption as SafetyUpgradeOption).id.includes('fire') || (learnMoreOption as SafetyUpgradeOption).id.includes('crash') 
-                      ? getSafetyImage((learnMoreOption as SafetyUpgradeOption).id) 
+                      ? getSafetyImage(selectedTrim, selectedTank, (learnMoreOption as SafetyUpgradeOption).id) 
                       : (learnMoreOption as any).imageUrl}
                   alt={learnMoreOption.name} 
                   className="max-h-64 object-contain"
@@ -894,7 +900,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             ) : null}
            
-
             <p className="text-gray-600 text-center leading-relaxed">
               {(learnMoreOption as any).description || 'No description available.'}
             </p>

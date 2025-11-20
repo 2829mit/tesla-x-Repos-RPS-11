@@ -32,6 +32,8 @@ export interface IotOption {
 export interface TankOption {
   id: string;
   name: string;
+  price: number;
+  dimensions?: string;
 }
 
 export interface WarrantyOption {

@@ -8,7 +8,6 @@ import LoginModal from './components/LoginModal.tsx';
 import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
 import { 
   TRIM_OPTIONS,
-  BASE_PRICE,
   DECANTATION_OPTIONS,
   REPOS_OS_OPTIONS,
   WARRANTY_OPTIONS,
@@ -17,8 +16,10 @@ import {
   FUEL_LEVEL_TECHNOLOGY_OPTIONS,
   MECHANICAL_INCLUSION_OPTIONS,
   SAFETY_UPGRADE_OPTIONS,
-  LICENSE_OPTIONS
+  LICENSE_OPTIONS,
+  TANK_OPTIONS,
 } from './constants';
+import { getRecommendedTankId } from './utils/vehicleHelpers';
 
 const App: React.FC = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
@@ -26,24 +27,22 @@ const App: React.FC = () => {
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null);
   
-  // Payment Mode State
-  const [paymentMode, setPaymentMode] = useState<'outright' | 'installments'>('outright');
+  // Payment Mode State - Default to installments as requested
+  const [paymentMode, setPaymentMode] = useState<'outright' | 'installments'>('installments');
   
-  // Use safe initialization with fallbacks to prevent crashes
-  const [selectedTrim, setSelectedTrim] = useState<TrimOption>(() => {
-    if (TRIM_OPTIONS && TRIM_OPTIONS.length > 0) {
-      // Default to '2 RFID Nozzle' (id: 'lr-awd') if available
-      const defaultOption = TRIM_OPTIONS.find(t => t.id === 'lr-awd');
-      return defaultOption || TRIM_OPTIONS[0];
-    }
-    return { id: 'rwd', name: '3 RFID Nozzle', drive: '', price: 0, financePerMonth: 0, specs: [] };
-  });
+  // Default to NULL (no option selected)
+  const [selectedTrim, setSelectedTrim] = useState<TrimOption | null>(null);
 
-  const [selectedTank, setSelectedTank] = useState<TankOption['id']>('22kl');
-  
-  const [selectedFuelLevelTechnology, setSelectedFuelLevelTechnology] = useState<AccessoryOption>(() => 
-    FUEL_LEVEL_TECHNOLOGY_OPTIONS[0] || { id: 'ultrasonic', name: 'Ultrasonic', price: 0 }
+  // Ensure selectedTank defaults to a valid ID from TANK_OPTIONS
+  const [selectedTank, setSelectedTank] = useState<TankOption['id']>(() => 
+    TANK_OPTIONS[0]?.id || '22kl'
   );
+  
+  // Default to Capacitive (price 0)
+  const [selectedFuelLevelTechnology, setSelectedFuelLevelTechnology] = useState<AccessoryOption>(() => {
+    const options = FUEL_LEVEL_TECHNOLOGY_OPTIONS || [];
+    return options.find(o => o.price === 0) || options[0] || { id: 'ultrasonic', name: 'Ultrasonic', price: 0 };
+  });
   
   const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>(() => 
     (REPOS_OS_OPTIONS || []).filter(o => o.price === 0)
@@ -108,45 +107,15 @@ const App: React.FC = () => {
       setCustomerDetails(details);
       setSelectedConsumption(details.consumption);
       
-      switch (details.consumption) {
-        case '50-100KL':
-          setRecommendedTankId('22kl');
-          break;
-        case '100-200KL':
-          setRecommendedTankId('30kl');
-          break;
-        case '200-300KL':
-          setRecommendedTankId('45kl');
-          break;
-        case '300-1000KL':
-          setRecommendedTankId('60kl');
-          break;
-        default:
-          setRecommendedTankId(null);
-          break;
-      }
+      const recId = getRecommendedTankId(details.consumption);
+      setRecommendedTankId(recId);
     }
   };
 
   const handleConsumptionSelect = (consumption: string) => {
     setSelectedConsumption(consumption);
-    switch (consumption) {
-      case '50-100KL':
-        setRecommendedTankId('22kl');
-        break;
-      case '100-200KL':
-        setRecommendedTankId('30kl');
-        break;
-      case '200-300KL':
-        setRecommendedTankId('45kl');
-        break;
-      case '300-1000KL':
-        setRecommendedTankId('60kl');
-        break;
-      default:
-        setRecommendedTankId(null);
-        break;
-    }
+    const recId = getRecommendedTankId(consumption);
+    setRecommendedTankId(recId);
   };
 
   const handleReposOsToggle = (option: AccessoryOption) => {
@@ -181,16 +150,15 @@ const App: React.FC = () => {
     );
   };
 
-  const handleLicenseOptionToggle = (option: LicenseOption) => {
-    setSelectedLicenseOptions(prev => 
-      prev.find(o => o.id === option.id)
-        ? prev.filter(o => o.id !== option.id)
-        : [...prev, option]
-    );
-  };
+  // --- Price Calculations ---
 
-  const vehiclePrice = useMemo(() => {
-    let price = BASE_PRICE + (selectedTrim?.price || 0);
+  // 1. Calculate Total Monthly Price (Base cost of configuration per month)
+  const monthlyTotalPrice = useMemo(() => {
+    const tank = TANK_OPTIONS.find(t => t.id === selectedTank);
+    const tankPrice = tank ? tank.price : 0;
+
+    let price = tankPrice;
+    price += selectedTrim?.price || 0;
     price += selectedDispensingUnit?.price || 0;
     price += selectedFuelLevelTechnology.price || 0;
     price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
@@ -201,9 +169,33 @@ const App: React.FC = () => {
     price += selectedLicenseOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedWarrantyOption?.price || 0;
     return price;
-  }, [selectedTrim, selectedDispensingUnit, selectedFuelLevelTechnology, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions, selectedWarrantyOption]);
+  }, [selectedTank, selectedTrim, selectedDispensingUnit, selectedFuelLevelTechnology, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions, selectedWarrantyOption]);
 
-  const finalPrice = vehiclePrice;
+  // 2. Calculate Total Contract Value (Excluding Tax)
+  // This is essentially (Monthly * 36) regardless of payment mode, used as base for tax
+  const totalContractValue = useMemo(() => {
+    return monthlyTotalPrice * 36;
+  }, [monthlyTotalPrice]);
+
+  // 3. Calculate GST (18%)
+  const gstAmount = useMemo(() => {
+    return totalContractValue * 0.18;
+  }, [totalContractValue]);
+
+  // 4. Calculate Total Inclusive of Tax
+  const totalInclTax = useMemo(() => {
+    return totalContractValue + gstAmount;
+  }, [totalContractValue, gstAmount]);
+
+  // 5. Determine displayed/final price based on payment mode
+  // For Outright: User pays Total Incl Tax.
+  // For Installments: User pays Monthly Price. The GST Amount is the "Down Payment".
+  const displayPrice = useMemo(() => {
+    if (paymentMode === 'outright') {
+      return totalInclTax;
+    }
+    return monthlyTotalPrice;
+  }, [totalInclTax, monthlyTotalPrice, paymentMode]);
 
   // Determine if prices should be shown (only for 'sales' role)
   const showPrices = userRole === 'sales';
@@ -245,13 +237,16 @@ const App: React.FC = () => {
             selectedSafetyUpgrades={selectedSafetyUpgrades}
             onSafetyUpgradeToggle={handleSafetyUpgradeToggle}
             selectedLicenseOptions={selectedLicenseOptions}
-            onLicenseOptionToggle={handleLicenseOptionToggle}
             selectedWarrantyOption={selectedWarrantyOption}
             setSelectedWarrantyOption={setSelectedWarrantyOption}
             selectedConsumption={selectedConsumption}
             onConsumptionSelect={handleConsumptionSelect}
-            vehiclePrice={vehiclePrice}
-            finalPrice={finalPrice}
+            
+            // New Pricing Props
+            totalContractValue={totalContractValue}
+            gstAmount={gstAmount}
+            finalPrice={displayPrice} // This is either Total(Inc Tax) or Monthly Price
+            
             recommendedTankId={recommendedTankId}
             showPrices={showPrices}
           />

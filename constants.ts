@@ -1,8 +1,8 @@
 
 import type { PerformanceSpec, TrimOption, IotOption, TankOption, WarrantyOption, AccessoryOption, DispensingUnitOption, SafetyUpgradeOption, LicenseOption } from './types';
 
-export const BASE_PRICE = 3500000;
-export const BASE_FINANCE_PER_MONTH = 48000;
+// Removed static BASE_PRICE as it is now determined by the selected Tank
+export const BASE_FINANCE_PER_MONTH = 0; // Not used in new logic
 
 const commonSpecs: PerformanceSpec[] = [
   { value: '120L/m', label: 'Speed' },
@@ -10,12 +10,13 @@ const commonSpecs: PerformanceSpec[] = [
   { value: '24/7', label: 'Monitoring' },
 ];
 
+// Prices are now MONTHLY prices
 export const TRIM_OPTIONS: TrimOption[] = [
   { 
     id: 'rwd', 
     name: '3 RFID Nozzle', 
     drive: '150 tags', 
-    price: 60000, 
+    price: 14999, // Monthly
     financePerMonth: 0,
     specs: commonSpecs,
     imageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010429/15_a79ols.png',
@@ -24,8 +25,8 @@ export const TRIM_OPTIONS: TrimOption[] = [
     id: 'lr', 
     name: '1 RFID Nozzle', 
     drive: '50 Tags', 
-    price: 30000, 
-    financePerMonth: 7000,
+    price: 4999, // Updated Price
+    financePerMonth: 0,
     specs: commonSpecs,
     imageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010390/14_sdtrkr.png',
   },
@@ -33,8 +34,8 @@ export const TRIM_OPTIONS: TrimOption[] = [
     id: 'lr-awd', 
     name: '2 RFID Nozzle', 
     drive: '100 Tags', 
-    price: 50000, 
-    financePerMonth: 12000,
+    price: 9999, // Monthly
+    financePerMonth: 0,
     specs: commonSpecs,
     imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
   },
@@ -42,8 +43,8 @@ export const TRIM_OPTIONS: TrimOption[] = [
     id: 'p-awd', 
     name: 'Performance', 
     drive: 'All-Wheel Drive', 
-    price: 1700000, 
-    financePerMonth: 23000,
+    price: 50000, // placeholder high price
+    financePerMonth: 0,
     specs: [
       { value: '321mi', label: 'Range (EPA est.)' },
       { value: '125mph', label: 'Top Speed' },
@@ -53,12 +54,12 @@ export const TRIM_OPTIONS: TrimOption[] = [
 ];
 
 export const DISPENSING_UNIT_OPTIONS: DispensingUnitOption[] = [
-  { id: 'single-du', name: 'Single DU', subtext: '2 Nozzle', price: 50000 },
-  { id: 'double-du', name: 'Double DU', subtext: '3 Nozzle', price: 60000 },
+  { id: 'single-du', name: 'Single DU', subtext: '2 Nozzle', price: 0 }, // Assuming 0 / Included based on pattern
+  { id: 'double-du', name: 'Double DU', subtext: '3 Nozzle', price: 4999 }, // Monthly
 ];
 
 export const FUEL_LEVEL_TECHNOLOGY_OPTIONS: AccessoryOption[] = [
-  { id: 'ultrasonic-sensor', name: 'Ultrasonic Sensor', price: 0 },
+  { id: 'ultrasonic-sensor', name: 'Ultrasonic Sensor', price: 4599 }, // Monthly
   { id: 'capacitive-sensor', name: 'Capacitive Sensor', price: 0 },
 ];
 
@@ -66,7 +67,7 @@ export const REPOS_OS_OPTIONS: AccessoryOption[] = [
   { id: 'reports-analytics', name: 'Reports & Analytics', price: 0 },
   { id: 'operator-manager-apps', name: 'Operator & Manager Apps', price: 0 },
   { id: 'real-time-inventory', name: 'Real-time Fuel Level Inventory', price: 0 },
-  { id: 'erp-integration', name: 'ERP Integration', price: 30000 },
+  { id: 'erp-integration', name: 'ERP Integration', price: 3499 }, // Monthly
 ];
 
 export const DECANTATION_OPTIONS: IotOption[] = [
@@ -74,7 +75,7 @@ export const DECANTATION_OPTIONS: IotOption[] = [
     id: 'advanced-skid', 
     name: 'Advanced Skid', 
     subtext: 'With Flow Meter', 
-    price: 25000,
+    price: 12999, // Monthly
     description: 'A Flow Meter is a high-precision instrument used to measure the volume of fuel being unloaded (decanted) into the station. It ensures accurate quantity verification, transparency, and prevents pilferage during the refilling process.'
   },
   { id: 'basic-skid', name: 'Basic Skid', subtext: 'Already Included', price: 0 },
@@ -96,24 +97,23 @@ export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
   { id: 'decantation-cutoff', name: 'Decantation Cutoff', price: 0 },
   { id: 'flame-proof-illumination', name: 'Flame Proof Illumination', price: 0 },
   { id: 'glasswool-shield', name: 'Glasswool Shield', price: 0 },
-  { id: 'bollard-barriers', name: 'Bollard Barriers', price: 4999 },
-  { id: 'surveillance-camera', name: 'Surveillance Camera', price: 12999 },
-  { id: 'mobile-device', name: 'Wireless Synchronised Mobile', price: 20000 },
+  { id: 'surveillance-camera', name: 'Surveillance Camera', price: 499 }, // Monthly
+  { id: 'mobile-device', name: 'Wireless Synchronised Mobile', price: 0 },
 ];
 
 export const SAFETY_UPGRADE_OPTIONS: SafetyUpgradeOption[] = [
   { 
-    id: 'fire-suppression', 
+    id: 'fire-suppression', // Correct ID for Fire System
     name: 'Fire Suppression System', 
-    price: 280000,
-    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png',
+    price: 2999, // Monthly
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png', // Visual 3 corresponds to Fire System (Offset 2)
     description: 'Safety-focused package featuring an integrated fire extinguisher for emergency situations.'
   },
   { 
-    id: 'crash-barrier', 
+    id: 'crash-barrier', // Correct ID for Barrier
     name: 'Crash Barrier', 
-    price: 350000,
-    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/2.png',
+    price: 5499, // Monthly
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/2.png', // Visual 2 corresponds to Barrier (Offset 1)
     description: 'Reinforced protective barriers engineered to safeguard the station against vehicular impact and ensure operational safety.'
   },
 ];
@@ -125,11 +125,12 @@ export const LICENSE_OPTIONS: LicenseOption[] = [
   { id: 'final-grant', name: 'Final Grant', price: 0, subtext: 'Scope Customer' },
 ];
 
+// Tanks now have prices (Monthly) and dimensions
 export const TANK_OPTIONS: TankOption[] = [
-  { id: '22kl', name: '22KL' },
-  { id: '30kl', name: '30KL' },
-  { id: '45kl', name: '45KL' },
-  { id: '60kl', name: '60KL' },
+  { id: '22kl', name: '22KL', price: 99999, dimensions: '10.5 x 4.5 x 4.5 meters' },
+  { id: '30kl', name: '30KL', price: 119999, dimensions: '12 x 4.5 x 4.5 meters' },
+  { id: '45kl', name: '45KL', price: 129999, dimensions: '15 x 4.5 x 4.5 meters' },
+  { id: '60kl', name: '60KL', price: 139999, dimensions: '18 x 4.5 x 4.5 meters' },
 ];
 
 export const CONSUMPTION_OPTIONS: string[] = [
@@ -141,6 +142,6 @@ export const CONSUMPTION_OPTIONS: string[] = [
 
 export const WARRANTY_OPTIONS: WarrantyOption[] = [
   { id: 'standard-1-year', name: 'Standard 1 Year', price: 0 },
-  { id: 'extended-1-year', name: 'Extended 1 Year', price: 25000 },
-  { id: 'extended-2-year', name: 'Extended 2 Year', price: 30000 },
+  { id: 'extended-1-year', name: 'Extended 1 Year', price: 8999 }, // Monthly
+  { id: 'extended-2-year', name: 'Extended 2 Year', price: 11999 }, // Monthly
 ];
