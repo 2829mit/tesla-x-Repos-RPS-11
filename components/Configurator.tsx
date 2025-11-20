@@ -105,23 +105,32 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   const pricingSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Only setup observer if prices are shown (and thus the element exists)
+    if (!showPrices) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
+        // Hide footer when pricing section is visible (intersecting)
         setIsStickyFooterVisible(!entry.isIntersecting);
       },
-      { root: null, threshold: 0.1 }
+      { 
+        root: null, 
+        threshold: 0.1, // Trigger as soon as 10% of the pricing section is visible
+        rootMargin: "0px" 
+      }
     );
 
-    if (pricingSectionRef.current) {
-      observer.observe(pricingSectionRef.current);
+    const currentRef = pricingSectionRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (pricingSectionRef.current) {
+      if (currentRef) {
         observer.disconnect();
       }
     };
-  }, []);
+  }, [showPrices]); // Add showPrices dependency so observer re-runs when user logs in
 
   // Multiplier for UI display of individual options (Always show full contract value per item)
   const priceMultiplier = 36; 
@@ -218,8 +227,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   return (
     <div className="bg-white text-gray-800 lg:h-full h-auto flex flex-col relative lg:overflow-hidden">
       {/* Scrollable Content Area */}
-      <div className="flex-grow lg:overflow-y-auto overflow-visible scroll-smooth">
-        <div className="p-6 md:p-10 pb-24">
+      <div className="flex-grow lg:overflow-y-auto overflow-visible scroll-smooth pb-24">
+        <div className="p-6 md:p-10">
           <h1 className="text-2xl md:text-[28px] md:leading-[48px] font-medium text-center text-[#171A20]">Repos Portable Station</h1>
           <div className="flex justify-around my-8 text-center">
             {[
@@ -689,23 +698,24 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           {showPrices && (
             <div className="mt-16 mb-8">
               <h2 className="text-xl font-medium text-gray-900 mb-4">Payment Mode</h2>
-              <div className="bg-gray-100 p-1 rounded-lg flex">
+              <div className="relative w-full bg-gray-200 p-1 rounded-lg flex h-12">
+                 <div
+                   className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-md shadow transition-all duration-300 ease-in-out ${
+                     paymentMode === 'installments' ? 'left-[calc(50%+2px)]' : 'left-1'
+                   }`}
+                 ></div>
                  <button
                    onClick={() => setPaymentMode('outright')}
-                   className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all duration-200 ${
-                     paymentMode === 'outright' 
-                       ? 'bg-white shadow text-blue-600' 
-                       : 'text-gray-600 hover:text-gray-900'
+                   className={`relative z-10 flex-1 flex items-center justify-center text-sm font-semibold transition-colors duration-300 ${
+                     paymentMode === 'outright' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'
                    }`}
                  >
                    Outright (Full Amount)
                  </button>
                  <button
                    onClick={() => setPaymentMode('installments')}
-                   className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all duration-200 ${
-                     paymentMode === 'installments' 
-                       ? 'bg-white shadow text-blue-600' 
-                       : 'text-gray-600 hover:text-gray-900'
+                   className={`relative z-10 flex-1 flex items-center justify-center text-sm font-semibold transition-colors duration-300 ${
+                     paymentMode === 'installments' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'
                    }`}
                  >
                    Easy Installments (36 mo)
