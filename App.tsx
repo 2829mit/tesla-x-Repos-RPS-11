@@ -5,17 +5,13 @@ import CarVisualizer from './components/CarVisualizer.tsx';
 import Configurator from './components/Configurator.tsx';
 import LeadFormModal from './components/LeadFormModal.tsx';
 import LoginModal from './components/LoginModal.tsx';
-import type { TrimOption, AccessoryOption, IotOption, TankOption, WarrantyOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
+import type { TrimOption, AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
 import { 
-  TRIM_OPTIONS,
   DECANTATION_OPTIONS,
   REPOS_OS_OPTIONS,
-  WARRANTY_OPTIONS,
   SAFETY_UNIT_OPTIONS,
   DISPENSING_UNIT_OPTIONS,
-  FUEL_LEVEL_TECHNOLOGY_OPTIONS,
   MECHANICAL_INCLUSION_OPTIONS,
-  SAFETY_UPGRADE_OPTIONS,
   LICENSE_OPTIONS,
   TANK_OPTIONS,
 } from './constants';
@@ -37,12 +33,6 @@ const App: React.FC = () => {
   const [selectedTank, setSelectedTank] = useState<TankOption['id']>(() => 
     TANK_OPTIONS[0]?.id || '22kl'
   );
-  
-  // Default to Capacitive (price 0)
-  const [selectedFuelLevelTechnology, setSelectedFuelLevelTechnology] = useState<AccessoryOption>(() => {
-    const options = FUEL_LEVEL_TECHNOLOGY_OPTIONS || [];
-    return options.find(o => o.price === 0) || options[0] || { id: 'ultrasonic', name: 'Ultrasonic', price: 0 };
-  });
   
   const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>(() => 
     (REPOS_OS_OPTIONS || []).filter(o => o.price === 0)
@@ -74,11 +64,6 @@ const App: React.FC = () => {
       return LICENSE_OPTIONS || [];
   });
 
-  const [selectedWarrantyOption, setSelectedWarrantyOption] = useState<WarrantyOption>(() => {
-    const options = WARRANTY_OPTIONS || [];
-    return options.find(o => o.price === 0) || options[0] || { id: 'basic', name: 'Basic', price: 0 };
-  });
-  
   const [selectedConsumption, setSelectedConsumption] = useState<string | null>(null);
   const [recommendedTankId, setRecommendedTankId] = useState<TankOption['id'] | null>(null);
 
@@ -160,16 +145,14 @@ const App: React.FC = () => {
     let price = tankPrice;
     price += selectedTrim?.price || 0;
     price += selectedDispensingUnit?.price || 0;
-    price += selectedFuelLevelTechnology.price || 0;
     price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedMechanicalInclusionOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedDecantation?.price || 0;
     price += selectedSafetyUnits.reduce((total, unit) => total + unit.price, 0);
     price += selectedSafetyUpgrades.reduce((total, unit) => total + unit.price, 0);
     price += selectedLicenseOptions.reduce((total, opt) => total + opt.price, 0);
-    price += selectedWarrantyOption?.price || 0;
     return price;
-  }, [selectedTank, selectedTrim, selectedDispensingUnit, selectedFuelLevelTechnology, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions, selectedWarrantyOption]);
+  }, [selectedTank, selectedTrim, selectedDispensingUnit, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions]);
 
   // 2. Calculate Total Contract Value (Excluding Tax)
   // This is essentially (Monthly * 36) regardless of payment mode, used as base for tax
@@ -222,8 +205,6 @@ const App: React.FC = () => {
             setSelectedTrim={setSelectedTrim}
             selectedTank={selectedTank}
             setSelectedTank={setSelectedTank}
-            selectedFuelLevelTechnology={selectedFuelLevelTechnology}
-            setSelectedFuelLevelTechnology={setSelectedFuelLevelTechnology}
             selectedReposOsOptions={selectedReposOsOptions}
             onReposOsToggle={handleReposOsToggle}
             selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}
@@ -237,8 +218,6 @@ const App: React.FC = () => {
             selectedSafetyUpgrades={selectedSafetyUpgrades}
             onSafetyUpgradeToggle={handleSafetyUpgradeToggle}
             selectedLicenseOptions={selectedLicenseOptions}
-            selectedWarrantyOption={selectedWarrantyOption}
-            setSelectedWarrantyOption={setSelectedWarrantyOption}
             selectedConsumption={selectedConsumption}
             onConsumptionSelect={handleConsumptionSelect}
             

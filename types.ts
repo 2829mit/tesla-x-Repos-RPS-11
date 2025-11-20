@@ -36,13 +36,6 @@ export interface TankOption {
   dimensions?: string;
 }
 
-export interface WarrantyOption {
-  id: string;
-  name: string;
-  price: number;
-  subtext?: string;
-}
-
 export interface LicenseOption {
   id: string;
   name: string;

@@ -142,42 +142,34 @@ export const generateQuotePDF = async (data: QuoteData) => {
   const { trim } = data.configuration;
   tableRows.push([`RFID Tech: ${trim.name}`, getItemPrice(trim.price)]);
 
-  // 4. Fuel Level Tech
-  const { fuelLevel } = data.configuration.accessories;
-  tableRows.push([fuelLevel.name, getItemPrice(fuelLevel.price)]);
-
-  // 5. Repos OS
+  // 4. Repos OS
   data.configuration.accessories.reposOs.forEach(opt => {
     tableRows.push([opt.name, getItemPrice(opt.price)]);
   });
 
-  // 6. Decantation
+  // 5. Decantation
   const { decantation } = data.configuration;
   tableRows.push([`Decantation: ${decantation.name}`, getItemPrice(decantation.price)]);
 
-  // 7. Mechanical Inclusion
+  // 6. Mechanical Inclusion
   data.configuration.accessories.mechanical.forEach(opt => {
      tableRows.push([opt.name, getItemPrice(opt.price)]);
   });
 
-  // 8. Safety Unit
+  // 7. Safety Unit
   data.configuration.accessories.safetyUnits.forEach(opt => {
      tableRows.push([opt.name, getItemPrice(opt.price)]);
   });
 
-  // 9. Safety Upgrades
+  // 8. Safety Upgrades
   data.configuration.accessories.safetyUpgrades.forEach(opt => {
      tableRows.push([opt.name, getItemPrice(opt.price)]);
   });
   
-  // 10. Licenses
+  // 9. Licenses
   data.configuration.licenses.forEach(opt => {
     tableRows.push([`License: ${opt.name}`, getItemPrice(opt.price)]);
   });
-
-  // 11. Warranty
-  const { warranty } = data.configuration;
-  tableRows.push([`Warranty: ${warranty.name}`, getItemPrice(warranty.price)]);
 
   // Generate Table
   doc.autoTable({
