@@ -120,6 +120,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     }).format(amount);
   };
 
+  // Helper for list buttons
   const formatPrice = (monthlyPrice: number) => {
     if (!showPrices) return '';
     if (paymentMode === 'outright') {
@@ -163,17 +164,22 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 
   const tankBasePrice = currentTank ? currentTank.price : 0;
 
+  // DETERMINE MULTIPLIER BASED ON PAYMENT MODE
+  const multiplier = paymentMode === 'outright' ? 36 : 1;
+
   let pricingItems = [
-    { name: `RPS Base Price (${currentTank?.name || ''} Tank)`, price: tankBasePrice * 36 },
-    { name: selectedDispensingUnit.name, price: selectedDispensingUnit.price * 36 },
-    ...(selectedRfidOption ? [{ name: selectedRfidOption.name, price: selectedRfidOption.price * 36 }] : []),
-    ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price * 36 })),
-    { name: selectedDecantation.name, price: selectedDecantation.price * 36 },
-    ...selectedMechanicalInclusionOptions.map(opt => ({ name: opt.name, price: opt.price * 36 })),
-    ...selectedSafetyUnits.map(opt => ({ name: opt.name, price: opt.price * 36 })),
-    ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price * 36 })),
+    { name: `RPS Base Price (${currentTank?.name || ''} Tank)`, price: tankBasePrice * multiplier },
+    { name: selectedDispensingUnit.name, price: selectedDispensingUnit.price * multiplier },
+    ...(selectedRfidOption ? [{ name: selectedRfidOption.name, price: selectedRfidOption.price * multiplier }] : []),
+    ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
+    { name: selectedDecantation.name, price: selectedDecantation.price * multiplier },
+    ...selectedMechanicalInclusionOptions.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
+    ...selectedSafetyUnits.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
+    ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
   ];
 
+  // Hide Tank Base Price row from the list if desired (usually shown in total header, but user requested hide)
+  // The user previously requested "Dont show tank quantity in pricing details section."
   pricingItems = pricingItems.filter(item => !item.name.includes('RPS Base Price'));
 
   const paidItems = pricingItems.filter(item => item.price > 0);
@@ -181,6 +187,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 
   const displayedPriceLabel = paymentMode === 'outright' ? 'Total RPS Price (Inc. GST)' : 'Monthly Payment (36 mo)';
   const footerPrice = paymentMode === 'outright' ? totalContractValue : finalPrice;
+  
+  const subtotalDisplay = paymentMode === 'outright' ? totalContractValue : finalPrice;
+  const subtotalLabel = paymentMode === 'outright' ? 'Subtotal (Excl. GST)' : 'Total Monthly Payment';
 
   return (
     <div className="bg-white text-gray-800 lg:h-full h-auto flex flex-col relative lg:overflow-hidden">
@@ -589,8 +598,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isPricingDetailsOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="space-y-3 text-sm text-gray-600 mb-8">
                     
-                    {/* Only show item breakdown for Outright */}
-                    {paymentMode === 'outright' && paidItems.map((item, idx) => (
+                    {/* Show Breakdown for BOTH modes. Multiplier handles price logic. */}
+                    {paidItems.map((item, idx) => (
                       <div key={`paid-${idx}`} className="flex justify-between">
                         <span>{item.name}</span>
                         <span>{formatCurrency(item.price)}</span>
@@ -598,13 +607,10 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     ))}
                     
                     <div className="border-t border-gray-200 my-3 pt-3">
-                        {/* Only show Subtotal for Outright */}
-                        {paymentMode === 'outright' && (
-                            <div className="flex justify-between font-semibold text-gray-800">
-                                <span>Subtotal (Excl. GST)</span>
-                                <span>{formatCurrency(totalContractValue)}</span>
-                            </div>
-                        )}
+                        <div className="flex justify-between font-semibold text-gray-800">
+                            <span>{subtotalLabel}</span>
+                            <span>{formatCurrency(subtotalDisplay)}</span>
+                        </div>
                         
                         {paymentMode === 'outright' && (
                           <div className="flex justify-between text-gray-600 mt-1">
@@ -623,10 +629,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                                 <span>Tenure</span>
                                 <span>36 Months</span>
                              </div>
-                             <div className="flex justify-between text-gray-900 font-semibold mt-1 text-sm">
-                                <span>Monthly Payment</span>
-                                <span>{formatCurrency(finalPrice)}</span>
-                             </div>
                              <div className="mt-2 text-xs text-gray-500 italic text-right">
                                 Subject to approval from Partnered Bank
                              </div>
@@ -634,8 +636,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                         )}
                     </div>
 
-                    {/* Only show included items toggle if Outright */}
-                    {paymentMode === 'outright' && includedItems.length > 0 && (
+                    {/* Show included items toggle (For both modes as they are relevant) */}
+                    {includedItems.length > 0 && (
                       <div className="mt-4 border-t border-gray-100 pt-2">
                          <button 
                           onClick={() => setShowIncludedOptions(!showIncludedOptions)}

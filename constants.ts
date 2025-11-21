@@ -60,11 +60,11 @@ export const DECANTATION_OPTIONS: IotOption[] = [
   { 
     id: 'advanced-skid', 
     name: 'Advanced Skid', 
-    subtext: 'With Flow Meter', 
+    subtext: 'With Metering Counter', 
     price: 9999, 
     description: 'A Flow Meter is a high-precision instrument used to measure the volume of fuel being unloaded (decanted) into the station. It ensures accurate quantity verification, transparency, and prevents pilferage during the refilling process.'
   },
-  { id: 'basic-skid', name: 'Basic Skid', subtext: 'Already Included', price: 0 },
+  { id: 'basic-skid', name: 'Basic Skid', subtext: 'Without Metering Counter', price: 0 },
 ];
 
 export const MECHANICAL_INCLUSION_OPTIONS: AccessoryOption[] = [
@@ -74,33 +74,32 @@ export const MECHANICAL_INCLUSION_OPTIONS: AccessoryOption[] = [
   { id: 'ss-pipeline', name: 'Stainless Steel Pipeline', price: 0 },
   { id: 'galvanized-surface', name: 'Rustfree Surface Treatment', price: 0 },
   { id: 'filtration-mechanism', name: 'Filtration Mechanism', price: 0 },
+  { id: 'flame-proof-illumination', name: 'Flame Proof Illumination', price: 0 },
+  { id: 'glasswool-shield', name: 'Glasswool Shield', price: 0 },
 ];
 
 export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
   { id: 'iot-controller-safety', name: 'IOT Controller', price: 0 },
   { id: 'fuel-level-sensors', name: 'Fuel Level Sensors', price: 0 }, 
-  { id: 'leak-detection', name: 'PESO Approved', price: 0 },
   { id: 'overfill-sensors', name: 'Overfill Sensors', price: 0 },
   { id: 'decantation-cutoff', name: 'Decantation Cutoff', price: 0 },
-  { id: 'flame-proof-illumination', name: 'Flame Proof Illumination', price: 0 },
-  { id: 'glasswool-shield', name: 'Glasswool Shield', price: 0 },
   { id: 'mobile-device', name: 'Wireless Synchronised Mobile', price: 0 },
 ];
 
 export const SAFETY_UPGRADE_OPTIONS: SafetyUpgradeOption[] = [
-  { 
-    id: 'fire-suppression', 
-    name: 'Fire Suppression System', 
-    price: 2999, 
-    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png', 
-    description: 'Safety-focused package featuring an integrated fire extinguisher for emergency situations.'
-  },
   { 
     id: 'crash-barrier', 
     name: 'Crash Barrier', 
     price: 5499, 
     imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/2.png', 
     description: 'Reinforced protective barriers engineered to safeguard the station against vehicular impact and ensure operational safety.'
+  },
+  { 
+    id: 'fire-suppression', 
+    name: 'Fire Suppression System', 
+    price: 2999, 
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/3.png', 
+    description: 'Safety-focused package featuring an integrated fire extinguisher for emergency situations.'
   },
 ];
 

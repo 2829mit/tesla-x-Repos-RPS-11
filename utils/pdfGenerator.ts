@@ -30,6 +30,27 @@ const getBase64ImageFromURL = (url: string): Promise<string> => {
   });
 };
 
+// Manual formatter for Indian Currency to avoid Intl non-breaking spaces/glyphs causing PDF distortion
+const formatIndianCurrency = (num: number): string => {
+  if (num === undefined || num === null) return "Rs. 0";
+  
+  const val = Math.round(num);
+  const s = val.toString();
+  
+  // Get last 3 digits
+  let lastThree = s.substring(s.length - 3);
+  // Get all other digits
+  const otherNumbers = s.substring(0, s.length - 3);
+  
+  let res = lastThree;
+  if (otherNumbers !== '') {
+      // Add commas every 2 digits for the rest
+      res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree;
+  }
+  
+  return "Rs. " + res;
+};
+
 export const generateQuotePDF = async (data: QuoteData) => {
   if (!window.jspdf) {
     alert("PDF library not loaded yet. Please check your connection.");
@@ -38,6 +59,10 @@ export const generateQuotePDF = async (data: QuoteData) => {
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
+  
+  // Set standard font to avoid encoding issues
+  doc.setFont("helvetica", "normal");
+
   const logoUrl = "https://i.postimg.cc/52fvQyLD/Repos-New-Logo-V1-1.png";
 
   let logoBase64 = "";
@@ -47,14 +72,14 @@ export const generateQuotePDF = async (data: QuoteData) => {
     console.error(e);
   }
 
+  // Use manual formatter instead of Intl
   const formatPdfCurrency = (amount: number) => {
-    const value = new Intl.NumberFormat('en-IN', {
-      maximumFractionDigits: 0,
-    }).format(amount);
-    return `Rs. ${value}`;
+    return formatIndianCurrency(amount);
   };
 
-  const multiplier = 36;
+  // If payment mode is installments, show monthly prices (multiplier 1)
+  // If outright, show full contract prices (multiplier 36)
+  const multiplier = data.paymentMode === 'installments' ? 1 : 36;
   
   const getItemPrice = (price: number) => {
     if (price === 0) return 'Included';
@@ -72,11 +97,11 @@ export const generateQuotePDF = async (data: QuoteData) => {
   }
 
   doc.setFontSize(22);
-  doc.setTextColor(...primaryColor);
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.text("PROFORMA INVOICE / QUOTE", 14, finalY);
   
   doc.setFontSize(12);
-  doc.setTextColor(100);
+  doc.setTextColor(100, 100, 100);
   doc.text("Repos Energy Pvt Limited", 14, finalY + 8);
   
   const orderId = `RPS-${Date.now().toString().slice(-6)}`;
@@ -85,17 +110,20 @@ export const generateQuotePDF = async (data: QuoteData) => {
   doc.setFontSize(10);
   doc.text(`Date: ${date}`, 150, finalY);
   doc.text(`Order ID: ${orderId}`, 150, finalY + 6);
-  doc.text(`Payment Mode: ${data.paymentMode === 'installments' ? 'Easy Installments' : 'Outright'}`, 150, finalY + 12);
+  
+  // Corrected Payment Mode Label
+  const modeText = data.paymentMode === 'installments' ? 'Easy Installments (36 Months)' : 'Outright (Full Amount)';
+  doc.text(`Payment Mode: ${modeText}`, 150, finalY + 12);
 
   finalY += 25;
 
   doc.setFontSize(14);
-  doc.setTextColor(...primaryColor);
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.text("Bill To:", 14, finalY);
   finalY += 8;
 
   doc.setFontSize(10);
-  doc.setTextColor(0);
+  doc.setTextColor(0, 0, 0);
   if (data.customerDetails) {
     doc.text(`Name: ${data.customerDetails.name}`, 14, finalY);
     doc.text(`Company: ${data.customerDetails.company}`, 14, finalY + 6);
@@ -111,11 +139,15 @@ export const generateQuotePDF = async (data: QuoteData) => {
 
   finalY += 36;
 
-  const tableColumn = ["Description", "Price (INR)"];
+  // Update header based on mode
+  const priceHeader = data.paymentMode === 'installments' ? "Monthly Price (INR)" : "Price (INR)";
+  const tableColumn = ["Description", priceHeader];
   const tableRows: any[] = [];
 
   const tank = TANK_OPTIONS.find(t => t.id === data.configuration.tank);
   const tankPrice = tank ? tank.price : 0;
+  
+  // Add Tank Base Price row
   tableRows.push([`RPS Base Price (${tank?.name || ''} Tank)`, getItemPrice(tankPrice)]);
 
   const { dispensingUnit } = data.configuration;
@@ -156,52 +188,76 @@ export const generateQuotePDF = async (data: QuoteData) => {
     body: tableRows,
     theme: 'grid',
     headStyles: { fillColor: primaryColor, textColor: 255 },
-    styles: { fontSize: 10, cellPadding: 3 },
+    // Added columnStyles to fix width and prevent overlapping
+    columnStyles: {
+        0: { cellWidth: 'auto' }, 
+        1: { cellWidth: 40, halign: 'right' }
+    },
+    styles: { 
+        fontSize: 10, 
+        cellPadding: 3, 
+        font: "helvetica", 
+        overflow: 'linebreak' // Ensures text wraps if description is too long
+    }, 
   });
 
   // @ts-ignore
   const finalYAfterTable = doc.lastAutoTable.finalY + 10;
   
   doc.setFontSize(10);
-  doc.setTextColor(100);
-  doc.text("Subtotal (Excl. GST):", 130, finalYAfterTable);
-  doc.text(formatPdfCurrency(data.totalContractValue || 0), 170, finalYAfterTable, { align: 'right' });
-  
-  doc.text("GST (18%):", 130, finalYAfterTable + 6);
-  doc.text(formatPdfCurrency(data.gstAmount || 0), 170, finalYAfterTable + 6, { align: 'right' });
+  doc.setTextColor(100, 100, 100);
 
-  const totalY = finalYAfterTable + 14;
+  if (data.paymentMode === 'outright') {
+    // OUTRIGHT SUMMARY
+    doc.text("Subtotal (Excl. GST):", 130, finalYAfterTable);
+    doc.text(formatPdfCurrency(data.totalContractValue || 0), 195, finalYAfterTable, { align: 'right' });
+    
+    doc.text("GST (18%):", 130, finalYAfterTable + 6);
+    doc.text(formatPdfCurrency(data.gstAmount || 0), 195, finalYAfterTable + 6, { align: 'right' });
 
-  doc.setFontSize(12);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(...primaryColor);
-  doc.text("Total (Inc. GST):", 130, totalY);
-  doc.setTextColor(...accentColor);
-  const totalIncTax = (data.totalContractValue || 0) + (data.gstAmount || 0);
-  doc.text(formatPdfCurrency(totalIncTax), 170, totalY, { align: 'right' });
+    const totalY = finalYAfterTable + 14;
+    const totalIncTax = (data.totalContractValue || 0) + (data.gstAmount || 0);
 
-  const modeY = totalY + 10;
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text("Total (Inc. GST):", 130, totalY);
+    doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+    doc.text(formatPdfCurrency(totalIncTax), 195, totalY, { align: 'right' });
+  } else {
+    // INSTALLMENTS SUMMARY
+    doc.text("Total Monthly Payment:", 130, finalYAfterTable);
+    doc.text(formatPdfCurrency(data.monthlyPrice || 0), 195, finalYAfterTable, { align: 'right' });
 
-  if (data.paymentMode === 'installments') {
-    doc.setFontSize(11);
-    doc.setTextColor(...primaryColor);
-    doc.text("Payment Mode: Easy Installments (36 Months)", 14, modeY);
+    const totalY = finalYAfterTable + 8;
     
     doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text(`Monthly Payment: ${formatPdfCurrency(data.totalPrice)}`, 14, modeY + 6);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text("Down Payment (GST Amount):", 130, totalY);
+    doc.text(formatPdfCurrency(data.gstAmount || 0), 195, totalY, { align: 'right' });
+    
+    doc.text("Tenure:", 130, totalY + 6);
+    doc.text("36 Months", 195, totalY + 6, { align: 'right' });
+  }
 
+  const modeY = finalYAfterTable + 30;
+
+  doc.setFontSize(11);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  
+  if (data.paymentMode === 'installments') {
+    doc.text("Payment Mode: Easy Installments (36 Months)", 14, modeY);
+    doc.setFontSize(9);
     doc.setFont(undefined, 'italic');
-    doc.setTextColor(100);
-    doc.text(`* Down Payment (GST Amount): ${formatPdfCurrency(data.gstAmount || 0)}`, 14, modeY + 12);
+    doc.setTextColor(100, 100, 100);
+    doc.text("* Subject to approval from Partnered Bank", 14, modeY + 6);
   } else {
-      doc.setFontSize(11);
-      doc.setTextColor(...primaryColor);
       doc.text("Payment Mode: Outright (Full Amount)", 14, modeY);
   }
 
   doc.setFontSize(8);
-  doc.setTextColor(150);
+  doc.setTextColor(150, 150, 150);
   doc.setFont(undefined, 'normal');
   doc.text("Thank you for choosing Repos Energy.", 105, 280, { align: 'center' });
   

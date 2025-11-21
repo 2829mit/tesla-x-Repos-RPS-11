@@ -11,8 +11,7 @@ interface LeadFormModalProps {
 const INDUSTRY_OPTIONS = [
   'Mining',
   'Logistics',
-  'Infra',
-  'Construction',
+  'Infra & Construction',
   'Manufacturing',
   'Others'
 ];
