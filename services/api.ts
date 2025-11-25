@@ -1,5 +1,5 @@
 
-import { CustomerDetails, RfidOption, TankOption, AccessoryOption, DispensingUnitOption, IotOption, SafetyUpgradeOption, LicenseOption } from "../types";
+import { CustomerDetails, TankOption, AccessoryOption, DispensingUnitOption, IotOption, SafetyUpgradeOption, LicenseOption } from "../types";
 
 // In a real production build, this would be an environment variable
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.reposenergy.com/v1';
@@ -13,7 +13,6 @@ export interface QuoteData {
   customerDetails: CustomerDetails | null;
   paymentMode: 'outright' | 'installments';
   configuration: {
-    rfidOption: RfidOption;
     tank: TankOption['id'];
     dispensingUnit: DispensingUnitOption;
     decantation: IotOption;

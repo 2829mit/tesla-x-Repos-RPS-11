@@ -1,18 +1,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import type { RfidOption, AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
-import { RFID_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS } from '../constants';
-import ComparisonModal from './ComparisonModal.tsx';
+import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
+import { DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS } from '../constants';
 import { generateQuotePDF } from '../utils/pdfGenerator';
 import { logQuoteGeneration, QuoteData } from '../services/api';
 import { getSafetyImage } from '../utils/vehicleHelpers';
+import ComparisonModal from './ComparisonModal';
 
 interface ConfiguratorProps {
   customerDetails: CustomerDetails | null;
   paymentMode: 'outright' | 'installments';
   setPaymentMode: (mode: 'outright' | 'installments') => void;
-  selectedRfidOption: RfidOption | null;
-  setSelectedRfidOption: (option: RfidOption | null) => void;
   selectedTank: TankOption['id'];
   setSelectedTank: (tankId: TankOption['id']) => void;
   selectedReposOsOptions: AccessoryOption[];
@@ -55,8 +53,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   customerDetails,
   paymentMode,
   setPaymentMode,
-  selectedRfidOption,
-  setSelectedRfidOption,
   selectedTank,
   setSelectedTank,
   selectedReposOsOptions,
@@ -82,9 +78,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   recommendedTankId,
   showPrices,
 }) => {
-  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<'quote' | 'contact'>('contact');
   const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | IotOption | null>(null);
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
 
   const [isStickyFooterVisible, setIsStickyFooterVisible] = useState(true);
   const [isPricingDetailsOpen, setIsPricingDetailsOpen] = useState(true);
@@ -144,7 +140,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
       monthlyPrice: paymentMode === 'installments' ? finalPrice : undefined,
       
       configuration: {
-        rfidOption: selectedRfidOption!,
         tank: selectedTank,
         dispensingUnit: selectedDispensingUnit,
         decantation: selectedDecantation,
@@ -170,7 +165,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   let pricingItems = [
     { name: `RPS Base Price (${currentTank?.name || ''} Tank)`, price: tankBasePrice * multiplier },
     { name: selectedDispensingUnit.name, price: selectedDispensingUnit.price * multiplier },
-    ...(selectedRfidOption ? [{ name: selectedRfidOption.name, price: selectedRfidOption.price * multiplier }] : []),
     ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
     { name: selectedDecantation.name, price: selectedDecantation.price * multiplier },
     ...selectedMechanicalInclusionOptions.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
@@ -178,8 +172,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
   ];
 
-  // Hide Tank Base Price row from the list if desired (usually shown in total header, but user requested hide)
-  // The user previously requested "Dont show tank quantity in pricing details section."
+  // Hide Tank Base Price row from the list if desired
   pricingItems = pricingItems.filter(item => !item.name.includes('RPS Base Price'));
 
   const paidItems = pricingItems.filter(item => item.price > 0);
@@ -235,9 +228,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-          {/* Tank Capacity */}
+          {/* RPS Capacity */}
           <div className="mb-[45px]">
-            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Tank Capacity</h2>
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RPS Capacity</h2>
             <div className="space-y-4">
               {TANK_OPTIONS.map(option => (
                   <button 
@@ -269,21 +262,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
+          {/* Dispensing Unit (Renamed Header) */}
           <div className="mb-[45px]">
-              <button
-                  onClick={() => setIsComparisonModalOpen(true)}
-                  className="w-full flex justify-between items-center p-4 bg-gray-100 hover:bg-gray-200 rounded-lg text-left transition-colors"
-              >
-                  <span className="font-semibold text-gray-800">View & Compare Features</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-              </button>
-          </div>
-
-          {/* Dispensing Unit */}
-          <div className="mb-[45px]">
-            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Dispensing Unit</h2>
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Enabled Dispensing Unit</h2>
             <div className="space-y-2">
               {DISPENSING_UNIT_OPTIONS.map(option => (
                 <button
@@ -310,50 +291,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
                   )}
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* RFID Technology */}
-          <div className="mb-[45px]">
-            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Technology</h2>
-            <div className="space-y-2">
-              {RFID_OPTIONS.filter(option => option.id !== 'performance-test')
-                .sort((a, b) => {
-                  const order: Array<RfidOption['id']> = ['2-active-reader', '1-active-reader'];
-                  return order.indexOf(a.id) - order.indexOf(b.id);
-                })
-                .map(option => (
-                  <button
-                    key={`dispensing-${option.id}`}
-                    onClick={() => {
-                        if (selectedRfidOption?.id === option.id) {
-                            setSelectedRfidOption(null);
-                        } else {
-                            setSelectedRfidOption(option);
-                        }
-                    }}
-                    className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedRfidOption?.id === option.id 
-                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' 
-                        : 'border-gray-300 hover:border-gray-500'
-                    }`}
-                  >
-                    <div className="flex-grow">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                          <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.drive}</p>
-                        </div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
-                          {showPrices ? formatPrice(option.price) : ''}
-                        </p>
-                      </div>
-                    </div>
-                    {selectedRfidOption?.id !== option.id && (
-                        <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
-                    )}
-                  </button>
               ))}
             </div>
           </div>
@@ -528,7 +465,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       
                       <div className="w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
                         <img 
-                          src={getSafetyImage(selectedRfidOption, selectedTank, option.id)} 
+                          src={getSafetyImage(selectedTank, option.id)} 
                           alt={option.name} 
                           className="max-h-[150px] w-auto object-contain mix-blend-multiply"
                         />
@@ -743,7 +680,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                <div className="flex justify-center mb-6">
                 <img 
                   src={(learnMoreOption as SafetyUpgradeOption).id.includes('fire') || (learnMoreOption as SafetyUpgradeOption).id.includes('crash') 
-                      ? getSafetyImage(selectedRfidOption, selectedTank, (learnMoreOption as SafetyUpgradeOption).id) 
+                      ? getSafetyImage(selectedTank, (learnMoreOption as SafetyUpgradeOption).id) 
                       : (learnMoreOption as any).imageUrl}
                   alt={learnMoreOption.name} 
                   className="max-h-64 object-contain"

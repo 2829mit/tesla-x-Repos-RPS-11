@@ -42,7 +42,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onLogin }) => {
         
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Welcome</h2>
-          <p className="text-gray-500 mt-2">Please sign in to access pricing</p>
+          <p className="text-gray-500 mt-2">Please Sign In to Explore</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">

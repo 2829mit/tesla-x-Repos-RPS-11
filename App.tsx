@@ -5,7 +5,7 @@ import CarVisualizer from './components/CarVisualizer.tsx';
 import Configurator from './components/Configurator.tsx';
 import LeadFormModal from './components/LeadFormModal.tsx';
 import LoginModal from './components/LoginModal.tsx';
-import type { RfidOption, AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
+import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
 import { 
   DECANTATION_OPTIONS,
   REPOS_OS_OPTIONS,
@@ -22,12 +22,11 @@ const App: React.FC = () => {
   const [userRole, setUserRole] = useState<'sales' | 'guest' | null>(null);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null);
+  const [showRoiCalculator, setShowRoiCalculator] = useState(false);
   
   const [paymentMode, setPaymentMode] = useState<'outright' | 'installments'>('installments');
   
-  // Renamed from selectedTrim to selectedRfidOption
-  const [selectedRfidOption, setSelectedRfidOption] = useState<RfidOption | null>(null);
-
+  // Selected Tank
   const [selectedTank, setSelectedTank] = useState<TankOption['id']>(() => 
     TANK_OPTIONS[0]?.id || '22kl'
   );
@@ -47,7 +46,7 @@ const App: React.FC = () => {
   
   const [selectedDispensingUnit, setSelectedDispensingUnit] = useState<DispensingUnitOption>(() => {
     const options = DISPENSING_UNIT_OPTIONS || [];
-    return options[0] || { id: 'single', name: 'Single', subtext: '', price: 0 };
+    return options[0] || { id: 'single-du', name: 'Single DU', subtext: '2 Nozzle 100 Tags', price: 0 };
   });
   
   const [selectedSafetyUnits, setSelectedSafetyUnits] = useState<AccessoryOption[]>(() => 
@@ -134,7 +133,6 @@ const App: React.FC = () => {
     const tankPrice = tank ? tank.price : 0;
 
     let price = tankPrice;
-    price += selectedRfidOption?.price || 0;
     price += selectedDispensingUnit?.price || 0;
     price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedMechanicalInclusionOptions.reduce((total, opt) => total + opt.price, 0);
@@ -143,7 +141,7 @@ const App: React.FC = () => {
     price += selectedSafetyUpgrades.reduce((total, unit) => total + unit.price, 0);
     price += selectedLicenseOptions.reduce((total, opt) => total + opt.price, 0);
     return price;
-  }, [selectedTank, selectedRfidOption, selectedDispensingUnit, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions]);
+  }, [selectedTank, selectedDispensingUnit, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions]);
 
   const totalContractValue = useMemo(() => {
     return monthlyTotalPrice * 36;
@@ -170,49 +168,61 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-stone-50 font-sans text-gray-800">
       {isLoginModalOpen && <LoginModal onLogin={handleLogin} />}
       {isLeadFormOpen && <LeadFormModal onSubmit={handleLeadFormClose} />}
-      <Header />
-      <main className="flex flex-col lg:flex-row">
-        <div className="w-full lg:flex-1 lg:h-[calc(100vh-72px)] lg:sticky lg:top-[72px] h-[45vh] min-h-[300px] relative z-0 bg-gray-100">
-          <CarVisualizer 
-            rfidOption={selectedRfidOption}
-            tank={selectedTank}
-            safetyUpgrades={selectedSafetyUpgrades}
+      
+      <Header 
+        onRoiClick={() => setShowRoiCalculator(true)} 
+        onHomeClick={() => setShowRoiCalculator(false)}
+      />
+      
+      {showRoiCalculator ? (
+        <div className="w-full h-[calc(100vh-72px)] bg-white">
+          <iframe 
+            src="https://repos-rps-roi-calculator.vercel.app/" 
+            className="w-full h-full border-0"
+            title="ROI Calculator"
           />
         </div>
-        <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">
-          <Configurator
-            customerDetails={customerDetails}
-            paymentMode={paymentMode}
-            setPaymentMode={setPaymentMode}
-            selectedRfidOption={selectedRfidOption}
-            setSelectedRfidOption={setSelectedRfidOption}
-            selectedTank={selectedTank}
-            setSelectedTank={setSelectedTank}
-            selectedReposOsOptions={selectedReposOsOptions}
-            onReposOsToggle={handleReposOsToggle}
-            selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}
-            onMechanicalInclusionToggle={handleMechanicalInclusionToggle}
-            selectedDecantation={selectedDecantation}
-            setSelectedDecantation={setSelectedDecantation}
-            selectedDispensingUnit={selectedDispensingUnit}
-            setSelectedDispensingUnit={setSelectedDispensingUnit}
-            selectedSafetyUnits={selectedSafetyUnits}
-            onSafetyUnitToggle={handleSafetyUnitToggle}
-            selectedSafetyUpgrades={selectedSafetyUpgrades}
-            onSafetyUpgradeToggle={handleSafetyUpgradeToggle}
-            selectedLicenseOptions={selectedLicenseOptions}
-            selectedConsumption={selectedConsumption}
-            onConsumptionSelect={handleConsumptionSelect}
-            
-            totalContractValue={totalContractValue}
-            gstAmount={gstAmount}
-            finalPrice={displayPrice}
-            
-            recommendedTankId={recommendedTankId}
-            showPrices={showPrices}
-          />
-        </div>
-      </main>
+      ) : (
+        <main className="flex flex-col lg:flex-row">
+          <div className="w-full lg:flex-1 lg:h-[calc(100vh-72px)] lg:sticky lg:top-[72px] h-[45vh] min-h-[300px] relative z-0 bg-gray-100">
+            <CarVisualizer 
+              tank={selectedTank}
+              safetyUpgrades={selectedSafetyUpgrades}
+            />
+          </div>
+          <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">
+            <Configurator
+              customerDetails={customerDetails}
+              paymentMode={paymentMode}
+              setPaymentMode={setPaymentMode}
+              selectedTank={selectedTank}
+              setSelectedTank={setSelectedTank}
+              selectedReposOsOptions={selectedReposOsOptions}
+              onReposOsToggle={handleReposOsToggle}
+              selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}
+              onMechanicalInclusionToggle={handleMechanicalInclusionToggle}
+              selectedDecantation={selectedDecantation}
+              setSelectedDecantation={setSelectedDecantation}
+              selectedDispensingUnit={selectedDispensingUnit}
+              setSelectedDispensingUnit={setSelectedDispensingUnit}
+              selectedSafetyUnits={selectedSafetyUnits}
+              onSafetyUnitToggle={handleSafetyUnitToggle}
+              selectedSafetyUpgrades={selectedSafetyUpgrades}
+              onSafetyUpgradeToggle={handleSafetyUpgradeToggle}
+              selectedLicenseOptions={selectedLicenseOptions}
+              selectedConsumption={selectedConsumption}
+              onConsumptionSelect={handleConsumptionSelect}
+              
+              totalContractValue={totalContractValue}
+              gstAmount={gstAmount}
+              finalPrice={displayPrice}
+              
+              recommendedTankId={recommendedTankId}
+              showPrices={showPrices}
+            />
+          </div>
+        </main>
+      )}
     </div>
   );
 };

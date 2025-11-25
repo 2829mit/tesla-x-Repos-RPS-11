@@ -26,6 +26,13 @@ const STATE_OPTIONS = [
   'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
 ].sort();
 
+const SALESPERSON_OPTIONS = [
+  'Ketan',
+  'Abhishek',
+  'Aditya',
+  'Ajay'
+];
+
 const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState<CustomerDetails>({
     name: '',
@@ -35,6 +42,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
     industry: '',
     state: '',
     consumption: '',
+    salesperson: '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,7 +154,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
               </div>
             </div>
 
-            {/* Row 2: Email */}
+            {/* Row 2: Email | Salesperson */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email ID</label>
@@ -160,6 +168,28 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition"
                   placeholder="you@example.com"
                 />
+              </div>
+              <div>
+                <label htmlFor="salesperson" className="block text-sm font-medium text-gray-700 mb-1">Salesperson</label>
+                <select
+                  name="salesperson"
+                  id="salesperson"
+                  value={formData.salesperson}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition appearance-none"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                  }}
+                >
+                  <option value="" disabled>Select Salesperson</option>
+                  {SALESPERSON_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

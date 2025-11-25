@@ -4,17 +4,6 @@ export interface PerformanceSpec {
   label: string;
 }
 
-// Renamed from TrimOption to RfidOption to match domain
-export interface RfidOption {
-  id: '1-active-reader' | '2-active-reader' | 'performance-test'; 
-  name: string;
-  drive: string; // Keeping 'drive' as a generic subtitle field for now, could be renamed to 'tagCapacity'
-  price: number;
-  financePerMonth: number;
-  specs: PerformanceSpec[];
-  imageUrl?: string;
-}
-
 export interface AccessoryOption {
   id: string;
   name: string;
@@ -65,4 +54,5 @@ export interface CustomerDetails {
   industry: string;
   state: string;
   consumption: string;
+  salesperson: string;
 }

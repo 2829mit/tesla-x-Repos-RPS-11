@@ -1,5 +1,5 @@
 
-import type { PerformanceSpec, RfidOption, IotOption, TankOption, AccessoryOption, DispensingUnitOption, SafetyUpgradeOption, LicenseOption } from './types';
+import type { PerformanceSpec, IotOption, TankOption, AccessoryOption, DispensingUnitOption, SafetyUpgradeOption, LicenseOption } from './types';
 
 // Removed static BASE_PRICE as it is now determined by the selected Tank
 export const BASE_FINANCE_PER_MONTH = 0; // Not used in new logic
@@ -10,43 +10,10 @@ const commonSpecs: PerformanceSpec[] = [
   { value: '24/7', label: 'Monitoring' },
 ];
 
-// Prices are now MONTHLY prices
-export const RFID_OPTIONS: RfidOption[] = [
-  { 
-    id: '1-active-reader', // Was 'lr'
-    name: '1 RFID Active Reader', 
-    drive: '50 Tags', 
-    price: 4999, 
-    financePerMonth: 0,
-    specs: commonSpecs,
-    imageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1763010390/14_sdtrkr.png',
-  },
-  { 
-    id: '2-active-reader', // Was 'lr-awd'
-    name: '2 RFID Active Reader', 
-    drive: '100 Tags', 
-    price: 9999, 
-    financePerMonth: 0,
-    specs: commonSpecs,
-    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/Entire+RPS.png',
-  },
-  { 
-    id: 'performance-test', // Was 'p-awd'
-    name: 'Performance', 
-    drive: 'All-Wheel Drive', 
-    price: 50000, 
-    financePerMonth: 0,
-    specs: [
-      { value: '321mi', label: 'Range (EPA est.)' },
-      { value: '125mph', label: 'Top Speed' },
-      { value: '6.8sec', label: '0-60 mph' },
-    ]
-  },
-];
-
+// Renamed and Updated Dispensing Unit Options
 export const DISPENSING_UNIT_OPTIONS: DispensingUnitOption[] = [
-  { id: 'single-du', name: 'Single DU', subtext: '2 Nozzle', price: 0 }, 
-  { id: 'double-du', name: 'Double DU', subtext: '3 Nozzle', price: 4999 }, 
+  { id: 'single-du', name: 'Single DU', subtext: '2 Nozzle 100 Tags', price: 0 }, 
+  { id: 'backup-du', name: 'Backup DU', subtext: 'Standard Nozzle', price: 0 }, 
 ];
 
 export const REPOS_OS_OPTIONS: AccessoryOption[] = [
