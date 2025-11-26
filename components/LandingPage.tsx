@@ -17,18 +17,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onExploreClick, o
     } else if (item === 'ROI Calculator' && onRoiClick) {
       onRoiClick();
     }
+    // Handle FAQs click if needed, e.g., scroll to section or open modal
   };
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
       <Header 
-        navItems={['About Us', 'Explore', 'Repos Pay', 'ROI Calculator', 'Build Your Own RPS', 'FAQs']}
+        navItems={['About Us', 'Explore', 'Repos Pay', 'ROI Calculator', 'Build Your Own RPS']}
+        rightNavItems={['FAQs']}
         onNavItemClick={handleNavClick}
         onHomeClick={() => {}}
         showRoi={false}
       />
       
-      <div className="relative flex-grow h-[calc(100vh-72px)] overflow-hidden bg-black group">
+      {/* Section 1: Embrace The Impossible (Hero) */}
+      <div className="relative h-[calc(100vh-72px)] overflow-hidden bg-black group shrink-0">
         <video 
           className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-80"
           autoPlay 
@@ -66,6 +69,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onExploreClick, o
              </div>
           </div>
         </div>
+      </div>
+
+      {/* Section 2: Transforming Energy Distribution (New Video Section) */}
+      <div className="relative h-screen overflow-hidden bg-black shrink-0">
+         <video 
+            className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover"
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+         >
+            <source src="https://res.cloudinary.com/dt8jmqu8d/video/upload/v1764178964/Transforming_Energy_Distribution_through_Repos_Ecosystem_ayqp2x.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+         </video>
+         
+         <div className="absolute inset-0 bg-black/10" />
       </div>
     </div>
   );
