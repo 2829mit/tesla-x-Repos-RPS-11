@@ -14,7 +14,7 @@ export interface QuoteData {
   paymentMode: 'outright' | 'installments';
   configuration: {
     tank: TankOption['id'];
-    dispensingUnit: DispensingUnitOption;
+    dispensingUnits: DispensingUnitOption[]; // Changed to Array
     decantation: IotOption;
     accessories: {
       reposOs: AccessoryOption[];

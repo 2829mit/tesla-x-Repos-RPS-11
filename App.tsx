@@ -44,9 +44,12 @@ const App: React.FC = () => {
     return options.find(o => o.price === 0) || options[0] || { id: 'basic', name: 'Basic', price: 0, subtext: '' };
   });
   
-  const [selectedDispensingUnit, setSelectedDispensingUnit] = useState<DispensingUnitOption>(() => {
+  // Changed to Array for Multi-Select
+  const [selectedDispensingUnits, setSelectedDispensingUnits] = useState<DispensingUnitOption[]>(() => {
     const options = DISPENSING_UNIT_OPTIONS || [];
-    return options[0] || { id: 'single-du', name: 'Single DU', subtext: '2 Nozzle 100 Tags', price: 0 };
+    // Default to selecting Single DU if available
+    const defaultDU = options.find(o => o.id === 'single-du');
+    return defaultDU ? [defaultDU] : [];
   });
   
   const [selectedSafetyUnits, setSelectedSafetyUnits] = useState<AccessoryOption[]>(() => 
@@ -128,12 +131,43 @@ const App: React.FC = () => {
     );
   };
 
+  const handleDispensingUnitToggle = (option: DispensingUnitOption) => {
+    setSelectedDispensingUnits(prev => 
+      prev.find(o => o.id === option.id)
+        ? prev.filter(o => o.id !== option.id)
+        : [...prev, option]
+    );
+  };
+
+  // Reset configuration handler for Clear All button
+  const resetConfiguration = () => {
+    setSelectedTank(TANK_OPTIONS[0]?.id || '22kl');
+    setSelectedReposOsOptions((REPOS_OS_OPTIONS || []).filter(o => o.price === 0));
+    setSelectedMechanicalInclusionOptions(MECHANICAL_INCLUSION_OPTIONS || []);
+    
+    const decantationOptions = DECANTATION_OPTIONS || [];
+    setSelectedDecantation(decantationOptions.find(o => o.price === 0) || decantationOptions[0]);
+    
+    // Reset dispensing units to default
+    const dispensingOptions = DISPENSING_UNIT_OPTIONS || [];
+    const defaultDU = dispensingOptions.find(o => o.id === 'single-du');
+    setSelectedDispensingUnits(defaultDU ? [defaultDU] : []);
+    
+    setSelectedSafetyUnits((SAFETY_UNIT_OPTIONS || []).filter(o => o.price === 0));
+    setSelectedSafetyUpgrades([]);
+    setSelectedLicenseOptions(LICENSE_OPTIONS || []);
+    
+    setPaymentMode('installments');
+  };
+
   const monthlyTotalPrice = useMemo(() => {
     const tank = TANK_OPTIONS.find(t => t.id === selectedTank);
     const tankPrice = tank ? tank.price : 0;
 
     let price = tankPrice;
-    price += selectedDispensingUnit?.price || 0;
+    // Sum all selected dispensing units
+    price += selectedDispensingUnits.reduce((sum, du) => sum + du.price, 0);
+    
     price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedMechanicalInclusionOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedDecantation?.price || 0;
@@ -141,7 +175,7 @@ const App: React.FC = () => {
     price += selectedSafetyUpgrades.reduce((total, unit) => total + unit.price, 0);
     price += selectedLicenseOptions.reduce((total, opt) => total + opt.price, 0);
     return price;
-  }, [selectedTank, selectedDispensingUnit, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions]);
+  }, [selectedTank, selectedDispensingUnits, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions]);
 
   const totalContractValue = useMemo(() => {
     return monthlyTotalPrice * 36;
@@ -203,8 +237,11 @@ const App: React.FC = () => {
               onMechanicalInclusionToggle={handleMechanicalInclusionToggle}
               selectedDecantation={selectedDecantation}
               setSelectedDecantation={setSelectedDecantation}
-              selectedDispensingUnit={selectedDispensingUnit}
-              setSelectedDispensingUnit={setSelectedDispensingUnit}
+              
+              // Pass Array and Toggle Handler
+              selectedDispensingUnits={selectedDispensingUnits}
+              onDispensingUnitToggle={handleDispensingUnitToggle}
+              
               selectedSafetyUnits={selectedSafetyUnits}
               onSafetyUnitToggle={handleSafetyUnitToggle}
               selectedSafetyUpgrades={selectedSafetyUpgrades}
@@ -219,6 +256,7 @@ const App: React.FC = () => {
               
               recommendedTankId={recommendedTankId}
               showPrices={showPrices}
+              onResetConfiguration={resetConfiguration}
             />
           </div>
         </main>
