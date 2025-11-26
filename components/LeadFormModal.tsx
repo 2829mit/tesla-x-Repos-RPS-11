@@ -203,6 +203,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                   id="company"
                   value={formData.company}
                   onChange={handleChange}
+                  required
                   className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none transition"
                   placeholder="Your company's name"
                 />
