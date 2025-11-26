@@ -6,6 +6,7 @@ import Configurator from './components/Configurator.tsx';
 import LeadFormModal from './components/LeadFormModal.tsx';
 import LoginModal from './components/LoginModal.tsx';
 import LandingPage from './components/LandingPage.tsx';
+import ExplorePage from './components/ExplorePage.tsx';
 import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
 import { 
   DECANTATION_OPTIONS,
@@ -19,7 +20,7 @@ import {
 import { getRecommendedTankId } from './utils/vehicleHelpers';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'app'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'app' | 'explore'>('landing');
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
   const [userRole, setUserRole] = useState<'sales' | 'guest' | null>(null);
@@ -203,7 +204,25 @@ const App: React.FC = () => {
   const showPrices = userRole === 'sales';
 
   if (currentView === 'landing') {
-    return <LandingPage onEnterApp={() => setCurrentView('app')} />;
+    return (
+      <LandingPage 
+        onEnterApp={() => setCurrentView('app')} 
+        onExploreClick={() => setCurrentView('explore')}
+        onRoiClick={() => {
+          setCurrentView('app');
+          setShowRoiCalculator(true);
+        }}
+      />
+    );
+  }
+
+  if (currentView === 'explore') {
+    return (
+      <ExplorePage 
+        onNavigateHome={() => setCurrentView('landing')}
+        onNavigateToApp={() => setCurrentView('app')}
+      />
+    );
   }
 
   return (

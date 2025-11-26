@@ -4,19 +4,25 @@ import Header from './Header';
 
 interface LandingPageProps {
   onEnterApp: () => void;
+  onExploreClick: () => void;
+  onRoiClick?: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onExploreClick, onRoiClick }) => {
   const handleNavClick = (item: string) => {
     if (item === 'Build Your Own RPS') {
       onEnterApp();
+    } else if (item === 'Explore') {
+      onExploreClick();
+    } else if (item === 'ROI Calculator' && onRoiClick) {
+      onRoiClick();
     }
   };
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
       <Header 
-        navItems={['About Us', 'Build Your Own RPS']}
+        navItems={['About Us', 'Explore', 'Repos Pay', 'ROI Calculator', 'Build Your Own RPS', 'FAQs']}
         onNavItemClick={handleNavClick}
         onHomeClick={() => {}}
         showRoi={false}
@@ -53,7 +59,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             Build Your Own RPS
           </button>
           
-          <div className="absolute bottom-10 animate-bounce cursor-pointer" onClick={onEnterApp}>
+          <div className="absolute bottom-10 animate-bounce cursor-pointer" onClick={onExploreClick}>
              <div className="flex flex-col items-center gap-2">
                <span className="text-xs tracking-widest uppercase">Explore</span>
                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>

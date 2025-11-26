@@ -56,3 +56,24 @@ export interface CustomerDetails {
   consumption: string;
   salesperson: string;
 }
+
+export interface QuoteData {
+  customerDetails: CustomerDetails;
+  paymentMode: 'outright' | 'installments';
+  totalPrice: number;
+  gstAmount: number;
+  totalContractValue: number;
+  monthlyPrice?: number;
+  configuration: {
+    tank: string;
+    dispensingUnits: DispensingUnitOption[];
+    decantation: IotOption | null;
+    accessories: {
+      reposOs: AccessoryOption[];
+      mechanical: AccessoryOption[];
+      safetyUnits: AccessoryOption[];
+      safetyUpgrades: SafetyUpgradeOption[];
+    };
+    licenses: LicenseOption[];
+  };
+}

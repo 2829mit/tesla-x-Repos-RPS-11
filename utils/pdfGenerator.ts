@@ -1,5 +1,5 @@
 import { TANK_OPTIONS } from '../constants';
-import { QuoteData } from '../services/api';
+import { QuoteData } from '../types';
 
 // Declare jsPDF on window since we are using CDN
 declare global {

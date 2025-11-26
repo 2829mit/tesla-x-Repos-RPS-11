@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
+import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption, QuoteData } from '../types';
 import { DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS } from '../constants';
 import { generateQuotePDF } from '../utils/pdfGenerator';
-import { logQuoteGeneration, QuoteData } from '../services/api';
+import { logQuoteGeneration } from '../services/api';
 import { getSafetyImage } from '../utils/vehicleHelpers';
 import ComparisonModal from './ComparisonModal';
 import QuoteModal from './QuoteModal';
