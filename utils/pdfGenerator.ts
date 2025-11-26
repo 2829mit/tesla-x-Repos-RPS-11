@@ -1,4 +1,3 @@
-
 import { TANK_OPTIONS } from '../constants';
 import { QuoteData } from '../services/api';
 
@@ -146,6 +145,11 @@ export const generateQuotePDF = async (data: QuoteData) => {
     `Salesperson: ${data.customerDetails?.salesperson || 'N/A'}`
   ];
   
+  // Also show mobile/email if available
+  if (data.customerDetails?.mobile) {
+      addressLines.push(`Mob: ${data.customerDetails.mobile}`);
+  }
+  
   let addrY = yPos + 10;
   addressLines.forEach(line => {
     doc.text(line, col1X + 2, addrY);
@@ -205,14 +209,20 @@ export const generateQuotePDF = async (data: QuoteData) => {
           productDesc += `Dispenser: Suction type (${du.name}, ${du.subtext})\n`;
       });
   } else {
-      productDesc += `Dispenser: Standard\n`;
+      // Fallback to Standard Single DU Text to ensure Invoice remains correct even if selection is cleared
+      productDesc += `Dispenser: Suction type (Single DU, 2 Nozzle 100 Tags)\n`;
   }
   
   productDesc += `DU Make: Tokheim Branding : Only Logo as per Buyer\nRequirement\n`;
   
   const addons: string[] = [];
   data.configuration.accessories.reposOs.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });
-  if (data.configuration.decantation.price > 0) addons.push(`Decantation: ${data.configuration.decantation.name}`);
+  
+  // Handle decantation logic (if null, assume standard basic skid)
+  if (data.configuration.decantation && data.configuration.decantation.price > 0) {
+      addons.push(`Decantation: ${data.configuration.decantation.name}`);
+  }
+  
   data.configuration.accessories.mechanical.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });
   data.configuration.accessories.safetyUnits.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });
   data.configuration.accessories.safetyUpgrades.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });

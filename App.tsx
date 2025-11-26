@@ -5,6 +5,7 @@ import CarVisualizer from './components/CarVisualizer.tsx';
 import Configurator from './components/Configurator.tsx';
 import LeadFormModal from './components/LeadFormModal.tsx';
 import LoginModal from './components/LoginModal.tsx';
+import LandingPage from './components/LandingPage.tsx';
 import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
 import { 
   DECANTATION_OPTIONS,
@@ -18,6 +19,8 @@ import {
 import { getRecommendedTankId } from './utils/vehicleHelpers';
 
 const App: React.FC = () => {
+  const [currentView, setCurrentView] = useState<'landing' | 'app'>('landing');
+
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
   const [userRole, setUserRole] = useState<'sales' | 'guest' | null>(null);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
@@ -39,9 +42,9 @@ const App: React.FC = () => {
     Array.isArray(MECHANICAL_INCLUSION_OPTIONS) ? MECHANICAL_INCLUSION_OPTIONS : []
   );
 
-  const [selectedDecantation, setSelectedDecantation] = useState<IotOption>(() => {
+  const [selectedDecantation, setSelectedDecantation] = useState<IotOption | null>(() => {
     const options = DECANTATION_OPTIONS || [];
-    return options.find(o => o.price === 0) || options[0] || { id: 'basic', name: 'Basic', price: 0, subtext: '' };
+    return options.find(o => o.price === 0) || options[0] || null;
   });
   
   // Changed to Array for Multi-Select
@@ -142,20 +145,21 @@ const App: React.FC = () => {
   // Reset configuration handler for Clear All button
   const resetConfiguration = () => {
     setSelectedTank(TANK_OPTIONS[0]?.id || '22kl');
-    setSelectedReposOsOptions((REPOS_OS_OPTIONS || []).filter(o => o.price === 0));
-    setSelectedMechanicalInclusionOptions(MECHANICAL_INCLUSION_OPTIONS || []);
     
-    const decantationOptions = DECANTATION_OPTIONS || [];
-    setSelectedDecantation(decantationOptions.find(o => o.price === 0) || decantationOptions[0]);
+    // Clear all array selections including price 0 options
+    setSelectedReposOsOptions([]);
+    setSelectedMechanicalInclusionOptions([]);
     
-    // Reset dispensing units to default
-    const dispensingOptions = DISPENSING_UNIT_OPTIONS || [];
-    const defaultDU = dispensingOptions.find(o => o.id === 'single-du');
-    setSelectedDispensingUnits(defaultDU ? [defaultDU] : []);
+    // Clear decantation selection completely
+    setSelectedDecantation(null);
     
-    setSelectedSafetyUnits((SAFETY_UNIT_OPTIONS || []).filter(o => o.price === 0));
+    // Clear dispensing units including default
+    setSelectedDispensingUnits([]);
+    
+    setSelectedSafetyUnits([]);
     setSelectedSafetyUpgrades([]);
-    setSelectedLicenseOptions(LICENSE_OPTIONS || []);
+    // Clear license options including standard offerings
+    setSelectedLicenseOptions([]);
     
     setPaymentMode('installments');
   };
@@ -197,6 +201,10 @@ const App: React.FC = () => {
   }, [totalInclTax, monthlyTotalPrice, paymentMode]);
 
   const showPrices = userRole === 'sales';
+
+  if (currentView === 'landing') {
+    return <LandingPage onEnterApp={() => setCurrentView('app')} />;
+  }
 
   return (
     <div className="min-h-screen bg-stone-50 font-sans text-gray-800">

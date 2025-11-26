@@ -1,4 +1,3 @@
-
 import { CustomerDetails, TankOption, AccessoryOption, DispensingUnitOption, IotOption, SafetyUpgradeOption, LicenseOption } from "../types";
 
 // In a real production build, this would be an environment variable
@@ -15,7 +14,7 @@ export interface QuoteData {
   configuration: {
     tank: TankOption['id'];
     dispensingUnits: DispensingUnitOption[]; // Changed to Array
-    decantation: IotOption;
+    decantation: IotOption | null;
     accessories: {
       reposOs: AccessoryOption[];
       mechanical: AccessoryOption[];
