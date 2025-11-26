@@ -202,7 +202,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             ))}
           </div>
           
-          {/* Consumption */}
+          {/* 1. Consumption */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Consumption</h2>
             <div className="space-y-4">
@@ -228,7 +228,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-          {/* RPS Capacity */}
+          {/* 2. RPS Capacity */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RPS Capacity</h2>
             <div className="space-y-4">
@@ -262,7 +262,50 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-          {/* Dispensing Unit (Renamed Header) */}
+          {/* Compare Features Button */}
+          <div className="mb-[45px]">
+              <button
+                  onClick={() => setIsComparisonModalOpen(true)}
+                  className="w-full flex justify-between items-center p-4 bg-gray-100 hover:bg-gray-200 rounded-lg text-left transition-colors"
+              >
+                  <span className="font-semibold text-gray-800">View & Compare Features</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+              </button>
+          </div>
+
+          {/* 3. Mechanical Inclusion */}
+          <div className="mb-[45px]">
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Mechanical Inclusion</h2>
+            <div className="space-y-2">
+              {MECHANICAL_INCLUSION_OPTIONS.map(option => (
+                <button
+                  key={option.id}
+                  onClick={() => onMechanicalInclusionToggle(option)}
+                  className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                    selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                    selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
+                  }`}>
+                    {selectedMechanicalInclusionOptions.some(o => o.id === option.id) && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-grow flex justify-between items-center">
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 4. RFID Enabled Dispensing Unit */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Enabled Dispensing Unit</h2>
             <div className="space-y-2">
@@ -295,7 +338,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-          {/* Repos OS */}
+          {/* 5. Repos OS */}
           <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Repos OS</h2>
             <div className="space-y-2">
@@ -327,7 +370,37 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-           {/* Decantation Unit */}
+          {/* 6. Sensors and Controller Unit */}
+          <div className="mb-[45px]">
+              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Sensors and Controller Unit</h2>
+              <div className="space-y-2">
+                {SAFETY_UNIT_OPTIONS.map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => onSafetyUnitToggle(option)}
+                    className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                      selectedSafetyUnits.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                      selectedSafetyUnits.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
+                    }`}>
+                      {selectedSafetyUnits.some(o => o.id === option.id) && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-grow flex justify-between items-center">
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+          </div>
+
+           {/* 7. Decantation Unit */}
            <div className="mb-[45px]">
             <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Decantation Unit</h2>
             <div className="space-y-2">
@@ -375,67 +448,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             </div>
           </div>
 
-          {/* Mechanical Inclusion */}
-          <div className="mb-[45px]">
-            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Mechanical Inclusion</h2>
-            <div className="space-y-2">
-              {MECHANICAL_INCLUSION_OPTIONS.map(option => (
-                <button
-                  key={option.id}
-                  onClick={() => onMechanicalInclusionToggle(option)}
-                  className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                    selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                    selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
-                  }`}>
-                    {selectedMechanicalInclusionOptions.some(o => o.id === option.id) && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-grow flex justify-between items-center">
-                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                    <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Sensors and Controller Unit */}
-          <div className="mb-[45px]">
-              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Sensors and Controller Unit</h2>
-              <div className="space-y-2">
-                {SAFETY_UNIT_OPTIONS.map(option => (
-                  <button
-                    key={option.id}
-                    onClick={() => onSafetyUnitToggle(option)}
-                    className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedSafetyUnits.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
-                    }`}
-                  >
-                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                      selectedSafetyUnits.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
-                    }`}>
-                      {selectedSafetyUnits.some(o => o.id === option.id) && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-grow flex justify-between items-center">
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-          </div>
-
-          {/* Safety Upgrades */}
+          {/* 8. Safety Upgrades */}
           <div className="mb-[45px]">
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Safety Upgrades</h2>
               <div className="space-y-6">
@@ -487,7 +500,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
           </div>
             
-          {/* Licenses and Compliance Section */}
+          {/* 9. Licenses and Compliance Section */}
           <div className="mb-[45px]">
             <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
             <div className="space-y-3 mt-6">

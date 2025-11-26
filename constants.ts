@@ -13,7 +13,7 @@ const commonSpecs: PerformanceSpec[] = [
 // Renamed and Updated Dispensing Unit Options
 export const DISPENSING_UNIT_OPTIONS: DispensingUnitOption[] = [
   { id: 'single-du', name: 'Single DU', subtext: '2 Nozzle 100 Tags', price: 0 }, 
-  { id: 'backup-du', name: 'Additional DU', subtext: 'Standard Nozzle', price: 0 }, 
+  { id: 'backup-du', name: 'Additional DU', subtext: 'Standard Nozzle', price: 4999 }, 
 ];
 
 export const REPOS_OS_OPTIONS: AccessoryOption[] = [
