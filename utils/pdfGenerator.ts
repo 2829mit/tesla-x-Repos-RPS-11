@@ -233,7 +233,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
   data.configuration.accessories.safetyUpgrades.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });
   
   if (addons.length > 0) {
-    productDesc += "\nPaid Add-ons Included:\n";
+    productDesc += "\nPAID ADD-ONS INCLUDED:\n";
     addons.forEach(addon => productDesc += `- ${addon}\n`);
   }
 

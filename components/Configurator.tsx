@@ -35,6 +35,7 @@ interface ConfiguratorProps {
   
   recommendedTankId: TankOption['id'] | null;
   showPrices: boolean;
+  onResetConfiguration?: () => void;
 }
 
 const ChevronUp: React.FC = () => (
@@ -77,6 +78,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   
   recommendedTankId,
   showPrices,
+  onResetConfiguration
 }) => {
   const [selectedAction, setSelectedAction] = useState<'quote' | 'contact'>('contact');
   const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | IotOption | null>(null);
@@ -188,7 +190,20 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     <div className="bg-white text-gray-800 lg:h-full h-auto flex flex-col relative lg:overflow-hidden">
       <div className="flex-grow lg:overflow-y-auto overflow-visible scroll-smooth pb-24">
         <div className="p-6 md:p-10">
-          <h1 className="text-2xl md:text-[28px] md:leading-[48px] font-medium text-center text-[#171A20]">Repos Portable Station</h1>
+          
+          {/* Header Section with Clear Button */}
+          <div className="flex justify-between items-center mb-4">
+             <h1 className="text-2xl md:text-[28px] font-medium text-[#171A20]">Repos Portable Station</h1>
+             {onResetConfiguration && (
+               <button 
+                 onClick={onResetConfiguration}
+                 className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-2 rounded transition-colors uppercase tracking-wide"
+               >
+                 Clear All
+               </button>
+             )}
+          </div>
+
           <div className="flex justify-around my-8 text-center">
             {[
               { label: 'Speed', value: '120L/m' },
@@ -277,7 +292,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 
           {/* 3. Mechanical Inclusion */}
           <div className="mb-[45px]">
-            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Mechanical Inclusion</h2>
+            <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Mechanical Inclusions</h2>
             <div className="space-y-2">
               {MECHANICAL_INCLUSION_OPTIONS.map(option => (
                 <button
@@ -319,6 +334,19 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       : 'border-gray-300 hover:border-gray-500'
                   }`}
                 >
+                  {/* Tickbox - Square Style with Checkmark */}
+                  <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                    selectedDispensingUnit.id === option.id
+                      ? 'bg-gray-600 border-gray-600'
+                      : 'bg-white border-gray-300'
+                  }`}>
+                    {selectedDispensingUnit.id === option.id && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+
                   <div className="flex-grow">
                     <div className="flex justify-between items-center">
                       <div>
@@ -642,7 +670,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 <div className="flex gap-4 flex-col sm:flex-row">
                    <button
                      className="w-full py-3 px-4 rounded text-sm font-semibold bg-blue-600 text-white transition-colors hover:bg-blue-700"
-                     onClick={() => { alert("Thank you for your interest. Our sales team will contact you shortly."); }}
+                     onClick={() => {
+                       alert("Thank you for your interest. Our sales team will contact you shortly.");
+                     }}
                   >
                     Contact Sales
                   </button>
@@ -660,7 +690,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 <div>
                   <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{formatCurrency(footerPrice)}</p>
                   {paymentMode === 'installments' && (
-                     <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Per Month</p>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Per Month</p>
                   )}
                 </div>
                 <button
@@ -683,10 +713,19 @@ const Configurator: React.FC<ConfiguratorProps> = ({
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
           onClick={() => setLearnMoreOption(null)}
         >
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg relative p-6" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setLearnMoreOption(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-lg relative p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setLearnMoreOption(null)} 
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
+
             <h3 className="text-2xl font-semibold mb-4 text-gray-900 text-center">{learnMoreOption.name}</h3>
             
             {(learnMoreOption as any).imageUrl ? (
