@@ -98,6 +98,15 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({
          </div>
       </div>
 
+      {/* Company Overview Section */}
+      <div className="bg-white py-20 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+              <p className="text-xl md:text-2xl font-light text-gray-800 leading-relaxed">
+                  Repos Energy is a fuel-tech platform that enables businesses to get doorstep diesel delivery through a seamless app-based network. We connect <span className="font-medium text-black">2000+ petrol pumps</span> with <span className="font-medium text-black">700+ enterprises</span>, ensuring reliable supply with full transparency. Our IoT-enabled systems guarantee quality, quantity, and secure fuel management for both demand and supply sides.
+              </p>
+          </div>
+      </div>
+
       {/* Founders Section - Split Layout (Fixes Face Coverage) */}
       <div className="flex flex-col lg:flex-row min-h-[800px]">
          {/* Image Side */}
@@ -125,7 +134,7 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({
                  "Conceived in 2016, Repos was born from their shared vision to make energy accessible to every corner of the world."
                </p>
                <p>
-                 Driven by relentless faith and an indomitable spirit, they believe the world is your oyster if you are persistent in your pursuit.
+                 Driven by relentless faith and an indomitable spirit, they believe the world is your oyster if you are relentless in your pursuit.
                </p>
             </div>
          </div>
