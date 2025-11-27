@@ -269,12 +269,14 @@ const App: React.FC = () => {
       {isLeadFormOpen && <LeadFormModal onSubmit={handleLeadFormClose} />}
       
       <Header 
+        navItems={['Home']}
         onRoiClick={() => setShowRoiCalculator(true)} 
         onHomeClick={() => setShowRoiCalculator(false)}
         // If user clicks FAQs in App, go to FAQ page
         rightNavItems={['FAQs']}
         onNavItemClick={(item) => {
             if (item === 'FAQs') setCurrentView('faq');
+            if (item === 'Home') setCurrentView('landing');
         }}
       />
       

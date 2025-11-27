@@ -60,7 +60,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
 
   const complianceItems = [
     { name: "PESO", desc: "Petroleum & Explosives Safety" },
-    { name: "LSM", desc: "Legal Metrology Standards" },
+    { name: "L&M", desc: "Legal Metrology Standards" },
     { name: "CIMFR", desc: "Mining & Fuel Research" },
     { name: "BIS", desc: "Bureau of Indian Standards" },
     { name: "ATEX", desc: "Explosive Atmospheres" }
