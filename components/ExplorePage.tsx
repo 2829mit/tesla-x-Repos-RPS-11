@@ -5,9 +5,11 @@ import Header from './Header';
 interface ExplorePageProps {
   onNavigateHome: () => void;
   onNavigateToApp: () => void;
+  onFaqClick: () => void;
+  onAboutClick: () => void;
 }
 
-const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToApp }) => {
+const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToApp, onFaqClick, onAboutClick }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -20,8 +22,12 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
   const handleNavClick = (item: string) => {
     if (item === 'Build Your Own RPS') {
       onNavigateToApp();
-    } else if (item === 'About Us' || item === 'Home') {
+    } else if (item === 'About Us') {
+      onAboutClick();
+    } else if (item === 'Home') {
       onNavigateHome();
+    } else if (item === 'FAQs') {
+      onFaqClick();
     }
   };
 
@@ -34,7 +40,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
     },
     {
       title: "Fire Suppression",
-      image: "https://images.unsplash.com/photo-1626084282717-38e4a9df36b6?q=80&w=1000&auto=format&fit=crop",
+      image: "https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764218815/Screenshot_2025-11-27_101642_ry3ctu.png",
       subtitle: "Automatic Activation System",
       desc: "Instant response safety mechanism. Detects thermal anomalies and deploys suppression agents automatically, protecting personnel and assets before a hazard escalates."
     },
@@ -66,7 +72,8 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden selection:bg-white selection:text-black">
       <Header 
-        navItems={['About Us', 'Explore', 'Build Your Own RPS']}
+        navItems={['Home', 'About Us', 'Build Your Own RPS']}
+        rightNavItems={['FAQs']}
         onNavItemClick={handleNavClick}
         onHomeClick={onNavigateHome}
         showRoi={false}
@@ -188,7 +195,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
             <img 
               src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop" 
               alt="IoT Chip" 
-              className="absolute inset-0 w-full h-full object-cover grayscale opacity-60 group-hover:scale-105 group-hover:opacity-80 transition-all duration-1000 ease-out"
+              className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000 ease-out"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
           </div>
@@ -201,7 +208,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
             <img 
               src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764177695/Gemini_Generated_Image_wnjc9hwnjc9hwnjc_jaoh8q.png" 
               alt="Smart Float Mechanism" 
-              className="absolute inset-0 w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000 ease-out mix-blend-multiply"
+              className="absolute inset-0 w-full h-full object-cover opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out mix-blend-multiply"
             />
           </div>
           <div className="w-full md:w-1/2 flex flex-col justify-center p-12 md:p-24 relative overflow-hidden">
@@ -287,15 +294,9 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
                 <img 
                   src={feature.image} 
                   alt={feature.title} 
-                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-90 group-hover:scale-105 transition-all duration-1000 ease-out grayscale"
+                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
                 />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all duration-500"></div>
-                {/* Hover Reveal Label */}
-                <div className="absolute bottom-10 left-10 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-                  <span className="bg-white text-black px-4 py-2 text-xs font-bold uppercase tracking-widest">
-                    View Spec
-                  </span>
-                </div>
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all duration-500"></div>
              </div>
            </div>
          ))}
@@ -349,7 +350,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
               <img 
                 src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=2000&auto=format&fit=crop" 
                 alt="Factory Welding" 
-                className="w-full h-full object-cover grayscale opacity-50 group-hover:opacity-90 group-hover:scale-110 transition-all duration-1000 ease-out"
+                className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000 ease-out"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
               <div className="absolute bottom-8 left-8 transform translate-y-4 group-hover:translate-y-0 opacity-50 group-hover:opacity-100 transition-all duration-700">
@@ -362,9 +363,9 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
             {/* Image 2: Assembly / Clean Line */}
             <div className="group relative h-[500px] overflow-hidden cursor-crosshair lg:mt-16">
               <img 
-                src="https://images.unsplash.com/photo-1565514020176-892eb1036e62?q=80&w=2000&auto=format&fit=crop" 
-                alt="Assembly Line" 
-                className="w-full h-full object-cover grayscale opacity-50 group-hover:opacity-90 group-hover:scale-110 transition-all duration-1000 ease-out"
+                src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764216794/LargestIoTfactoryintheworldformobilepetrolpumps_dckqcy.webp" 
+                alt="Repos Assembly Line" 
+                className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000 ease-out"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
               <div className="absolute bottom-8 left-8 transform translate-y-4 group-hover:translate-y-0 opacity-50 group-hover:opacity-100 transition-all duration-700">
@@ -379,7 +380,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
               <img 
                 src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2000&auto=format&fit=crop" 
                 alt="Robotic Arm" 
-                className="w-full h-full object-cover grayscale opacity-50 group-hover:opacity-90 group-hover:scale-110 transition-all duration-1000 ease-out"
+                className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000 ease-out"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
               <div className="absolute bottom-8 left-8 transform translate-y-4 group-hover:translate-y-0 opacity-50 group-hover:opacity-100 transition-all duration-700">
@@ -388,6 +389,60 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
                 <p className="text-3xl text-white font-light">R&D & Robotics</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* NEW SECTION: Research & Development */}
+      <div className="bg-white text-black py-32 px-6 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+            
+            {/* Text Content */}
+            <div>
+              <span className="text-xs font-bold tracking-[0.2em] uppercase text-blue-600 mb-6 block">
+                Government of India Recognized
+              </span>
+              <h2 className="text-4xl md:text-6xl font-light mb-8 tracking-tight leading-none">
+                Accredited by <br/>
+                <span className="font-bold">DSIR</span>
+              </h2>
+              <div className="h-1 w-20 bg-black mb-10"></div>
+              
+              <p className="text-xl leading-relaxed font-light text-gray-800 mb-8">
+                Repos Research Centre has been accredited by <span className="font-semibold">DSIR</span> for its groundbreaking technological innovations, making us <span className="font-semibold">one out of 2%</span> of private R&D Labs in India.
+              </p>
+              
+              <p className="text-gray-500 leading-relaxed text-sm max-w-md">
+                Our R&D facility is certified and approved by the Department of Science & Industrial Research (DSIR), a renowned Government of India (GoI) institution.
+              </p>
+            </div>
+
+            {/* Visuals */}
+            <div className="relative">
+               <div className="grid grid-cols-1 gap-8">
+                  <div className="bg-gray-50 p-8 border border-gray-100 shadow-xl transform hover:-translate-y-2 transition-transform duration-500">
+                     <img 
+                       src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764218338/Screenshot_2025-11-27_100831_qvnqx7.png" 
+                       alt="DSIR Accreditation Graph" 
+                       className="w-full h-auto object-contain mix-blend-multiply" 
+                     />
+                  </div>
+                  <div className="bg-gray-50 p-8 border border-gray-100 shadow-xl transform hover:-translate-y-2 transition-transform duration-500 ml-12 -mt-12 z-10 relative">
+                      <img 
+                       src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764218333/Screenshot_2025-11-27_100753_ugnv3q.png" 
+                       alt="R&D Recognition" 
+                       className="w-full h-auto object-contain mix-blend-multiply" 
+                     />
+                  </div>
+               </div>
+               
+               {/* Decorative Element behind */}
+               <div className="absolute -top-10 -right-10 text-[10rem] font-bold text-gray-50 opacity-50 -z-10 leading-none select-none hidden md:block">
+                 R&D
+               </div>
+            </div>
+
           </div>
         </div>
       </div>

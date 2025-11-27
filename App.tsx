@@ -7,6 +7,9 @@ import LeadFormModal from './components/LeadFormModal.tsx';
 import LoginModal from './components/LoginModal.tsx';
 import LandingPage from './components/LandingPage.tsx';
 import ExplorePage from './components/ExplorePage.tsx';
+import FaqPage from './components/FaqPage.tsx';
+import ReposPayPage from './components/ReposPayPage.tsx';
+import AboutUsPage from './components/AboutUsPage.tsx';
 import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
 import { 
   DECANTATION_OPTIONS,
@@ -20,7 +23,7 @@ import {
 import { getRecommendedTankId } from './utils/vehicleHelpers';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'app' | 'explore'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'app' | 'explore' | 'faq' | 'reposPay' | 'about'>('landing');
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
   const [userRole, setUserRole] = useState<'sales' | 'guest' | null>(null);
@@ -208,6 +211,9 @@ const App: React.FC = () => {
       <LandingPage 
         onEnterApp={() => setCurrentView('app')} 
         onExploreClick={() => setCurrentView('explore')}
+        onFaqClick={() => setCurrentView('faq')}
+        onReposPayClick={() => setCurrentView('reposPay')}
+        onAboutClick={() => setCurrentView('about')}
         onRoiClick={() => {
           setCurrentView('app');
           setShowRoiCalculator(true);
@@ -221,6 +227,38 @@ const App: React.FC = () => {
       <ExplorePage 
         onNavigateHome={() => setCurrentView('landing')}
         onNavigateToApp={() => setCurrentView('app')}
+        onFaqClick={() => setCurrentView('faq')}
+        onAboutClick={() => setCurrentView('about')}
+      />
+    );
+  }
+
+  if (currentView === 'faq') {
+    return (
+      <FaqPage 
+        onBack={() => setCurrentView('landing')} 
+        onAboutClick={() => setCurrentView('about')}
+      />
+    );
+  }
+
+  if (currentView === 'reposPay') {
+    return (
+      <ReposPayPage 
+        onBack={() => setCurrentView('landing')}
+        onNavigateToApp={() => setCurrentView('app')}
+        onAboutClick={() => setCurrentView('about')}
+      />
+    );
+  }
+
+  if (currentView === 'about') {
+    return (
+      <AboutUsPage
+        onNavigateHome={() => setCurrentView('landing')}
+        onNavigateToApp={() => setCurrentView('app')}
+        onExploreClick={() => setCurrentView('explore')}
+        onReposPayClick={() => setCurrentView('reposPay')}
       />
     );
   }
@@ -233,6 +271,11 @@ const App: React.FC = () => {
       <Header 
         onRoiClick={() => setShowRoiCalculator(true)} 
         onHomeClick={() => setShowRoiCalculator(false)}
+        // If user clicks FAQs in App, go to FAQ page
+        rightNavItems={['FAQs']}
+        onNavItemClick={(item) => {
+            if (item === 'FAQs') setCurrentView('faq');
+        }}
       />
       
       {showRoiCalculator ? (

@@ -6,9 +6,12 @@ interface LandingPageProps {
   onEnterApp: () => void;
   onExploreClick: () => void;
   onRoiClick?: () => void;
+  onFaqClick: () => void;
+  onReposPayClick: () => void;
+  onAboutClick: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onExploreClick, onRoiClick }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onExploreClick, onRoiClick, onFaqClick, onReposPayClick, onAboutClick }) => {
   const handleNavClick = (item: string) => {
     if (item === 'Build Your Own RPS') {
       onEnterApp();
@@ -16,8 +19,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onExploreClick, o
       onExploreClick();
     } else if (item === 'ROI Calculator' && onRoiClick) {
       onRoiClick();
+    } else if (item === 'FAQs') {
+      onFaqClick();
+    } else if (item === 'Repos Pay') {
+      onReposPayClick();
+    } else if (item === 'About Us') {
+      onAboutClick();
     }
-    // Handle FAQs click if needed, e.g., scroll to section or open modal
   };
 
   return (
@@ -85,6 +93,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onExploreClick, o
          </video>
          
          <div className="absolute inset-0 bg-black/10" />
+      </div>
+
+      {/* Section 3: Trusted Brands */}
+      <div className="bg-white py-24 px-6 flex flex-col items-center text-center">
+        <p className="text-xs md:text-sm font-bold tracking-[0.2em] text-gray-500 uppercase mb-8">Trusted Partners</p>
+        <h2 className="text-3xl md:text-5xl font-bold text-black mb-16 tracking-tight">Powering Industry Leaders</h2>
+        <div className="max-w-7xl mx-auto w-full flex justify-center">
+          <img 
+            src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764218439/Screenshot_2025-11-27_100713_olo5at.png" 
+            alt="Trusted Brands" 
+            className="w-full h-auto max-w-5xl object-contain mix-blend-multiply opacity-90 hover:opacity-100 transition-opacity duration-500"
+          />
+        </div>
       </div>
     </div>
   );
