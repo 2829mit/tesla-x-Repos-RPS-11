@@ -10,7 +10,11 @@ import ExplorePage from './components/ExplorePage.tsx';
 import FaqPage from './components/FaqPage.tsx';
 import ReposPayPage from './components/ReposPayPage.tsx';
 import AboutUsPage from './components/AboutUsPage.tsx';
-import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from './types';
+import ComparisonModal from './components/ComparisonModal.tsx';
+import QuoteModal from './components/QuoteModal.tsx';
+import { generateQuotePDF } from './utils/pdfGenerator';
+import { logQuoteGeneration } from './services/api';
+import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption, QuoteData } from './types';
 import { 
   DECANTATION_OPTIONS,
   REPOS_OS_OPTIONS,
@@ -31,6 +35,10 @@ const App: React.FC = () => {
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null);
   const [showRoiCalculator, setShowRoiCalculator] = useState(false);
   
+  // Modal States
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+
   const [paymentMode, setPaymentMode] = useState<'outright' | 'installments'>('installments');
   
   // Selected Tank
@@ -206,6 +214,49 @@ const App: React.FC = () => {
 
   const showPrices = userRole === 'sales';
 
+  const handleQuoteSubmit = async (mobile: string, email: string) => {
+    setIsQuoteModalOpen(false);
+
+    // Update customer details with provided mobile/email if available
+    const updatedCustomerDetails = {
+      ...(customerDetails || {
+        name: 'Guest User',
+        company: '',
+        industry: '',
+        state: '',
+        consumption: '',
+        salesperson: ''
+      }),
+      mobile,
+      email
+    };
+
+    const quoteData: QuoteData = {
+      customerDetails: updatedCustomerDetails,
+      paymentMode,
+      totalPrice: displayPrice,
+      gstAmount: gstAmount,
+      totalContractValue: totalContractValue,
+      monthlyPrice: paymentMode === 'installments' ? displayPrice : undefined,
+      
+      configuration: {
+        tank: selectedTank,
+        dispensingUnits: selectedDispensingUnits,
+        decantation: selectedDecantation,
+        accessories: {
+          reposOs: selectedReposOsOptions,
+          mechanical: selectedMechanicalInclusionOptions,
+          safetyUnits: selectedSafetyUnits,
+          safetyUpgrades: selectedSafetyUpgrades,
+        },
+        licenses: selectedLicenseOptions,
+      }
+    };
+
+    await generateQuotePDF(quoteData);
+    logQuoteGeneration(quoteData);
+  };
+
   if (currentView === 'landing') {
     return (
       <LandingPage 
@@ -264,7 +315,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 font-sans text-gray-800">
+    <div className="min-h-screen bg-stone-50 font-sans text-gray-800 relative">
       {isLoginModalOpen && <LoginModal onLogin={handleLogin} />}
       {isLeadFormOpen && <LeadFormModal onSubmit={handleLeadFormClose} />}
       
@@ -329,10 +380,26 @@ const App: React.FC = () => {
               recommendedTankId={recommendedTankId}
               showPrices={showPrices}
               onResetConfiguration={resetConfiguration}
+              
+              // Modal Handlers passed from App
+              onOpenComparison={() => setIsComparisonModalOpen(true)}
+              onOpenQuote={() => setIsQuoteModalOpen(true)}
             />
           </div>
         </main>
       )}
+
+      {/* Render Modals at Root Level to ensure they are above everything */}
+      {isComparisonModalOpen && (
+        <ComparisonModal onClose={() => setIsComparisonModalOpen(false)} showPrices={showPrices} />
+      )}
+
+      <QuoteModal 
+        isOpen={isQuoteModalOpen} 
+        onClose={() => setIsQuoteModalOpen(false)} 
+        onSubmit={handleQuoteSubmit}
+        initialDetails={customerDetails}
+      />
     </div>
   );
 };

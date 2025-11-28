@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { CustomerDetails } from '../types';
 
@@ -32,7 +33,7 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, onSubmit, init
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[120] p-4 animate-fade-in">
       <div 
         className="bg-white rounded-lg p-6 w-full max-w-md relative shadow-xl"
         onClick={(e) => e.stopPropagation()}

@@ -1,11 +1,8 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption, QuoteData } from '../types';
-import { DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS, CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS } from '../constants';
-import { generateQuotePDF } from '../utils/pdfGenerator';
-import { logQuoteGeneration } from '../services/api';
+import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
+import { CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS } from '../constants';
 import { getSafetyImage } from '../utils/vehicleHelpers';
-import ComparisonModal from './ComparisonModal';
-import QuoteModal from './QuoteModal';
 
 interface ConfiguratorProps {
   customerDetails: CustomerDetails | null;
@@ -39,6 +36,10 @@ interface ConfiguratorProps {
   recommendedTankId: TankOption['id'] | null;
   showPrices: boolean;
   onResetConfiguration?: () => void;
+  
+  // Handlers for opening modals
+  onOpenComparison: () => void;
+  onOpenQuote: () => void;
 }
 
 const ChevronUp: React.FC = () => (
@@ -81,12 +82,13 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   
   recommendedTankId,
   showPrices,
-  onResetConfiguration
+  onResetConfiguration,
+  
+  onOpenComparison,
+  onOpenQuote
 }) => {
   const [selectedAction, setSelectedAction] = useState<'quote' | 'contact'>('contact');
   const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | IotOption | null>(null);
-  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
-  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
   const [isStickyFooterVisible, setIsStickyFooterVisible] = useState(true);
   const [isPricingDetailsOpen, setIsPricingDetailsOpen] = useState(true);
@@ -135,50 +137,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 
   const handleViewQuoteClick = () => {
     setSelectedAction('quote');
-    setIsQuoteModalOpen(true);
-  };
-
-  const handleQuoteSubmit = async (mobile: string, email: string) => {
-    setIsQuoteModalOpen(false);
-
-    // Update customer details with provided mobile/email if available
-    const updatedCustomerDetails = {
-      ...(customerDetails || {
-        name: 'Guest User',
-        company: '',
-        industry: '',
-        state: '',
-        consumption: '',
-        salesperson: ''
-      }),
-      mobile,
-      email
-    };
-
-    const quoteData: QuoteData = {
-      customerDetails: updatedCustomerDetails,
-      paymentMode,
-      totalPrice: finalPrice,
-      gstAmount: gstAmount,
-      totalContractValue: totalContractValue,
-      monthlyPrice: paymentMode === 'installments' ? finalPrice : undefined,
-      
-      configuration: {
-        tank: selectedTank,
-        dispensingUnits: selectedDispensingUnits,
-        decantation: selectedDecantation,
-        accessories: {
-          reposOs: selectedReposOsOptions,
-          mechanical: selectedMechanicalInclusionOptions,
-          safetyUnits: selectedSafetyUnits,
-          safetyUpgrades: selectedSafetyUpgrades,
-        },
-        licenses: selectedLicenseOptions,
-      }
-    };
-
-    await generateQuotePDF(quoteData);
-    logQuoteGeneration(quoteData);
+    onOpenQuote();
   };
 
   const tankBasePrice = currentTank ? currentTank.price : 0;
@@ -304,7 +263,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
             {/* Compare Features Button */}
             <div className="mb-[45px]">
                 <button
-                    onClick={() => setIsComparisonModalOpen(true)}
+                    onClick={onOpenComparison}
                     className="w-full flex justify-between items-center p-4 bg-gray-100 hover:bg-gray-200 rounded-lg text-left transition-colors"
                 >
                     <span className="font-semibold text-gray-800">View & Compare Features</span>
@@ -726,17 +685,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
         </div>
       )}
 
-      {isComparisonModalOpen && (
-        <ComparisonModal onClose={() => setIsComparisonModalOpen(false)} showPrices={showPrices} />
-      )}
-
-      <QuoteModal 
-        isOpen={isQuoteModalOpen} 
-        onClose={() => setIsQuoteModalOpen(false)} 
-        onSubmit={handleQuoteSubmit}
-        initialDetails={customerDetails}
-      />
-
+      {/* Learn More Modal for Safety Upgrades */}
       {learnMoreOption && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
