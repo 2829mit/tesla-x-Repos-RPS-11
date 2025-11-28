@@ -290,6 +290,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
     head: [["Sr", "Product Descriptions", "HSN/SAC", "Quantity", "Rate", "Per", "Disc. %", "Amount"]],
     body: tableBody,
     theme: 'grid',
+    margin: { left: 7, right: 7 }, // Fix: Explicit margins to handle content overflow
     styles: {
       font: "helvetica",
       fontSize: 8,
@@ -308,7 +309,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
     },
     columnStyles: {
       0: { cellWidth: 8, halign: 'center' }, 
-      1: { cellWidth: 85 }, 
+      1: { cellWidth: 80 }, // Adjusted slightly to fit with margins
       2: { cellWidth: 18, halign: 'center' },
       3: { cellWidth: 12, halign: 'center' },
       4: { cellWidth: 25, halign: 'right' },
@@ -332,7 +333,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
   let finalY = doc.lastAutoTable.finalY;
 
   doc.setFont("helvetica", "bold");
-  doc.text(`Amount (Words) - Rs. ${numberToWords(Math.round(grandTotal))} Only`, 5, finalY + 6);
+  doc.text(`Amount (Words) - Rs. ${numberToWords(Math.round(grandTotal))} Only`, 7, finalY + 6);
   
   finalY += 10;
 

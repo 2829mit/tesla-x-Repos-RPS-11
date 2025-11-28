@@ -1,4 +1,3 @@
-
 import { CustomerDetails, QuoteData } from "../types";
 
 // Base URL for the Django Backend
@@ -62,10 +61,11 @@ export const logQuoteGeneration = async (data: QuoteData): Promise<void> => {
     });
 
     if (!response.ok) {
-      console.error('Failed to log quote');
+      console.warn('Failed to log quote to backend');
     }
   } catch (error) {
-    console.error('API Error logging quote:', error);
+    // Gracefully handle fetch errors (offline/no backend) to prevent console noise
+    console.warn('Backend unreachable, skipping quote log.');
   }
 };
 
