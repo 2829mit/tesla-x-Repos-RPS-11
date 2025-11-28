@@ -211,25 +211,29 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
               </div>
             </div>
           </div>
-          <div className="w-full md:w-1/2 h-[500px] md:h-auto relative order-1 md:order-2 overflow-hidden group">
-            <img 
-              src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop" 
-              alt="IoT Chip" 
-              className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000 ease-out"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
+          <div className="w-full md:w-1/2 h-[500px] md:h-auto order-1 md:order-2 bg-[#050505] p-6 md:p-12">
+            <div className="relative w-full h-full overflow-hidden rounded-xl group shadow-2xl border border-zinc-800">
+              <img 
+                src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop" 
+                alt="IoT Chip" 
+                className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000 ease-out"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
+            </div>
           </div>
         </div>
 
         {/* Block 2: Intelligent Overfill Prevention - Light Theme Variant */}
         <div className="flex flex-col md:flex-row min-h-[800px] bg-white text-black">
-          <div className="w-full md:w-1/2 h-[500px] md:h-auto relative overflow-hidden group border-r border-gray-100">
-            <div className="absolute inset-0 bg-gray-50"></div>
-            <img 
-              src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764177695/Gemini_Generated_Image_wnjc9hwnjc9hwnjc_jaoh8q.png" 
-              alt="Smart Float Mechanism" 
-              className="absolute inset-0 w-full h-full object-cover opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out mix-blend-multiply"
-            />
+          <div className="w-full md:w-1/2 h-[500px] md:h-auto bg-white p-6 md:p-12 border-r border-gray-100">
+             <div className="relative w-full h-full overflow-hidden rounded-xl group shadow-xl">
+                <div className="absolute inset-0 bg-gray-50"></div>
+                <img 
+                  src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764177695/Gemini_Generated_Image_wnjc9hwnjc9hwnjc_jaoh8q.png" 
+                  alt="Smart Float Mechanism" 
+                  className="absolute inset-0 w-full h-full object-cover opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out mix-blend-multiply"
+                />
+             </div>
           </div>
           <div className="w-full md:w-1/2 flex flex-col justify-center p-12 md:p-24 relative overflow-hidden">
             {/* Watermark */}
@@ -277,7 +281,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
         </div>
       </div>
 
-      {/* NEW SECTION: Safety & Intelligence Ecosystem (Separated Sections) */}
+      {/* Safety & Intelligence Ecosystem (Separated Sections) */}
       <div className="bg-[#050505]">
          <div className="py-32 px-6 text-center bg-black border-b border-zinc-900">
             <h2 className="text-4xl md:text-6xl font-light text-white mb-6 tracking-tight">Safety Ecosystem</h2>
@@ -310,19 +314,53 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
              </div>
              
              {/* Visual */}
-             <div className={`w-full md:w-1/2 relative order-1 ${idx % 2 === 0 ? 'md:order-2' : 'md:order-1'} group overflow-hidden`}>
-                <img 
-                  src={feature.image} 
-                  alt={feature.title} 
-                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
-                />
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all duration-500"></div>
+             <div className={`w-full md:w-1/2 relative order-1 ${idx % 2 === 0 ? 'md:order-2' : 'md:order-1'} p-6 md:p-12`}>
+                <div className="relative w-full h-full overflow-hidden rounded-xl group shadow-2xl border border-zinc-800">
+                    <img 
+                      src={feature.image} 
+                      alt={feature.title} 
+                      className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
+                    />
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all duration-500"></div>
+                </div>
              </div>
            </div>
          ))}
       </div>
 
-      {/* NEW SECTION: License & Compliance Camera Roll */}
+      {/* NEW SECTION: 3D Visualization (Compact) */}
+      <div className="bg-[#050505] py-24 px-6 border-b border-zinc-900">
+         <div className="max-w-3xl mx-auto text-center">
+            <span className="text-blue-500 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">
+              Digital Twin
+            </span>
+            <h2 className="text-3xl md:text-4xl font-light text-white mb-8 tracking-tight">
+              Site Integration Model
+            </h2>
+            
+            <div className="relative rounded-xl overflow-hidden border border-zinc-800 shadow-2xl bg-black">
+               <video 
+                  className="w-full h-auto max-h-[400px] object-cover opacity-90"
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline
+               >
+                  <source src="https://res.cloudinary.com/dt8jmqu8d/video/upload/v1764311605/Video_Caption_Removal_Complete_qdpl67.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+               </video>
+               {/* Vignette */}
+               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+               <div className="absolute inset-0 ring-1 ring-white/5 rounded-xl pointer-events-none"></div>
+            </div>
+            
+            <p className="text-gray-500 text-xs mt-6 tracking-widest uppercase">
+              Actual site deployment visualization
+            </p>
+         </div>
+      </div>
+
+      {/* License & Compliance Camera Roll */}
       <div className="bg-white py-32 overflow-hidden border-b border-gray-100">
           <div className="flex flex-col items-center justify-center text-center mb-20 px-6">
               <h2 className="text-3xl md:text-4xl font-light text-black tracking-tight mb-4">Certified Excellence</h2>
@@ -375,9 +413,9 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Image 1: Welding / Industrial */}
-            <div className="group relative h-[500px] overflow-hidden cursor-crosshair">
+            <div className="group relative h-[500px] overflow-hidden cursor-crosshair rounded-xl">
               <img 
                 src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=2000&auto=format&fit=crop" 
                 alt="Factory Welding" 
@@ -392,7 +430,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
             </div>
 
             {/* Image 2: Assembly / Clean Line */}
-            <div className="group relative h-[500px] overflow-hidden cursor-crosshair lg:mt-16">
+            <div className="group relative h-[500px] overflow-hidden cursor-crosshair lg:mt-16 rounded-xl">
               <img 
                 src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764216794/LargestIoTfactoryintheworldformobilepetrolpumps_dckqcy.webp" 
                 alt="Repos Assembly Line" 
@@ -407,7 +445,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
             </div>
 
             {/* Image 3: Robotics / High Tech */}
-            <div className="group relative h-[500px] overflow-hidden cursor-crosshair">
+            <div className="group relative h-[500px] overflow-hidden cursor-crosshair rounded-xl">
               <img 
                 src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2000&auto=format&fit=crop" 
                 alt="Robotic Arm" 

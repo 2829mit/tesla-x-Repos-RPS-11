@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="bg-white sticky top-0 z-40 h-[72px] shadow-sm">
+      <header className="bg-white fixed top-0 left-0 right-0 z-50 h-[72px] shadow-sm w-full">
         <div className="px-6 md:px-10 h-full">
           <div className="relative flex items-center justify-between h-full">
             
@@ -119,6 +119,9 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </header>
+
+      {/* Spacer to prevent content overlap since header is fixed */}
+      <div className="h-[72px]" />
 
       {/* Mobile Menu Overlay */}
       <div 

@@ -110,11 +110,11 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({
       {/* Founders Section - Split Layout (Fixes Face Coverage) */}
       <div className="flex flex-col lg:flex-row min-h-[800px]">
          {/* Image Side */}
-         <div className="lg:w-1/2 h-[500px] lg:h-auto relative overflow-hidden bg-gray-100">
+         <div className="lg:w-1/2 h-[500px] lg:h-auto relative overflow-hidden bg-gray-50">
             <img 
-              src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764223632/chetan-and-aditi-1024x675_ylozeo.jpg" 
+              src="https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764310562/Aditi-Bhosale-Walunj-Chetan-Walunj-scaled-1_ntm0gd.jpg" 
               alt="Chetan and Aditi Walunj" 
-              className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-[2s] hover:scale-105"
+              className="absolute inset-0 w-full h-full object-contain object-center"
             />
          </div>
          
