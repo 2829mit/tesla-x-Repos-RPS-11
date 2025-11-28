@@ -94,7 +94,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-[10px] flex items-center justify-center z-50 p-4 animate-fade-in"
+      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-[10px] flex items-center justify-center z-[100] p-4 animate-fade-in"
     >
       <div
         className="bg-white rounded-lg shadow-2xl border border-gray-200 w-full max-w-[772px] relative p-6 md:p-12 overflow-y-auto max-h-full"
@@ -103,7 +103,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
         {/* Close button enabled for testing purposes */}
         <button 
           onClick={() => onSubmit()} 
-          className="absolute top-6 right-6 text-gray-400 hover:text-gray-800 disabled:opacity-50" 
+          className="absolute top-6 right-6 text-gray-400 hover:text-gray-800 disabled:opacity-50 z-10" 
           aria-label="Close"
           disabled={isSubmitting}
         >
@@ -296,4 +296,3 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
 };
 
 export default LeadFormModal;
-    
