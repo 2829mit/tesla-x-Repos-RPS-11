@@ -179,6 +179,103 @@ const ReposPayPage: React.FC<ReposPayPageProps> = ({ onBack, onNavigateToApp, on
         </div>
       </div>
 
+      {/* NEW SECTION: Financing Simplified */}
+      <div className="py-24 px-6 bg-[#050505] border-b border-zinc-900">
+        <div className="max-w-7xl mx-auto">
+           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+              
+              {/* Left Column: Sticky Header */}
+              <div className="lg:col-span-4 lg:sticky lg:top-32 h-fit">
+                 <h2 className="text-4xl md:text-6xl font-semibold mb-6 leading-tight tracking-tight">
+                   Financing <br/> Simplified
+                 </h2>
+                 <div className="h-1 w-20 bg-blue-600 mb-8"></div>
+                 <p className="text-xl text-white font-medium mb-1">Your Fuel.</p>
+                 <p className="text-xl text-white-500 font-light">Your choice of payment.</p>
+              </div>
+
+              {/* Right Column: Cards Grid */}
+              <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                 
+                 {/* Card 1: EMI */}
+                 <div className="bg-[#111] border border-zinc-800 rounded-2xl p-8 hover:border-zinc-600 transition-all duration-300 flex flex-col justify-between min-h-[400px]">
+                    <div>
+                      <h3 className="text-2xl font-semibold mb-2">EMI Options Available</h3>
+                      <p className="text-gray-400 font-light text-sm mb-8">
+                        Only the best financing partners for you. Pre-approved loans at competitive rates per annum. Offline financing accepted too. There, we sorted it out for you.
+                      </p>
+                      {/* Bank Logos / Circles */}
+                      <div className="flex gap-3 mb-8">
+                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-red-600 to-red-400 flex items-center justify-center text-[10px] font-bold">AXIS</div>
+                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-800 to-blue-500 flex items-center justify-center text-[10px] font-bold">HDFC</div>
+                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-600 to-orange-400 flex items-center justify-center text-[10px] font-bold">ICICI</div>
+                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-cyan-300 flex items-center justify-center text-[10px] font-bold text-black">SBI</div>
+                      </div>
+                    </div>
+                    <button className="w-full bg-white text-black py-3 rounded font-bold text-sm uppercase tracking-wide hover:bg-gray-200 transition-colors">
+                      Calculate EMI &rarr;
+                    </button>
+                 </div>
+
+                 {/* Card 2: Pay By Cash */}
+                 <div className="bg-[#111] border border-zinc-800 rounded-2xl p-8 hover:border-zinc-600 transition-all duration-300 flex flex-col justify-start min-h-[300px]">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mb-6">
+                       <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    </div>
+                    <h3 className="text-2xl font-semibold mb-2">Pay by Cash</h3>
+                    <p className="text-gray-400 font-light text-sm">
+                      Get the Repos Portable Station with our new all-cash / 100% advance payment option for maximum benefits.
+                    </p>
+                 </div>
+
+                 {/* Card 3: Split and Pay */}
+                 <div className="bg-[#111] border border-zinc-800 rounded-2xl p-8 hover:border-zinc-600 transition-all duration-300 flex flex-col justify-between row-span-2 min-h-[450px]">
+                    <div>
+                      <h3 className="text-2xl font-semibold mb-2">Now take it slow with Split and Pay</h3>
+                      <p className="text-gray-400 font-light text-sm mb-8">
+                         Split the amount and pay. You choose the split amount. You choose the payment mode. You call the shots.
+                      </p>
+                    </div>
+                    
+                    {/* Visual Mockup for App Slider */}
+                    <div className="mt-auto bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+                       <div className="flex justify-between text-xs text-gray-400 mb-2">
+                          <span>Total Payable</span>
+                          <span>₹14,99,000</span>
+                       </div>
+                       <div className="w-full h-1.5 bg-zinc-700 rounded-full mb-4 relative">
+                          <div className="absolute left-0 top-0 h-full w-2/3 bg-blue-500 rounded-full"></div>
+                          <div className="absolute left-2/3 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow cursor-pointer hover:scale-110 transition-transform"></div>
+                       </div>
+                       <div className="flex justify-between items-center text-xs">
+                          <div>
+                             <span className="block text-gray-500">Split 1 Payment</span>
+                             <span className="text-white font-mono">₹9,99,000</span>
+                          </div>
+                          <div className="text-right">
+                             <span className="block text-gray-500">Balance Amount</span>
+                             <span className="text-white font-mono">₹5,00,000</span>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Card 4: Online Payment */}
+                 <div className="bg-[#111] border border-zinc-800 rounded-2xl p-8 hover:border-zinc-600 transition-all duration-300 flex flex-col justify-start min-h-[300px]">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mb-6">
+                       <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                    </div>
+                    <h3 className="text-2xl font-semibold mb-2">Online Payment</h3>
+                    <p className="text-gray-400 font-light text-sm">
+                      Hassle-free online payments with Credit Card, Debit Card, or UPI. Secure and instant.
+                    </p>
+                 </div>
+
+              </div>
+           </div>
+        </div>
+      </div>
+
       {/* Section: Benefits Grid (Tesla Style) */}
       <div className="py-24 px-6 bg-[#050505]">
         <div className="max-w-7xl mx-auto">

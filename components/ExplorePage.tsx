@@ -59,11 +59,31 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
   ];
 
   const complianceItems = [
-    { name: "PESO", desc: "Petroleum & Explosives Safety" },
-    { name: "L&M", desc: "Legal Metrology Standards" },
-    { name: "CIMFR", desc: "Mining & Fuel Research" },
-    { name: "BIS", desc: "Bureau of Indian Standards" },
-    { name: "ATEX", desc: "Explosive Atmospheres" }
+    { 
+      name: "PESO", 
+      desc: "Petroleum & Explosives Safety",
+      image: "https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764305823/peso_hjsbio.jpg"
+    },
+    { 
+      name: "L&M", 
+      desc: "Legal Metrology Standards",
+      image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/1200px-Emblem_of_India.svg.png" // Placeholder for Govt of India
+    },
+    { 
+      name: "CIMFR", 
+      desc: "Mining & Fuel Research",
+      image: "https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764305823/cimfr_mtz29w.jpg"
+    },
+    { 
+      name: "BIS", 
+      desc: "Bureau of Indian Standards",
+      image: "https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764305823/bis_krvdyv.png"
+    },
+    { 
+      name: "ATEX", 
+      desc: "Explosive Atmospheres",
+      image: "https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764305822/atex_dis8a4.png"
+    }
   ];
 
   // Duplicate the array to create a seamless loop
@@ -320,8 +340,19 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNavigateHome, onNavigateToA
                                 <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.516L20.297 19H3.703L12 5.516zM11 16h2v2h-2v-2zm0-7h2v5h-2V9z"/></svg>
                               </div>
                               
-                              <div className="text-center relative z-10">
-                                <h3 className="text-5xl font-bold text-gray-900 mb-4 tracking-tighter">{item.name}</h3>
+                              <div className="text-center relative z-10 w-full flex flex-col items-center">
+                                {item.image ? (
+                                   <div className="h-32 w-full flex items-center justify-center mb-6">
+                                     <img 
+                                      src={item.image} 
+                                      alt={item.name} 
+                                      className="max-h-full max-w-full object-contain mix-blend-multiply"
+                                     />
+                                   </div>
+                                ) : (
+                                  <h3 className="text-5xl font-bold text-gray-900 mb-6 tracking-tighter">{item.name}</h3>
+                                )}
+                                
                                 <div className="h-0.5 w-8 bg-black mx-auto mb-6"></div>
                                 <span className="text-[10px] uppercase font-bold tracking-widest text-white bg-black px-3 py-1 mb-4 inline-block">Approved</span>
                                 <p className="text-xs text-gray-500 max-w-[150px] mx-auto leading-relaxed font-medium">{item.desc}</p>
