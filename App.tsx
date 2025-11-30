@@ -257,10 +257,15 @@ const App: React.FC = () => {
     logQuoteGeneration(quoteData);
   };
 
+  const enterConfigurator = () => {
+    setCurrentView('app');
+    setShowRoiCalculator(false);
+  };
+
   if (currentView === 'landing') {
     return (
       <LandingPage 
-        onEnterApp={() => setCurrentView('app')} 
+        onEnterApp={enterConfigurator}
         onExploreClick={() => setCurrentView('explore')}
         onFaqClick={() => setCurrentView('faq')}
         onReposPayClick={() => setCurrentView('reposPay')}
@@ -277,7 +282,7 @@ const App: React.FC = () => {
     return (
       <ExplorePage 
         onNavigateHome={() => setCurrentView('landing')}
-        onNavigateToApp={() => setCurrentView('app')}
+        onNavigateToApp={enterConfigurator}
         onFaqClick={() => setCurrentView('faq')}
         onAboutClick={() => setCurrentView('about')}
       />
@@ -297,7 +302,7 @@ const App: React.FC = () => {
     return (
       <ReposPayPage 
         onBack={() => setCurrentView('landing')}
-        onNavigateToApp={() => setCurrentView('app')}
+        onNavigateToApp={enterConfigurator}
         onAboutClick={() => setCurrentView('about')}
       />
     );
@@ -307,7 +312,7 @@ const App: React.FC = () => {
     return (
       <AboutUsPage
         onNavigateHome={() => setCurrentView('landing')}
-        onNavigateToApp={() => setCurrentView('app')}
+        onNavigateToApp={enterConfigurator}
         onExploreClick={() => setCurrentView('explore')}
         onReposPayClick={() => setCurrentView('reposPay')}
       />
