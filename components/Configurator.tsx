@@ -510,7 +510,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               
             {/* 9. Licenses and Compliance Section */}
             <div className="mb-[45px]">
-              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
+              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliances</h2>
               <div className="space-y-3 mt-6">
                 {LICENSE_OPTIONS.map(option => (
                   <div key={`license-${option.id}`} className="w-full flex items-center p-4 border border-gray-300 rounded-lg text-left bg-gray-50">
