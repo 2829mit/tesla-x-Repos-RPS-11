@@ -46,24 +46,22 @@ const App: React.FC = () => {
     TANK_OPTIONS[0]?.id || '22kl'
   );
   
-  // Initialize all options as unselected (empty arrays or null)
+  // Initialize all options as unselected
   const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>([]);
-  
   const [selectedMechanicalInclusionOptions, setSelectedMechanicalInclusionOptions] = useState<AccessoryOption[]>([]);
-
-  // Changed Decantation to Array for multi-select
   const [selectedDecantation, setSelectedDecantation] = useState<IotOption[]>([]);
-  
   const [selectedDispensingUnits, setSelectedDispensingUnits] = useState<DispensingUnitOption[]>([]);
-  
   const [selectedSafetyUnits, setSelectedSafetyUnits] = useState<AccessoryOption[]>([]);
-
   const [selectedSafetyUpgrades, setSelectedSafetyUpgrades] = useState<SafetyUpgradeOption[]>([]);
-  
   const [selectedLicenseOptions, setSelectedLicenseOptions] = useState<LicenseOption[]>([]);
 
   const [selectedConsumption, setSelectedConsumption] = useState<string | null>(null);
   const [recommendedTankId, setRecommendedTankId] = useState<TankOption['id'] | null>(null);
+
+  // Visibility state for internal components (Flame proof, IoT, etc.)
+  // When a Safety Upgrade (Crash Barrier/Fire) is added, this becomes false (hiding internals).
+  // When an internal component is clicked, this becomes true (showing internals).
+  const [showInternalDetails, setShowInternalDetails] = useState(true);
 
   useEffect(() => {
     const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
@@ -108,6 +106,8 @@ const App: React.FC = () => {
   };
 
   const handleMechanicalInclusionToggle = (option: AccessoryOption) => {
+    // Interaction with internal component reveals them
+    setShowInternalDetails(true);
     setSelectedMechanicalInclusionOptions(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -115,8 +115,9 @@ const App: React.FC = () => {
     );
   };
 
-  // Toggle handler for Decantation (Multi-select)
   const handleDecantationToggle = (option: IotOption) => {
+    // Interaction with internal component reveals them
+    setShowInternalDetails(true);
     setSelectedDecantation(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -125,6 +126,8 @@ const App: React.FC = () => {
   };
 
   const handleSafetyUnitToggle = (option: AccessoryOption) => {
+    // Interaction with internal component reveals them
+    setShowInternalDetails(true);
     setSelectedSafetyUnits(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -133,11 +136,15 @@ const App: React.FC = () => {
   };
 
   const handleSafetyUpgradeToggle = (option: SafetyUpgradeOption) => {
-    setSelectedSafetyUpgrades(prev =>
-      prev.find(o => o.id === option.id)
-        ? prev.filter(o => o.id !== option.id)
-        : [...prev, option]
-    );
+    setSelectedSafetyUpgrades(prev => {
+      const exists = prev.find(o => o.id === option.id);
+      if (!exists) {
+        // When adding a safety upgrade (outer layer), hide the internal technical details
+        setShowInternalDetails(false);
+        return [...prev, option];
+      }
+      return prev.filter(o => o.id !== option.id);
+    });
   };
 
   const handleDispensingUnitToggle = (option: DispensingUnitOption) => {
@@ -148,26 +155,17 @@ const App: React.FC = () => {
     );
   };
 
-  // Reset configuration handler for Clear All button
   const resetConfiguration = () => {
     setSelectedTank(TANK_OPTIONS[0]?.id || '22kl');
-    
-    // Clear all array selections including price 0 options
     setSelectedReposOsOptions([]);
     setSelectedMechanicalInclusionOptions([]);
-    
-    // Clear decantation selection completely
     setSelectedDecantation([]);
-    
-    // Clear dispensing units including default
     setSelectedDispensingUnits([]);
-    
     setSelectedSafetyUnits([]);
     setSelectedSafetyUpgrades([]);
-    // Clear license options including standard offerings
     setSelectedLicenseOptions([]);
-    
     setPaymentMode('installments');
+    setShowInternalDetails(true); // Reset visibility
   };
 
   const monthlyTotalPrice = useMemo(() => {
@@ -175,15 +173,10 @@ const App: React.FC = () => {
     const tankPrice = tank ? tank.price : 0;
 
     let price = tankPrice;
-    // Sum all selected dispensing units
     price += selectedDispensingUnits.reduce((sum, du) => sum + du.price, 0);
-    
     price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedMechanicalInclusionOptions.reduce((total, opt) => total + opt.price, 0);
-    
-    // Sum all selected decantation options
     price += selectedDecantation.reduce((total, opt) => total + opt.price, 0);
-    
     price += selectedSafetyUnits.reduce((total, unit) => total + unit.price, 0);
     price += selectedSafetyUpgrades.reduce((total, unit) => total + unit.price, 0);
     price += selectedLicenseOptions.reduce((total, opt) => total + opt.price, 0);
@@ -214,7 +207,6 @@ const App: React.FC = () => {
   const handleQuoteSubmit = async (mobile: string, email: string) => {
     setIsQuoteModalOpen(false);
 
-    // Update customer details with provided mobile/email if available
     const updatedCustomerDetails = {
       ...(customerDetails || {
         name: 'Guest User',
@@ -239,7 +231,7 @@ const App: React.FC = () => {
       configuration: {
         tank: selectedTank,
         dispensingUnits: selectedDispensingUnits,
-        decantation: selectedDecantation, // Now passed as array
+        decantation: selectedDecantation,
         accessories: {
           reposOs: selectedReposOsOptions,
           mechanical: selectedMechanicalInclusionOptions,
@@ -325,7 +317,6 @@ const App: React.FC = () => {
         navItems={['Home']}
         onRoiClick={() => setShowRoiCalculator(true)} 
         onHomeClick={() => setShowRoiCalculator(false)}
-        // If user clicks FAQs in App, go to FAQ page
         rightNavItems={['FAQs']}
         onNavItemClick={(item) => {
             if (item === 'FAQs') setCurrentView('faq');
@@ -351,6 +342,7 @@ const App: React.FC = () => {
               safetyUnits={selectedSafetyUnits}
               safetyUpgrades={selectedSafetyUpgrades}
               decantation={selectedDecantation}
+              showInternalDetails={showInternalDetails}
             />
           </div>
           <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">
@@ -365,11 +357,9 @@ const App: React.FC = () => {
               selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}
               onMechanicalInclusionToggle={handleMechanicalInclusionToggle}
               
-              // Pass Array and Toggle Handler for Decantation
               selectedDecantation={selectedDecantation}
               onDecantationToggle={handleDecantationToggle}
               
-              // Pass Array and Toggle Handler
               selectedDispensingUnits={selectedDispensingUnits}
               onDispensingUnitToggle={handleDispensingUnitToggle}
               
@@ -389,7 +379,6 @@ const App: React.FC = () => {
               showPrices={showPrices}
               onResetConfiguration={resetConfiguration}
               
-              // Modal Handlers passed from App
               onOpenComparison={() => setIsComparisonModalOpen(true)}
               onOpenQuote={() => setIsQuoteModalOpen(true)}
             />
@@ -397,7 +386,6 @@ const App: React.FC = () => {
         </main>
       )}
 
-      {/* Render Modals at Root Level to ensure they are above everything */}
       {isComparisonModalOpen && (
         <ComparisonModal onClose={() => setIsComparisonModalOpen(false)} showPrices={showPrices} />
       )}

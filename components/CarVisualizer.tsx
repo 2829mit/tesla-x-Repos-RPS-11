@@ -9,7 +9,8 @@ interface CarVisualizerProps {
   dispensingUnits?: DispensingUnitOption[];
   safetyUnits?: AccessoryOption[];
   safetyUpgrades: SafetyUpgradeOption[];
-  decantation?: IotOption[]; // Changed to array
+  decantation?: IotOption[];
+  showInternalDetails?: boolean;
 }
 
 const CarVisualizer: React.FC<CarVisualizerProps> = ({ 
@@ -18,9 +19,18 @@ const CarVisualizer: React.FC<CarVisualizerProps> = ({
   dispensingUnits = [], 
   safetyUnits = [], 
   safetyUpgrades,
-  decantation = []
+  decantation = [],
+  showInternalDetails = true
 }) => {
-  const layers = getVisualizerLayers(tank, mechanicalOptions, dispensingUnits, safetyUnits, safetyUpgrades, decantation);
+  const layers = getVisualizerLayers(
+      tank, 
+      mechanicalOptions, 
+      dispensingUnits, 
+      safetyUnits, 
+      safetyUpgrades, 
+      decantation,
+      showInternalDetails
+  );
 
   return (
     <div className="relative w-full h-full flex items-center justify-center bg-white overflow-hidden group">
