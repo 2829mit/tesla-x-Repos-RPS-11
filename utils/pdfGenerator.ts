@@ -1,3 +1,4 @@
+
 import { TANK_OPTIONS } from '../constants';
 import { QuoteData } from '../types';
 
@@ -218,9 +219,13 @@ export const generateQuotePDF = async (data: QuoteData) => {
   const addons: string[] = [];
   data.configuration.accessories.reposOs.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });
   
-  // Handle decantation logic (if null, assume standard basic skid)
-  if (data.configuration.decantation && data.configuration.decantation.price > 0) {
-      addons.push(`Decantation: ${data.configuration.decantation.name}`);
+  // Handle decantation logic - iterate over selected array
+  if (data.configuration.decantation && data.configuration.decantation.length > 0) {
+      data.configuration.decantation.forEach(opt => {
+          if (opt.price > 0) {
+              addons.push(`Decantation: ${opt.name}`);
+          }
+      });
   }
   
   data.configuration.accessories.mechanical.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });

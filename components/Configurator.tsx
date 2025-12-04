@@ -14,8 +14,10 @@ interface ConfiguratorProps {
   onReposOsToggle: (option: AccessoryOption) => void;
   selectedMechanicalInclusionOptions: AccessoryOption[];
   onMechanicalInclusionToggle: (option: AccessoryOption) => void;
-  selectedDecantation: IotOption | null;
-  setSelectedDecantation: (option: IotOption) => void;
+  
+  // Updated to Array for Multi-Select
+  selectedDecantation: IotOption[];
+  onDecantationToggle: (option: IotOption) => void;
   
   // Updated to Array for Multi-Select
   selectedDispensingUnits: DispensingUnitOption[];
@@ -65,7 +67,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   selectedMechanicalInclusionOptions,
   onMechanicalInclusionToggle,
   selectedDecantation,
-  setSelectedDecantation,
+  onDecantationToggle,
   selectedDispensingUnits,
   onDispensingUnitToggle,
   selectedSafetyUnits,
@@ -150,7 +152,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     // Map all selected DUs
     ...selectedDispensingUnits.map(du => ({ name: du.name, price: du.price * multiplier })),
     ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
-    ...(selectedDecantation ? [{ name: selectedDecantation.name, price: selectedDecantation.price * multiplier }] : []),
+    ...selectedDecantation.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
     ...selectedMechanicalInclusionOptions.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
     ...selectedSafetyUnits.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
     ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
@@ -273,37 +275,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 </button>
             </div>
 
-            {/* 3. Mechanical Inclusion */}
-            <div className="mb-[45px]">
-              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Mechanical Inclusions</h2>
-              <div className="space-y-2">
-                {MECHANICAL_INCLUSION_OPTIONS.map(option => (
-                  <button
-                    key={option.id}
-                    onClick={() => onMechanicalInclusionToggle(option)}
-                    className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
-                    }`}
-                  >
-                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                      selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
-                    }`}>
-                      {selectedMechanicalInclusionOptions.some(o => o.id === option.id) && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-grow flex justify-between items-center">
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 4. RFID Enabled Dispensing Unit */}
+            {/* 3. RFID Enabled Dispensing Unit */}
             <div className="mb-[45px]">
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Enabled Dispensing Unit</h2>
               <div className="space-y-2">
@@ -340,6 +312,36 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                           {showPrices ? formatPrice(option.price) : ''}
                         </p>
                       </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 4. Mechanical Inclusion */}
+            <div className="mb-[45px]">
+              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Mechanical Inclusions</h2>
+              <div className="space-y-2">
+                {MECHANICAL_INCLUSION_OPTIONS.map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => onMechanicalInclusionToggle(option)}
+                    className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                      selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                      selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
+                    }`}>
+                      {selectedMechanicalInclusionOptions.some(o => o.id === option.id) && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-grow flex justify-between items-center">
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
                     </div>
                   </button>
                 ))}
@@ -408,20 +410,31 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 </div>
             </div>
 
-             {/* 7. Decantation Unit */}
+             {/* 7. Decantation Unit - Updated for Multi-Select */}
              <div className="mb-[45px]">
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Decantation Unit</h2>
               <div className="space-y-2">
                 {DECANTATION_OPTIONS.map(option => (
                   <div key={`decantation-${option.id}`} className="flex flex-col">
                     <button
-                      onClick={() => setSelectedDecantation(option)}
+                      onClick={() => onDecantationToggle(option)}
                       className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                        selectedDecantation?.id === option.id
+                        selectedDecantation.some(o => o.id === option.id)
                           ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
                           : 'border-gray-300 hover:border-gray-500'
                       }`}
                     >
+                      {/* Checkbox Tick */}
+                      <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                        selectedDecantation.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
+                      }`}>
+                        {selectedDecantation.some(o => o.id === option.id) && (
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+
                       <div className="flex-grow">
                         <div className="flex justify-between items-center">
                           <div>
@@ -433,9 +446,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                           </p>
                         </div>
                       </div>
-                      {selectedDecantation?.id !== option.id && (
-                          <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg transition-opacity duration-300 group-hover:opacity-0"></div>
-                      )}
                     </button>
                     
                     {option.id === 'advanced-skid' && (
@@ -510,7 +520,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               
             {/* 9. Licenses and Compliance Section */}
             <div className="mb-[45px]">
-              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliances</h2>
+              <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
               <div className="space-y-3 mt-6">
                 {LICENSE_OPTIONS.map(option => (
                   <div key={`license-${option.id}`} className="w-full flex items-center p-4 border border-gray-300 rounded-lg text-left bg-gray-50">

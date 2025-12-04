@@ -67,7 +67,7 @@ export interface QuoteData {
   configuration: {
     tank: string;
     dispensingUnits: DispensingUnitOption[];
-    decantation: IotOption | null;
+    decantation: IotOption[]; // Changed from IotOption | null to IotOption[]
     accessories: {
       reposOs: AccessoryOption[];
       mechanical: AccessoryOption[];

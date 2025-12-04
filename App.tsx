@@ -41,41 +41,26 @@ const App: React.FC = () => {
 
   const [paymentMode, setPaymentMode] = useState<'outright' | 'installments'>('installments');
   
-  // Selected Tank
+  // Selected Tank - Base product remains selected
   const [selectedTank, setSelectedTank] = useState<TankOption['id']>(() => 
     TANK_OPTIONS[0]?.id || '22kl'
   );
   
-  const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>(() => 
-    (REPOS_OS_OPTIONS || []).filter(o => o.price === 0)
-  );
+  // Initialize all options as unselected (empty arrays or null)
+  const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>([]);
   
-  const [selectedMechanicalInclusionOptions, setSelectedMechanicalInclusionOptions] = useState<AccessoryOption[]>(() => 
-    Array.isArray(MECHANICAL_INCLUSION_OPTIONS) ? MECHANICAL_INCLUSION_OPTIONS : []
-  );
+  const [selectedMechanicalInclusionOptions, setSelectedMechanicalInclusionOptions] = useState<AccessoryOption[]>([]);
 
-  const [selectedDecantation, setSelectedDecantation] = useState<IotOption | null>(() => {
-    const options = DECANTATION_OPTIONS || [];
-    return options.find(o => o.price === 0) || options[0] || null;
-  });
+  // Changed Decantation to Array for multi-select
+  const [selectedDecantation, setSelectedDecantation] = useState<IotOption[]>([]);
   
-  // Changed to Array for Multi-Select
-  const [selectedDispensingUnits, setSelectedDispensingUnits] = useState<DispensingUnitOption[]>(() => {
-    const options = DISPENSING_UNIT_OPTIONS || [];
-    // Default to selecting Single DU if available
-    const defaultDU = options.find(o => o.id === 'single-du');
-    return defaultDU ? [defaultDU] : [];
-  });
+  const [selectedDispensingUnits, setSelectedDispensingUnits] = useState<DispensingUnitOption[]>([]);
   
-  const [selectedSafetyUnits, setSelectedSafetyUnits] = useState<AccessoryOption[]>(() => 
-    (SAFETY_UNIT_OPTIONS || []).filter(o => o.price === 0)
-  );
+  const [selectedSafetyUnits, setSelectedSafetyUnits] = useState<AccessoryOption[]>([]);
 
   const [selectedSafetyUpgrades, setSelectedSafetyUpgrades] = useState<SafetyUpgradeOption[]>([]);
   
-  const [selectedLicenseOptions, setSelectedLicenseOptions] = useState<LicenseOption[]>(() => {
-      return LICENSE_OPTIONS || [];
-  });
+  const [selectedLicenseOptions, setSelectedLicenseOptions] = useState<LicenseOption[]>([]);
 
   const [selectedConsumption, setSelectedConsumption] = useState<string | null>(null);
   const [recommendedTankId, setRecommendedTankId] = useState<TankOption['id'] | null>(null);
@@ -130,6 +115,15 @@ const App: React.FC = () => {
     );
   };
 
+  // Toggle handler for Decantation (Multi-select)
+  const handleDecantationToggle = (option: IotOption) => {
+    setSelectedDecantation(prev =>
+      prev.find(o => o.id === option.id)
+        ? prev.filter(o => o.id !== option.id)
+        : [...prev, option]
+    );
+  };
+
   const handleSafetyUnitToggle = (option: AccessoryOption) => {
     setSelectedSafetyUnits(prev =>
       prev.find(o => o.id === option.id)
@@ -163,7 +157,7 @@ const App: React.FC = () => {
     setSelectedMechanicalInclusionOptions([]);
     
     // Clear decantation selection completely
-    setSelectedDecantation(null);
+    setSelectedDecantation([]);
     
     // Clear dispensing units including default
     setSelectedDispensingUnits([]);
@@ -186,7 +180,10 @@ const App: React.FC = () => {
     
     price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
     price += selectedMechanicalInclusionOptions.reduce((total, opt) => total + opt.price, 0);
-    price += selectedDecantation?.price || 0;
+    
+    // Sum all selected decantation options
+    price += selectedDecantation.reduce((total, opt) => total + opt.price, 0);
+    
     price += selectedSafetyUnits.reduce((total, unit) => total + unit.price, 0);
     price += selectedSafetyUpgrades.reduce((total, unit) => total + unit.price, 0);
     price += selectedLicenseOptions.reduce((total, opt) => total + opt.price, 0);
@@ -242,7 +239,7 @@ const App: React.FC = () => {
       configuration: {
         tank: selectedTank,
         dispensingUnits: selectedDispensingUnits,
-        decantation: selectedDecantation,
+        decantation: selectedDecantation, // Now passed as array
         accessories: {
           reposOs: selectedReposOsOptions,
           mechanical: selectedMechanicalInclusionOptions,
@@ -257,10 +254,15 @@ const App: React.FC = () => {
     logQuoteGeneration(quoteData);
   };
 
+  const handleEnterApp = () => {
+    setCurrentView('app');
+    setShowRoiCalculator(false);
+  };
+
   if (currentView === 'landing') {
     return (
       <LandingPage 
-        onEnterApp={() => setCurrentView('app')} 
+        onEnterApp={handleEnterApp} 
         onExploreClick={() => setCurrentView('explore')}
         onFaqClick={() => setCurrentView('faq')}
         onReposPayClick={() => setCurrentView('reposPay')}
@@ -277,7 +279,7 @@ const App: React.FC = () => {
     return (
       <ExplorePage 
         onNavigateHome={() => setCurrentView('landing')}
-        onNavigateToApp={() => setCurrentView('app')}
+        onNavigateToApp={handleEnterApp}
         onFaqClick={() => setCurrentView('faq')}
         onAboutClick={() => setCurrentView('about')}
       />
@@ -297,7 +299,7 @@ const App: React.FC = () => {
     return (
       <ReposPayPage 
         onBack={() => setCurrentView('landing')}
-        onNavigateToApp={() => setCurrentView('app')}
+        onNavigateToApp={handleEnterApp}
         onAboutClick={() => setCurrentView('about')}
       />
     );
@@ -307,7 +309,7 @@ const App: React.FC = () => {
     return (
       <AboutUsPage
         onNavigateHome={() => setCurrentView('landing')}
-        onNavigateToApp={() => setCurrentView('app')}
+        onNavigateToApp={handleEnterApp}
         onExploreClick={() => setCurrentView('explore')}
         onReposPayClick={() => setCurrentView('reposPay')}
       />
@@ -344,7 +346,11 @@ const App: React.FC = () => {
           <div className="w-full lg:flex-1 lg:h-[calc(100vh-72px)] lg:sticky lg:top-[72px] h-[45vh] min-h-[300px] relative z-0 bg-gray-100">
             <CarVisualizer 
               tank={selectedTank}
+              mechanicalOptions={selectedMechanicalInclusionOptions}
+              dispensingUnits={selectedDispensingUnits}
+              safetyUnits={selectedSafetyUnits}
               safetyUpgrades={selectedSafetyUpgrades}
+              decantation={selectedDecantation}
             />
           </div>
           <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">
@@ -358,8 +364,10 @@ const App: React.FC = () => {
               onReposOsToggle={handleReposOsToggle}
               selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}
               onMechanicalInclusionToggle={handleMechanicalInclusionToggle}
+              
+              // Pass Array and Toggle Handler for Decantation
               selectedDecantation={selectedDecantation}
-              setSelectedDecantation={setSelectedDecantation}
+              onDecantationToggle={handleDecantationToggle}
               
               // Pass Array and Toggle Handler
               selectedDispensingUnits={selectedDispensingUnits}
