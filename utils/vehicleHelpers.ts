@@ -47,20 +47,14 @@ export const getVisualizerLayers = (
         }
     }
 
-    // 3. Decantation - Advanced Skid
-    // Hidden if safety upgrades block view and details aren't active
-    if (!shouldHideInternals && decantation.some(d => d.id === 'advanced-skid')) {
-         layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764438688/Flowmeter_additional_skid_rxrbz5.png');
-    }
-
-    // 4. Safety Units
+    // 3. Safety Units
     // IoT Controller
     if (!shouldHideInternals && safetyUnits.some(o => o.id === 'iot-controller-safety')) {
          layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764438688/IOT_controller_jytcne.png');
     }
 
-    // 5. Safety Upgrades
-    // These are the outer shells (Barriers/Fire) that might block view
+    // 4. Safety Upgrades
+    // These are the outer shells (Barriers/Fire)
     safetyUpgrades.forEach(option => {
         if (option.id === 'crash-barrier') {
             if (isSmallTank) {
@@ -75,8 +69,7 @@ export const getVisualizerLayers = (
         }
     });
 
-    // 6. Mechanical Inclusions - Overlays (Superimposed on top of everything)
-    // These should also be hidden if obstructed, unless details are active
+    // 5. Mechanical Inclusions - Overlays
     
     // Flame Proof Illumination
     if (!shouldHideInternals && mechanicalOptions.some(o => o.id === 'flame-proof-illumination')) {
@@ -85,6 +78,12 @@ export const getVisualizerLayers = (
     // Filtration Mechanism
     if (!shouldHideInternals && mechanicalOptions.some(o => o.id === 'filtration-mechanism')) {
         layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764438688/Filteration_mechanism_ucoqse.png');
+    }
+
+    // 6. Decantation - Advanced Skid
+    // MOVED TO END: This ensures Skid renders ON TOP of Filtration Mechanism
+    if (!shouldHideInternals && decantation.some(d => d.id === 'advanced-skid')) {
+         layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764438688/Flowmeter_additional_skid_rxrbz5.png');
     }
 
     return layers;
