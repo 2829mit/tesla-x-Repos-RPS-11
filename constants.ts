@@ -35,7 +35,13 @@ export const DECANTATION_OPTIONS: IotOption[] = [
 ];
 
 export const MECHANICAL_INCLUSION_OPTIONS: AccessoryOption[] = [
-  { id: 'dual-walled-tank', name: 'Dual Walled Tank', price: 0 },
+  { 
+    id: 'dual-walled-tank', 
+    name: 'Dual Walled Tank', 
+    price: 0,
+    infoImageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764951511/Double_walled_tank_r7u9hb.png',
+    description: 'Double-walled construction ensures zero leakage and provides an extra layer of environmental protection and safety compliance.'
+  },
   { id: 'peso-manhole', name: 'PESO Approved Manhole Assembly', price: 0 },
   { id: 'weather-proof-canopy', name: 'Weather Proof Modular Canopy', price: 0 },
   { id: 'ss-pipeline', name: 'Stainless Steel Pipeline', price: 0 },
@@ -47,8 +53,20 @@ export const MECHANICAL_INCLUSION_OPTIONS: AccessoryOption[] = [
 
 export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
   { id: 'iot-controller-safety', name: 'IOT Controller', price: 0 },
-  { id: 'fuel-level-sensors', name: 'Fuel Level Sensors', price: 0 }, 
-  { id: 'overfill-sensors', name: 'Overfill Sensors', price: 0 },
+  { 
+    id: 'fuel-level-sensors', 
+    name: 'Fuel Level Sensors', 
+    price: 0,
+    infoImageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764951508/RATG_sensor_pe2a55.png',
+    description: 'High-precision ATG (Automatic Tank Gauge) sensors for real-time fuel inventory monitoring and leak detection.'
+  }, 
+  { 
+    id: 'overfill-sensors', 
+    name: 'Overfill Sensors', 
+    price: 0,
+    infoImageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764951500/Overfill_sensor_bfxzo6.png',
+    description: 'Advanced safety sensors that automatically shut off the pump to prevent accidental overfilling during fuel replenishment.'
+  },
   { id: 'decantation-cutoff', name: 'Decantation Cutoff', price: 0 },
   { id: 'mobile-device', name: 'Wireless Synchronised Mobile', price: 0 },
 ];

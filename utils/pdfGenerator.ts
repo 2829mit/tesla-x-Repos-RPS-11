@@ -139,11 +139,8 @@ export const generateQuotePDF = async (data: QuoteData) => {
   doc.text(custName.toUpperCase(), col1X + 2, yPos + 5);
   
   const addressLines = [
-    "2nd Floor, Door No. 360/1, Near old Ganesh gas Godown",
-    "Bharathi Nagar, Amaravathi, Hospet, Ballari,",
-    `${data.customerDetails?.state || "Karnataka"} - 583201`,
-    "GST No. 29AAGCC5056M2Z6",
-    `Salesperson: ${data.customerDetails?.salesperson || 'N/A'}`
+    data.customerDetails?.state || "",
+    `Repos Representative: ${data.customerDetails?.salesperson || 'N/A'}`
   ];
   
   // Also show mobile/email if available
@@ -153,8 +150,10 @@ export const generateQuotePDF = async (data: QuoteData) => {
   
   let addrY = yPos + 10;
   addressLines.forEach(line => {
-    doc.text(line, col1X + 2, addrY);
-    addrY += 4;
+    if (line) {
+        doc.text(line, col1X + 2, addrY);
+        addrY += 4;
+    }
   });
 
   // Invoice Details
@@ -178,8 +177,10 @@ export const generateQuotePDF = async (data: QuoteData) => {
   doc.text(`Payment Mode: ${modeText}`, col2X + 2, yPos + 10);
 
   if (data.paymentMode === 'installments' && data.monthlyPrice) {
+      doc.setFont("helvetica", "bold");
       doc.text(`Monthly Payment: Rs. ${formatIndianCurrency(data.monthlyPrice)}`, col2X + 2, yPos + 15);
       doc.text(`Down Payment: Rs. ${formatIndianCurrency(data.gstAmount || 0)}`, col2X + 2, yPos + 20);
+      doc.setFont("helvetica", "normal");
   }
 
   // Repos Account
@@ -267,13 +268,14 @@ export const generateQuotePDF = async (data: QuoteData) => {
       "1",
       formatIndianCurrency(rate),
       "Nos",
-      "0",
+      // Removed Discount Column Value
       formatIndianCurrency(amount)
     ]
   ];
 
   const addFooterRow = (label: string, value: string) => {
-    tableBody.push(["", label, "", "", "", "", "", value]);
+    // Removed one empty string to match new column count (7 columns instead of 8)
+    tableBody.push(["", label, "", "", "", "", value]);
   };
 
   addFooterRow("Packing & Forwarding Charges", "0");
@@ -288,22 +290,26 @@ export const generateQuotePDF = async (data: QuoteData) => {
   addFooterRow("Round Off", "0");
   addFooterRow("TCS 1%", "0");
   
-  tableBody.push(["", "Total (INR)", "", "", "", "1 Nos", "", formatIndianCurrency(grandTotal)]);
+  // Adjusted total row for 7 columns
+  tableBody.push(["", "Total (INR)", "", "", "", "1 Nos", formatIndianCurrency(grandTotal)]);
 
   doc.autoTable({
     startY: yPos,
-    head: [["Sr", "Product Descriptions", "HSN/SAC", "Quantity", "Rate", "Per", "Disc. %", "Amount"]],
+    // Removed "Disc. %" from header
+    head: [["Sr", "Product Descriptions", "HSN/SAC", "Quantity", "Rate", "Per", "Amount"]],
     body: tableBody,
     theme: 'grid',
-    margin: { left: 7, right: 7 }, // Fix: Explicit margins to handle content overflow
+    tableWidth: 175, // Explicit constrained width
+    margin: { left: 10, right: 10 }, 
     styles: {
       font: "helvetica",
-      fontSize: 8,
+      fontSize: 7, 
       textColor: black,
       lineColor: [0, 0, 0],
       lineWidth: 0.1,
       valign: 'top',
-      cellPadding: 2,
+      cellPadding: 1.5,
+      overflow: 'linebreak'
     },
     headStyles: {
       fillColor: [255, 255, 255],
@@ -314,13 +320,13 @@ export const generateQuotePDF = async (data: QuoteData) => {
     },
     columnStyles: {
       0: { cellWidth: 8, halign: 'center' }, 
-      1: { cellWidth: 80 }, // Adjusted slightly to fit with margins
-      2: { cellWidth: 18, halign: 'center' },
-      3: { cellWidth: 12, halign: 'center' },
-      4: { cellWidth: 25, halign: 'right' },
+      1: { cellWidth: 55 }, // Reduced to prevent overflow
+      2: { cellWidth: 15, halign: 'center' },
+      3: { cellWidth: 10, halign: 'center' },
+      4: { cellWidth: 20, halign: 'right' }, 
       5: { cellWidth: 10, halign: 'center' },
-      6: { cellWidth: 12, halign: 'center' },
-      7: { cellWidth: 25, halign: 'right' },
+      // Index 6 is now Amount
+      6: { cellWidth: 25, halign: 'right' },
     },
     didParseCell: function (data: any) {
       // Bold Total Row
@@ -338,46 +344,113 @@ export const generateQuotePDF = async (data: QuoteData) => {
   let finalY = doc.lastAutoTable.finalY;
 
   doc.setFont("helvetica", "bold");
-  doc.text(`Amount (Words) - Rs. ${numberToWords(Math.round(grandTotal))} Only`, 7, finalY + 6);
+  doc.setFontSize(9);
+  doc.text(`Amount (Words) - Rs. ${numberToWords(Math.round(grandTotal))} Only`, 10, finalY + 6);
   
   finalY += 10;
 
   const footerTop = finalY;
   
+  // PAGE 1 Footer Container
   doc.rect(5, footerTop, 200, 287 - footerTop - 5);
   doc.line(140, footerTop, 140, 287 - 5);
 
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold");
-  doc.text("Terms of Delivery", 7, footerTop + 5);
-  doc.setFont("helvetica", "normal");
-  
-  const paymentTerm = data.paymentMode === 'installments' 
-    ? '7. Payment Terms - Down Payment (GST) Advance, Balance in 36 Months' 
-    : '7. Payment Terms - 100% Advance';
-
-  const terms = [
-    "1. Any missuse, reaction,explosion or failure in procedure or in transit or",
-    "   any loss, we are not responsible since it is buyers risk",
-    "2. Goods once sold will not be taken back or replaced.",
-    "3. Interest of 18% p.a. will be charged on any outstanding more than 30 days",
-    "4. All Disputes Subject to Pune Jurisdiction only",
-    "5. If any objection is to be made regarding this Invoice it should reach us",
-    "   within 7 Days from the date of issue.",
-    "6. Cheque return charges if any will be applicable at INR 500 per instance",
-    paymentTerm,
-    "8. Price - Ex. Works"
-  ];
-  
-  let termY = footerTop + 10;
-  terms.forEach(term => {
-    doc.text(term, 7, termY);
-    termY += 4;
-  });
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "italic");
+  doc.text("Note: Please refer to the attached Annexure for detailed", 7, footerTop + 10);
+  doc.text("Terms and Conditions regarding this invoice.", 7, footerTop + 15);
 
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
   doc.text("For Repos Energy India Private Limited", 142, footerTop + 5);
   doc.text("Authorised Signatory", 160, 287 - 10, { align: "center" });
+
+  // --- PAGE 2: TERMS AND CONDITIONS ---
+  doc.addPage();
+  doc.rect(5, 5, 200, 287); // Border for Page 2
+  
+  let tY = 20;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("TERMS AND CONDITIONS (ANNEXURE)", 105, tY, { align: 'center' });
+  doc.line(5, tY + 2, 205, tY + 2);
+  
+  tY += 10;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  
+  // Helper to add a point
+  const addPoint = (title: string, content: string) => {
+     doc.setFont("helvetica", "bold");
+     doc.text(title, 10, tY);
+     tY += 4;
+     doc.setFont("helvetica", "normal");
+     const splitText = doc.splitTextToSize(content, 185);
+     doc.text(splitText, 10, tY);
+     tY += (splitText.length * 4) + 2;
+     
+     // Page break check (simple)
+     if (tY > 270) {
+         doc.addPage();
+         doc.rect(5, 5, 200, 287);
+         tY = 20;
+     }
+  };
+
+  addPoint("1. INTRODUCTION", 'These Terms and Conditions ("Agreement") govern the purchase, ownership, and operation of the Portable Fuel Station (RPS) supplied by Repos Energy India Private Limited ("Repos" or "Company") in compliance with Petroleum and Explosives Safety Organization (PESO) standards. By purchasing or operating the RPS, the Customer agrees to adhere to these terms.');
+  
+  addPoint("2. DEFINITIONS", '• Company: Repos Energy India Private Limited\n• Customer: The entity or individual purchasing the RPS.\n• RPS: Repos Portable Station, including all components supplied by Repos.\n• PESO: Petroleum and Explosives Safety Organization, the regulatory body for fuel storage and dispensing safety in India.\n• OMCs: Oil Marketing Companies supplying fuel to the Customer.\n• "Applicable laws": means all laws, regulations, rules including but not limited to PESO, MSHSD, MoPNG, Petroleum Act, and any other which are applicable to the Customer.');
+
+  addPoint("3. ELIGIBILITY AND COMPLIANCE", '• The Customer must be an entity or individual legally permitted to store and dispense fuel as per PESO regulations.\n• The Customer must obtain all necessary licenses, permits, and approvals from PESO and other regulatory authorities before commissioning the RPS.\n• The RPS must be installed and operated in accordance with PESO guidelines and any other applicable local/state regulations.');
+
+  addPoint("4. DELIVERY TERMS, PURCHASE, INSTALLATION, AND COMMISSIONING", '• The delivery of RPS will be within twelve (12) weeks from the date of PESO prior approval date.\n• The Customer must make full payment or enter into an agreed financing arrangement before delivery of the RPS.\n• Repos will supply and install the RPS at the Customer\'s designated site, subject to regulatory approvals and costs for such transportation & installation.\n• Title of the RPS transfers to the Customer upon delivery at Customer\'s site. No return or replacement will be accepted once the title of the product has been transferred.\n• The commissioning of the RPS will be conducted jointly by Repos and the Customer after compliance verification with PESO guidelines.\n• Any modifications or relocations of the RPS require prior written approval from Repos and relevant authorities.');
+
+  addPoint("5. FUEL SUPPLY & SOURCING", '• The Customer may procure fuel either directly from OMCs or through an arrangement facilitated by Repos.\n• If the Customer opts for Repos-facilitated fuel procurement, the pricing, delivery schedules, and payment terms will be as per a separate agreement.\n• The Customer is responsible for ensuring that fuel sourcing and storage comply with all safety and environmental regulations and ensure the product quality.');
+
+  addPoint("6. OWNERSHIP AND USAGE RIGHTS", '• The Customer retains ownership of the RPS upon full payment.\n• The Customer assumes full responsibility for proper use, storage, and handling of the product.\n• The RPS must not be used for any resale of fuel, unauthorized, or non-PESO-approved activities.\n• Any modification to the RPS without written consent from the Company or any tampering with the tracking system or dispensing unit will void the warranty.\n• The product is to be used solely for the internal business use of storage and/or dispensing of High Speed Diesel (HSD). Any usage of the product for substances other than HSD will automatically void the warranty.');
+
+  addPoint("7. SAFETY AND LIABILITY", '• The Customer shall ensure that all safety measures, including fire suppression systems, emergency response protocols, and trained personnel, are in place as per PESO norms.\n• Repos shall not be liable for accidents, environmental hazards, or losses arising from non-compliance with safety protocols by the Customer.\n• The Customer shall obtain insurance coverage for fire, theft, liability, and any other applicable risks.');
+
+  addPoint("8. WARRANTY AND SUPPORT", '• Repos provides a standard warranty for the RPS covering manufacturing defects for a period of 12 months from the date of commissioning.\n• The warranty does not cover damages due to water, fire, mishandling, unauthorized repairs, or force majeure events.\n• Post-warranty service shall be available at an additional cost as per the AMC terms.');
+
+  // Point 9: PAYMENT TERMS & SCHEDULE with TABLE
+  doc.setFont("helvetica", "bold");
+  doc.text("9. PAYMENT TERMS & SCHEDULE", 10, tY);
+  tY += 4;
+  doc.setFont("helvetica", "normal");
+  doc.text("• Payment must be made on advance basis or on agreed financial terms as per the agreed schedule.", 10, tY);
+  tY += 4;
+  doc.text("• Payment Schedule:", 10, tY);
+  tY += 2;
+
+  // Embedded AutoTable for Payment Schedule
+  doc.autoTable({
+      startY: tY,
+      head: [["Payment Schedule", "Amount (Per RPS)"]],
+      body: [
+          ["Prior Approval Application", "INR 5,00,000/-"],
+          ["Start of Manufacturing", "INR 18,00,000/-"],
+          ["Before Dispatch", "Balance Amount"]
+      ],
+      theme: 'grid',
+      tableWidth: 120,
+      margin: { left: 15 },
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [220, 220, 220], textColor: black, fontStyle: 'bold' }
+  });
+  
+  // @ts-ignore
+  tY = doc.lastAutoTable.finalY + 8; // Resume text after table
+
+  addPoint("10. TERMINATION & BREACH", '• Repos reserves the right to terminate the agreement if the Customer fails to comply with PESO regulations, payment terms, or safety protocols.\n• Upon termination, the Customer must cease operations and return/relinquish the RPS as per Repos\' instructions if the product is in their possession.\n• The Customer may terminate the agreement by providing a 60-day written notice, subject to fulfilment of all financial obligations and bearing the loss due to order cancellation.\n• In case of cancellation, prior approval application amount is non-refundable.');
+
+  addPoint("11. FORCE MAJEURE", '• Repos shall not be held liable for any delays, disruptions, or failures in performance due to events beyond reasonable control, including natural disasters, government restrictions, strikes, or supply chain disruptions.');
+
+  addPoint("12. DISPUTE RESOLUTION", '• Any disputes arising under this agreement shall be resolved through mutual discussions.\n• If disputes remain unresolved, they shall be referred to arbitration under the Arbitration and Conciliation Act, 1996, with jurisdiction in Pune, Maharashtra.');
+
+  addPoint("13. GOVERNING LAW", '• This Agreement shall be governed by and interpreted under the laws of India.');
+
+  addPoint("14. MISCELLANEOUS", '• No amendment to these terms shall be valid unless agreed upon in writing by both parties.\n• Any notices under this agreement shall be communicated via registered mail or email.\n• By purchasing or operating a RPS from Repos, the Customer acknowledges that they have read, understood, and agreed to these Terms and Conditions.');
 
   doc.save(`${invoiceNo}.pdf`);
 };

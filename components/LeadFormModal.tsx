@@ -27,10 +27,12 @@ const STATE_OPTIONS = [
 ].sort();
 
 const SALESPERSON_OPTIONS = [
-  'Ketan',
-  'Abhishek',
-  'Aditya',
-  'Ajay'
+  'Ajay Kumar',
+  'Ketan Sarode',
+  'Burhan Cyclewala',
+  'Malvika Sharma',
+  'Chetan Walunj',
+  'Aditi Walunj'
 ];
 
 const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
@@ -170,7 +172,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                 />
               </div>
               <div>
-                <label htmlFor="salesperson" className="block text-sm font-medium text-gray-700 mb-1">Salesperson</label>
+                <label htmlFor="salesperson" className="block text-sm font-medium text-gray-700 mb-1">Repos Representative</label>
                 <select
                   name="salesperson"
                   id="salesperson"
@@ -185,7 +187,7 @@ const LeadFormModal: React.FC<LeadFormModalProps> = ({ onSubmit }) => {
                     backgroundSize: '1.5em 1.5em',
                   }}
                 >
-                  <option value="" disabled>Select Salesperson</option>
+                  <option value="" disabled>Select Repos Representative</option>
                   {SALESPERSON_OPTIONS.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}

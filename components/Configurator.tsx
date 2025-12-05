@@ -56,6 +56,12 @@ const ChevronDown: React.FC = () => (
   </svg>
 );
 
+const InfoIcon: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 const Configurator: React.FC<ConfiguratorProps> = ({
   customerDetails,
   paymentMode,
@@ -90,7 +96,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   onOpenQuote
 }) => {
   const [selectedAction, setSelectedAction] = useState<'quote' | 'contact'>('contact');
-  const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | IotOption | null>(null);
+  const [learnMoreOption, setLearnMoreOption] = useState<SafetyUpgradeOption | IotOption | AccessoryOption | null>(null);
 
   const [isStickyFooterVisible, setIsStickyFooterVisible] = useState(true);
   const [isPricingDetailsOpen, setIsPricingDetailsOpen] = useState(true);
@@ -326,7 +332,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   <button
                     key={option.id}
                     onClick={() => onMechanicalInclusionToggle(option)}
-                    className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                    className={`group w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
                       selectedMechanicalInclusionOptions.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
                     }`}
                   >
@@ -341,7 +347,27 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </div>
                     <div className="flex-grow flex justify-between items-center">
                       <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
+                      
+                      {/* Price / Info Icon Switcher */}
+                      <div className="relative min-w-[60px] flex justify-end">
+                         <span className={`font-medium text-[14px] leading-[20px] text-[#171A20] transition-opacity duration-200 ${option.infoImageUrl ? 'group-hover:opacity-0' : ''}`}>
+                             {showPrices ? formatPrice(option.price) : ''}
+                         </span>
+                         
+                         {option.infoImageUrl && (
+                           <div 
+                             role="button"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               setLearnMoreOption(option);
+                             }}
+                             className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 text-black hover:bg-black/10 rounded-full p-1"
+                             title="View Image"
+                           >
+                             <InfoIcon />
+                           </div>
+                         )}
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -388,7 +414,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     <button
                       key={option.id}
                       onClick={() => onSafetyUnitToggle(option)}
-                      className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                      className={`group w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
                         selectedSafetyUnits.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
                       }`}
                     >
@@ -403,7 +429,27 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       </div>
                       <div className="flex-grow flex justify-between items-center">
                         <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
+                        
+                        {/* Price / Info Icon Switcher */}
+                        <div className="relative min-w-[60px] flex justify-end">
+                            <span className={`font-medium text-[14px] leading-[20px] text-[#171A20] transition-opacity duration-200 ${option.infoImageUrl ? 'group-hover:opacity-0' : ''}`}>
+                                {showPrices ? formatPrice(option.price) : ''}
+                            </span>
+                            
+                            {option.infoImageUrl && (
+                              <div 
+                                role="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setLearnMoreOption(option);
+                                }}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 text-black hover:bg-black/10 rounded-full p-1"
+                                title="View Image"
+                              >
+                                <InfoIcon />
+                              </div>
+                            )}
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -695,7 +741,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
         </div>
       )}
 
-      {/* Learn More Modal for Safety Upgrades */}
+      {/* Learn More / Image Info Modal */}
       {learnMoreOption && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
@@ -716,12 +762,16 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 
             <h3 className="text-2xl font-semibold mb-4 text-gray-900 text-center">{learnMoreOption.name}</h3>
             
-            {(learnMoreOption as any).imageUrl ? (
+            {/* Logic to determine image source: infoImageUrl > getSafetyImage > imageUrl */}
+            {((learnMoreOption as any).infoImageUrl || (learnMoreOption as any).imageUrl || (learnMoreOption as SafetyUpgradeOption).id) ? (
                <div className="flex justify-center mb-6">
                 <img 
-                  src={(learnMoreOption as SafetyUpgradeOption).id.includes('fire') || (learnMoreOption as SafetyUpgradeOption).id.includes('crash') 
+                  src={
+                      (learnMoreOption as any).infoImageUrl || 
+                      ((learnMoreOption as SafetyUpgradeOption).id.includes('fire') || (learnMoreOption as SafetyUpgradeOption).id.includes('crash') 
                       ? getSafetyImage(selectedTank, (learnMoreOption as SafetyUpgradeOption).id) 
-                      : (learnMoreOption as any).imageUrl}
+                      : (learnMoreOption as any).imageUrl)
+                  }
                   alt={learnMoreOption.name} 
                   className="max-h-64 object-contain"
                 />

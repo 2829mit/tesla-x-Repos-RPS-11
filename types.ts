@@ -8,6 +8,8 @@ export interface AccessoryOption {
   id: string;
   name: string;
   price: number;
+  infoImageUrl?: string; // Added field for info popup image
+  description?: string; // Added field for info popup text
 }
 
 export interface IotOption {
