@@ -58,11 +58,6 @@ const App: React.FC = () => {
   const [selectedConsumption, setSelectedConsumption] = useState<string | null>(null);
   const [recommendedTankId, setRecommendedTankId] = useState<TankOption['id'] | null>(null);
 
-  // Visibility state for internal components (Flame proof, IoT, etc.)
-  // When a Safety Upgrade (Crash Barrier/Fire) is added, this becomes false (hiding internals).
-  // When an internal component is clicked, this becomes true (showing internals).
-  const [showInternalDetails, setShowInternalDetails] = useState(true);
-
   useEffect(() => {
     const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
     const imageCount = 31;
@@ -106,8 +101,6 @@ const App: React.FC = () => {
   };
 
   const handleMechanicalInclusionToggle = (option: AccessoryOption) => {
-    // Interaction with internal component reveals them
-    setShowInternalDetails(true);
     setSelectedMechanicalInclusionOptions(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -116,8 +109,6 @@ const App: React.FC = () => {
   };
 
   const handleDecantationToggle = (option: IotOption) => {
-    // Interaction with internal component reveals them
-    setShowInternalDetails(true);
     setSelectedDecantation(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -126,8 +117,6 @@ const App: React.FC = () => {
   };
 
   const handleSafetyUnitToggle = (option: AccessoryOption) => {
-    // Interaction with internal component reveals them
-    setShowInternalDetails(true);
     setSelectedSafetyUnits(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -139,8 +128,6 @@ const App: React.FC = () => {
     setSelectedSafetyUpgrades(prev => {
       const exists = prev.find(o => o.id === option.id);
       if (!exists) {
-        // When adding a safety upgrade (outer layer), hide the internal technical details
-        setShowInternalDetails(false);
         return [...prev, option];
       }
       return prev.filter(o => o.id !== option.id);
@@ -165,7 +152,6 @@ const App: React.FC = () => {
     setSelectedSafetyUpgrades([]);
     setSelectedLicenseOptions([]);
     setPaymentMode('installments');
-    setShowInternalDetails(true); // Reset visibility
   };
 
   const monthlyTotalPrice = useMemo(() => {
@@ -342,7 +328,6 @@ const App: React.FC = () => {
               safetyUnits={selectedSafetyUnits}
               safetyUpgrades={selectedSafetyUpgrades}
               decantation={selectedDecantation}
-              showInternalDetails={showInternalDetails}
             />
           </div>
           <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">

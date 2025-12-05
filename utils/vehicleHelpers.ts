@@ -17,18 +17,11 @@ export const getVisualizerLayers = (
   dispensingUnits: DispensingUnitOption[],
   safetyUnits: AccessoryOption[],
   safetyUpgrades: SafetyUpgradeOption[],
-  decantation: IotOption[] = [],
-  showInternalDetails: boolean = true
+  decantation: IotOption[] = []
 ): string[] => {
     const layers: string[] = [];
     const isSmallTank = tank === '22kl' || tank === '30kl';
     
-    // Check if safety upgrades (Crash Barrier/Fire) are present.
-    // If present AND user hasn't explicitly asked to see internals (by clicking them),
-    // we hide the internal details (IoT, Skid, Flame Proof, etc.)
-    const hasSafetyObstruction = safetyUpgrades.length > 0;
-    const shouldHideInternals = hasSafetyObstruction && !showInternalDetails;
-
     // 1. Base Tank Layer
     if (isSmallTank) {
          layers.push('https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/13.png');
@@ -37,7 +30,6 @@ export const getVisualizerLayers = (
     }
 
     // 2. Dispensing Units (Single DU)
-    // Rendered before accessories so accessories can overlap if needed
     const hasSingleDU = dispensingUnits.some(du => du.id === 'single-du');
     if (hasSingleDU) {
         if (isSmallTank) {
@@ -49,12 +41,11 @@ export const getVisualizerLayers = (
 
     // 3. Safety Units
     // IoT Controller
-    if (!shouldHideInternals && safetyUnits.some(o => o.id === 'iot-controller-safety')) {
+    if (safetyUnits.some(o => o.id === 'iot-controller-safety')) {
          layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764438688/IOT_controller_jytcne.png');
     }
 
-    // 4. Safety Upgrades
-    // These are the outer shells (Barriers/Fire)
+    // 4. Safety Upgrades (Outer Shells)
     safetyUpgrades.forEach(option => {
         if (option.id === 'crash-barrier') {
             if (isSmallTank) {
@@ -65,24 +56,24 @@ export const getVisualizerLayers = (
         }
         
         if (option.id === 'fire-suppression') {
-            layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764850635/firesupp_uqa5mh.png');
+            layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764937461/Fire_supression_edited_v6o49q.png');
         }
-    });
+     });
 
     // 5. Mechanical Inclusions - Overlays
     
     // Flame Proof Illumination
-    if (!shouldHideInternals && mechanicalOptions.some(o => o.id === 'flame-proof-illumination')) {
+    if (mechanicalOptions.some(o => o.id === 'flame-proof-illumination')) {
         layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764438687/flameproof_light_htefu8.png');
     }
     // Filtration Mechanism
-    if (!shouldHideInternals && mechanicalOptions.some(o => o.id === 'filtration-mechanism')) {
+    if (mechanicalOptions.some(o => o.id === 'filtration-mechanism')) {
         layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764438688/Filteration_mechanism_ucoqse.png');
     }
 
     // 6. Decantation - Advanced Skid
-    // MOVED TO END: This ensures Skid renders ON TOP of Filtration Mechanism
-    if (!shouldHideInternals && decantation.some(d => d.id === 'advanced-skid')) {
+    // Rendered LAST to ensure it superimposes over Filtration Mechanism
+    if (decantation.some(d => d.id === 'advanced-skid')) {
          layers.push('https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764438688/Flowmeter_additional_skid_rxrbz5.png');
     }
 
