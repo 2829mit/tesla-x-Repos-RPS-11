@@ -47,6 +47,7 @@ const App: React.FC = () => {
   );
   
   // Initialize all options as unselected
+  const [isPlatformSelected, setIsPlatformSelected] = useState(false);
   const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>([]);
   const [selectedMechanicalInclusionOptions, setSelectedMechanicalInclusionOptions] = useState<AccessoryOption[]>([]);
   const [selectedDecantation, setSelectedDecantation] = useState<IotOption[]>([]);
@@ -90,6 +91,12 @@ const App: React.FC = () => {
     setSelectedConsumption(consumption);
     const recId = getRecommendedTankId(consumption);
     setRecommendedTankId(recId);
+  };
+  
+  const handleTankChange = (tankId: TankOption['id']) => {
+    setSelectedTank(tankId);
+    // Hide platform image when tank capacity is selected/changed
+    setIsPlatformSelected(false);
   };
 
   const handleReposOsToggle = (option: AccessoryOption) => {
@@ -144,6 +151,7 @@ const App: React.FC = () => {
 
   const resetConfiguration = () => {
     setSelectedTank(TANK_OPTIONS[0]?.id || '22kl');
+    setIsPlatformSelected(false);
     setSelectedReposOsOptions([]);
     setSelectedMechanicalInclusionOptions([]);
     setSelectedDecantation([]);
@@ -328,6 +336,7 @@ const App: React.FC = () => {
               safetyUnits={selectedSafetyUnits}
               safetyUpgrades={selectedSafetyUpgrades}
               decantation={selectedDecantation}
+              hasPlatform={isPlatformSelected}
             />
           </div>
           <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">
@@ -336,7 +345,9 @@ const App: React.FC = () => {
               paymentMode={paymentMode}
               setPaymentMode={setPaymentMode}
               selectedTank={selectedTank}
-              setSelectedTank={setSelectedTank}
+              setSelectedTank={handleTankChange}
+              isPlatformSelected={isPlatformSelected}
+              onPlatformToggle={() => setIsPlatformSelected(!isPlatformSelected)}
               selectedReposOsOptions={selectedReposOsOptions}
               onReposOsToggle={handleReposOsToggle}
               selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}

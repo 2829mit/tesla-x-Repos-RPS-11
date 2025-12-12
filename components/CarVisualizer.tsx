@@ -10,6 +10,7 @@ interface CarVisualizerProps {
   safetyUnits?: AccessoryOption[];
   safetyUpgrades: SafetyUpgradeOption[];
   decantation?: IotOption[];
+  hasPlatform?: boolean;
 }
 
 const CarVisualizer: React.FC<CarVisualizerProps> = ({ 
@@ -18,7 +19,8 @@ const CarVisualizer: React.FC<CarVisualizerProps> = ({
   dispensingUnits = [], 
   safetyUnits = [], 
   safetyUpgrades,
-  decantation = []
+  decantation = [],
+  hasPlatform = false
 }) => {
   const layers = getVisualizerLayers(
       tank, 
@@ -26,7 +28,8 @@ const CarVisualizer: React.FC<CarVisualizerProps> = ({
       dispensingUnits, 
       safetyUnits, 
       safetyUpgrades, 
-      decantation
+      decantation,
+      hasPlatform
   );
 
   return (

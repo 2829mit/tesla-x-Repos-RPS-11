@@ -52,7 +52,6 @@ export const MECHANICAL_INCLUSION_OPTIONS: AccessoryOption[] = [
 ];
 
 export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
-  { id: 'iot-controller-safety', name: 'IOT Controller', price: 0 },
   { 
     id: 'fuel-level-sensors', 
     name: 'Fuel Level Sensors', 
@@ -60,6 +59,14 @@ export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
     infoImageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764951508/RATG_sensor_pe2a55.png',
     description: 'High-precision ATG (Automatic Tank Gauge) sensors for real-time fuel inventory monitoring and leak detection.'
   }, 
+  {
+    id: 'leak-detection-system',
+    name: 'Leak Detection System',
+    price: 0,
+    infoImageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764177461/Screenshot_2025-11-26_224724_kbhepo.png',
+    description: 'Precision sensors monitor double-walled tank integrity 24/7. Any breach triggers an immediate system alert.'
+  },
+  { id: 'iot-controller-safety', name: 'IOT Controller', price: 0 },
   { 
     id: 'overfill-sensors', 
     name: 'Overfill Sensors', 
@@ -67,7 +74,6 @@ export const SAFETY_UNIT_OPTIONS: AccessoryOption[] = [
     infoImageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764951500/Overfill_sensor_bfxzo6.png',
     description: 'Advanced safety sensors that automatically shut off the pump to prevent accidental overfilling during fuel replenishment.'
   },
-  { id: 'decantation-cutoff', name: 'Decantation Cutoff', price: 0 },
   { id: 'mobile-device', name: 'Wireless Synchronised Mobile', price: 0 },
 ];
 
