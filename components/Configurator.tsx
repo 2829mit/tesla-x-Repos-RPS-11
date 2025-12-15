@@ -238,7 +238,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* Platform Section */}
+            {/* 2. Platform */}
             <div className="mb-[45px]">
                 <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Platform</h2>
                 <div className="space-y-4">
@@ -266,7 +266,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 </div>
             </div>
 
-            {/* 2. RPS Capacity */}
+            {/* 3. RPS Capacity */}
             <div className="mb-[45px]">
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RPS Capacity</h2>
               <div className="space-y-4">
@@ -311,49 +311,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                 </button>
-            </div>
-
-            {/* 3. RFID Enabled Dispensing Unit */}
-            <div className="mb-[45px]">
-              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Enabled Dispensing Unit</h2>
-              <div className="space-y-2">
-                {DISPENSING_UNIT_OPTIONS.map(option => (
-                  <button
-                    key={`dispensing-unit-${option.id}`}
-                    onClick={() => onDispensingUnitToggle(option)}
-                    className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedDispensingUnits.some(du => du.id === option.id)
-                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                        : 'border-gray-300 hover:border-gray-500'
-                    }`}
-                  >
-                    {/* Tickbox - Square Checkbox Style - Unified Color */}
-                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                      selectedDispensingUnits.some(du => du.id === option.id)
-                        ? 'bg-gray-600 border-gray-600'
-                        : 'bg-white border-gray-300'
-                    }`}>
-                      {selectedDispensingUnits.some(du => du.id === option.id) && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-
-                    <div className="flex-grow">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                          <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
-                        </div>
-                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
-                          {showPrices ? formatPrice(option.price) : ''}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* 4. Mechanical Inclusions */}
@@ -406,39 +363,106 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* 5. Repos OS */}
+            {/* 5. RFID Enabled Dispensing Unit */}
             <div className="mb-[45px]">
-              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Repos OS</h2>
+              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Enabled Dispensing Unit</h2>
               <div className="space-y-2">
-                {REPOS_OS_OPTIONS.map(option => (
+                {DISPENSING_UNIT_OPTIONS.map(option => (
                   <button
-                    key={option.id}
-                    onClick={() => onReposOsToggle(option)}
-                    className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedReposOsOptions.some(o => o.id === option.id)
+                    key={`dispensing-unit-${option.id}`}
+                    onClick={() => onDispensingUnitToggle(option)}
+                    className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                      selectedDispensingUnits.some(du => du.id === option.id)
                         ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
                         : 'border-gray-300 hover:border-gray-500'
                     }`}
                   >
+                    {/* Tickbox - Square Checkbox Style - Unified Color */}
                     <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                      selectedReposOsOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
+                      selectedDispensingUnits.some(du => du.id === option.id)
+                        ? 'bg-gray-600 border-gray-600'
+                        : 'bg-white border-gray-300'
                     }`}>
-                      {selectedReposOsOptions.some(o => o.id === option.id) && (
+                      {selectedDispensingUnits.some(du => du.id === option.id) && (
                         <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                     </div>
-                    <div className="flex-grow flex justify-between items-center">
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
+
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                          <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
+                        </div>
+                        <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                          {showPrices ? formatPrice(option.price) : ''}
+                        </p>
+                      </div>
                     </div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* 6. Sensors and Controller Unit */}
+            {/* 6. Decantation Unit */}
+             <div className="mb-[45px]">
+              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Decantation Unit</h2>
+              <div className="space-y-2">
+                {DECANTATION_OPTIONS.map(option => (
+                  <div key={`decantation-${option.id}`} className="flex flex-col">
+                    <button
+                      onClick={() => onDecantationToggle(option)}
+                      className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                        selectedDecantation.some(o => o.id === option.id)
+                          ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
+                          : 'border-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      {/* Checkbox Tick */}
+                      <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                        selectedDecantation.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
+                      }`}>
+                        {selectedDecantation.some(o => o.id === option.id) && (
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+
+                      <div className="flex-grow">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                            <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
+                          </div>
+                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
+                            {showPrices ? formatPrice(option.price) : ''}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    {option.id === 'advanced-skid' && (
+                      <div className="flex justify-end mt-2 mr-1">
+                         <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLearnMoreOption(option);
+                          }}
+                          className="text-xs font-medium text-gray-500 hover:text-blue-600 underline transition-colors"
+                        >
+                          What is Metering Counter?
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 7. Sensors and Controller Unit */}
             <div className="mb-[45px]">
                 <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Sensors and Controller Unit</h2>
                 <div className="space-y-2">
@@ -486,62 +510,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </button>
                   ))}
                 </div>
-            </div>
-
-             {/* 7. Decantation Unit - Updated for Multi-Select */}
-             <div className="mb-[45px]">
-              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Decantation Unit</h2>
-              <div className="space-y-2">
-                {DECANTATION_OPTIONS.map(option => (
-                  <div key={`decantation-${option.id}`} className="flex flex-col">
-                    <button
-                      onClick={() => onDecantationToggle(option)}
-                      className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                        selectedDecantation.some(o => o.id === option.id)
-                          ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                          : 'border-gray-300 hover:border-gray-500'
-                      }`}
-                    >
-                      {/* Checkbox Tick */}
-                      <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                        selectedDecantation.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
-                      }`}>
-                        {selectedDecantation.some(o => o.id === option.id) && (
-                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-
-                      <div className="flex-grow">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                            <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
-                          </div>
-                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
-                            {showPrices ? formatPrice(option.price) : ''}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                    
-                    {option.id === 'advanced-skid' && (
-                      <div className="flex justify-end mt-2 mr-1">
-                         <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setLearnMoreOption(option);
-                          }}
-                          className="text-xs font-medium text-gray-500 hover:text-blue-600 underline transition-colors"
-                        >
-                          What is a Flow Meter?
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* 8. Safety Upgrades */}
@@ -595,8 +563,40 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                   ))}
                 </div>
             </div>
-              
-            {/* 9. Licenses and Compliances Section */}
+
+            {/* 9. Repos OS */}
+            <div className="mb-[45px]">
+              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Repos OS</h2>
+              <div className="space-y-2">
+                {REPOS_OS_OPTIONS.map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => onReposOsToggle(option)}
+                    className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
+                      selectedReposOsOptions.some(o => o.id === option.id)
+                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
+                        : 'border-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
+                      selectedReposOsOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
+                    }`}>
+                      {selectedReposOsOptions.some(o => o.id === option.id) && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-grow flex justify-between items-center">
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
+                      <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(option.price) : ''}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 10. Licenses and Compliances Section */}
             <div className="mb-[45px]">
               <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
               <div className="space-y-3 mt-6">

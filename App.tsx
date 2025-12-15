@@ -1,27 +1,20 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
-import Header from './components/Header.tsx';
-import CarVisualizer from './components/CarVisualizer.tsx';
-import Configurator from './components/Configurator.tsx';
-import LeadFormModal from './components/LeadFormModal.tsx';
-import LoginModal from './components/LoginModal.tsx';
-import LandingPage from './components/LandingPage.tsx';
-import ExplorePage from './components/ExplorePage.tsx';
-import FaqPage from './components/FaqPage.tsx';
-import ReposPayPage from './components/ReposPayPage.tsx';
-import AboutUsPage from './components/AboutUsPage.tsx';
-import ComparisonModal from './components/ComparisonModal.tsx';
-import QuoteModal from './components/QuoteModal.tsx';
+import Header from './components/Header';
+import CarVisualizer from './components/CarVisualizer';
+import Configurator from './components/Configurator';
+import LeadFormModal from './components/LeadFormModal';
+import LoginModal from './components/LoginModal';
+import LandingPage from './components/LandingPage';
+import ExplorePage from './components/ExplorePage';
+import FaqPage from './components/FaqPage';
+import ReposPayPage from './components/ReposPayPage';
+import AboutUsPage from './components/AboutUsPage';
+import ComparisonModal from './components/ComparisonModal';
+import QuoteModal from './components/QuoteModal';
 import { generateQuotePDF } from './utils/pdfGenerator';
 import { logQuoteGeneration } from './services/api';
 import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption, QuoteData } from './types';
 import { 
-  DECANTATION_OPTIONS,
-  REPOS_OS_OPTIONS,
-  SAFETY_UNIT_OPTIONS,
-  DISPENSING_UNIT_OPTIONS,
-  MECHANICAL_INCLUSION_OPTIONS,
-  LICENSE_OPTIONS,
   TANK_OPTIONS,
 } from './constants';
 import { getRecommendedTankId } from './utils/vehicleHelpers';
@@ -48,6 +41,7 @@ const App: React.FC = () => {
   
   // Initialize all options as unselected
   const [isPlatformSelected, setIsPlatformSelected] = useState(false);
+  const [viewPlatform, setViewPlatform] = useState(false); // Controls visualizer visibility for platform
   const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>([]);
   const [selectedMechanicalInclusionOptions, setSelectedMechanicalInclusionOptions] = useState<AccessoryOption[]>([]);
   const [selectedDecantation, setSelectedDecantation] = useState<IotOption[]>([]);
@@ -95,8 +89,14 @@ const App: React.FC = () => {
   
   const handleTankChange = (tankId: TankOption['id']) => {
     setSelectedTank(tankId);
-    // Hide platform image when tank capacity is selected/changed
-    setIsPlatformSelected(false);
+    // Hide platform image when tank capacity is selected/changed, but keep it selected
+    setViewPlatform(false);
+  };
+
+  const handlePlatformToggle = () => {
+    const newState = !isPlatformSelected;
+    setIsPlatformSelected(newState);
+    setViewPlatform(newState);
   };
 
   const handleReposOsToggle = (option: AccessoryOption) => {
@@ -108,6 +108,7 @@ const App: React.FC = () => {
   };
 
   const handleMechanicalInclusionToggle = (option: AccessoryOption) => {
+    setViewPlatform(false);
     setSelectedMechanicalInclusionOptions(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -116,6 +117,7 @@ const App: React.FC = () => {
   };
 
   const handleDecantationToggle = (option: IotOption) => {
+    setViewPlatform(false);
     setSelectedDecantation(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -124,6 +126,7 @@ const App: React.FC = () => {
   };
 
   const handleSafetyUnitToggle = (option: AccessoryOption) => {
+    setViewPlatform(false);
     setSelectedSafetyUnits(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -132,6 +135,7 @@ const App: React.FC = () => {
   };
 
   const handleSafetyUpgradeToggle = (option: SafetyUpgradeOption) => {
+    setViewPlatform(false);
     setSelectedSafetyUpgrades(prev => {
       const exists = prev.find(o => o.id === option.id);
       if (!exists) {
@@ -142,6 +146,7 @@ const App: React.FC = () => {
   };
 
   const handleDispensingUnitToggle = (option: DispensingUnitOption) => {
+    setViewPlatform(false);
     setSelectedDispensingUnits(prev => 
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -152,6 +157,7 @@ const App: React.FC = () => {
   const resetConfiguration = () => {
     setSelectedTank(TANK_OPTIONS[0]?.id || '22kl');
     setIsPlatformSelected(false);
+    setViewPlatform(false);
     setSelectedReposOsOptions([]);
     setSelectedMechanicalInclusionOptions([]);
     setSelectedDecantation([]);
@@ -336,7 +342,7 @@ const App: React.FC = () => {
               safetyUnits={selectedSafetyUnits}
               safetyUpgrades={selectedSafetyUpgrades}
               decantation={selectedDecantation}
-              hasPlatform={isPlatformSelected}
+              hasPlatform={viewPlatform}
             />
           </div>
           <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">
@@ -347,7 +353,7 @@ const App: React.FC = () => {
               selectedTank={selectedTank}
               setSelectedTank={handleTankChange}
               isPlatformSelected={isPlatformSelected}
-              onPlatformToggle={() => setIsPlatformSelected(!isPlatformSelected)}
+              onPlatformToggle={handlePlatformToggle}
               selectedReposOsOptions={selectedReposOsOptions}
               onReposOsToggle={handleReposOsToggle}
               selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}

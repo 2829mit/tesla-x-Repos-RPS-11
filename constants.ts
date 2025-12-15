@@ -29,6 +29,7 @@ export const DECANTATION_OPTIONS: IotOption[] = [
     name: 'Advanced Skid', 
     subtext: 'With Metering Counter', 
     price: 9999, 
+    imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/-7-10-Advanced%20Skid-%20Flowmeter-common-min.png',
     description: 'A Flow Meter is a high-precision instrument used to measure the volume of fuel being unloaded (decanted) into the station. It ensures accurate quantity verification, transparency, and prevents pilferage during the refilling process.'
   },
   { id: 'basic-skid', name: 'Basic Skid', subtext: 'Without Metering Counter', price: 0 },
