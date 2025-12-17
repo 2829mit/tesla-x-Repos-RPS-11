@@ -59,7 +59,7 @@ export const getVisualizerLayers = (
 ): string[] => {
     // Exclusive View: If RPS Platform is selected, show ONLY the platform image
     if (hasPlatform) {
-         return ['https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/1-Platform-common-min.png'];
+         return ['https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/60kl%20platform-min.png'];
     }
 
     const layers: string[] = [];
