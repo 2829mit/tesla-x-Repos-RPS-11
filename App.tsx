@@ -39,9 +39,7 @@ const App: React.FC = () => {
     TANK_OPTIONS[0]?.id || '22kl'
   );
   
-  // Initialize all options as unselected
-  const [isPlatformSelected, setIsPlatformSelected] = useState(false);
-  const [viewPlatform, setViewPlatform] = useState(false); // Controls visualizer visibility for platform
+  // Selection States
   const [selectedReposOsOptions, setSelectedReposOsOptions] = useState<AccessoryOption[]>([]);
   const [selectedMechanicalInclusionOptions, setSelectedMechanicalInclusionOptions] = useState<AccessoryOption[]>([]);
   const [selectedDecantation, setSelectedDecantation] = useState<IotOption[]>([]);
@@ -52,6 +50,27 @@ const App: React.FC = () => {
 
   const [selectedConsumption, setSelectedConsumption] = useState<string | null>(null);
   const [recommendedTankId, setRecommendedTankId] = useState<TankOption['id'] | null>(null);
+
+  // Compute if we should show the capacity platform preview
+  // showCapacityPreview is true ONLY if NO add-ons are selected (selection count = 1, just the tank)
+  const showCapacityPreview = useMemo(() => {
+    const addOnCount = 
+      selectedReposOsOptions.length + 
+      selectedMechanicalInclusionOptions.length + 
+      selectedDecantation.length + 
+      selectedDispensingUnits.length + 
+      selectedSafetyUnits.length + 
+      selectedSafetyUpgrades.length;
+    
+    return addOnCount === 0;
+  }, [
+    selectedReposOsOptions, 
+    selectedMechanicalInclusionOptions, 
+    selectedDecantation, 
+    selectedDispensingUnits, 
+    selectedSafetyUnits, 
+    selectedSafetyUpgrades
+  ]);
 
   useEffect(() => {
     const s3BaseUrl = 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/ShortPixelOptimized/';
@@ -89,14 +108,6 @@ const App: React.FC = () => {
   
   const handleTankChange = (tankId: TankOption['id']) => {
     setSelectedTank(tankId);
-    // Hide platform image when tank capacity is selected/changed, but keep it selected
-    setViewPlatform(false);
-  };
-
-  const handlePlatformToggle = () => {
-    const newState = !isPlatformSelected;
-    setIsPlatformSelected(newState);
-    setViewPlatform(newState);
   };
 
   const handleReposOsToggle = (option: AccessoryOption) => {
@@ -108,7 +119,6 @@ const App: React.FC = () => {
   };
 
   const handleMechanicalInclusionToggle = (option: AccessoryOption) => {
-    setViewPlatform(false);
     setSelectedMechanicalInclusionOptions(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -117,7 +127,6 @@ const App: React.FC = () => {
   };
 
   const handleDecantationToggle = (option: IotOption) => {
-    setViewPlatform(false);
     setSelectedDecantation(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -126,7 +135,6 @@ const App: React.FC = () => {
   };
 
   const handleSafetyUnitToggle = (option: AccessoryOption) => {
-    setViewPlatform(false);
     setSelectedSafetyUnits(prev =>
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -135,7 +143,6 @@ const App: React.FC = () => {
   };
 
   const handleSafetyUpgradeToggle = (option: SafetyUpgradeOption) => {
-    setViewPlatform(false);
     setSelectedSafetyUpgrades(prev => {
       const exists = prev.find(o => o.id === option.id);
       if (!exists) {
@@ -146,7 +153,6 @@ const App: React.FC = () => {
   };
 
   const handleDispensingUnitToggle = (option: DispensingUnitOption) => {
-    setViewPlatform(false);
     setSelectedDispensingUnits(prev => 
       prev.find(o => o.id === option.id)
         ? prev.filter(o => o.id !== option.id)
@@ -156,8 +162,6 @@ const App: React.FC = () => {
 
   const resetConfiguration = () => {
     setSelectedTank(TANK_OPTIONS[0]?.id || '22kl');
-    setIsPlatformSelected(false);
-    setViewPlatform(false);
     setSelectedReposOsOptions([]);
     setSelectedMechanicalInclusionOptions([]);
     setSelectedDecantation([]);
@@ -342,7 +346,7 @@ const App: React.FC = () => {
               safetyUnits={selectedSafetyUnits}
               safetyUpgrades={selectedSafetyUpgrades}
               decantation={selectedDecantation}
-              hasPlatform={viewPlatform}
+              hasPlatform={showCapacityPreview}
             />
           </div>
           <div className="w-full lg:w-[400px] xl:w-[450px] lg:h-[calc(100vh-72px)] bg-white z-10 flex-shrink-0">
@@ -352,8 +356,6 @@ const App: React.FC = () => {
               setPaymentMode={setPaymentMode}
               selectedTank={selectedTank}
               setSelectedTank={handleTankChange}
-              isPlatformSelected={isPlatformSelected}
-              onPlatformToggle={handlePlatformToggle}
               selectedReposOsOptions={selectedReposOsOptions}
               onReposOsToggle={handleReposOsToggle}
               selectedMechanicalInclusionOptions={selectedMechanicalInclusionOptions}

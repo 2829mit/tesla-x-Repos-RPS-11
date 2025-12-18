@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
-import { CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS, DECANTATION_OPTIONS, SAFETY_UNIT_OPTIONS } from '../constants';
+import { CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS, SAFETY_UNIT_OPTIONS } from '../constants';
 import { getSafetyImage } from '../utils/vehicleHelpers';
 
 interface ConfiguratorProps {
@@ -10,8 +9,6 @@ interface ConfiguratorProps {
   setPaymentMode: (mode: 'outright' | 'installments') => void;
   selectedTank: TankOption['id'];
   setSelectedTank: (tankId: TankOption['id']) => void;
-  isPlatformSelected: boolean;
-  onPlatformToggle: () => void;
   selectedReposOsOptions: AccessoryOption[];
   onReposOsToggle: (option: AccessoryOption) => void;
   selectedMechanicalInclusionOptions: AccessoryOption[];
@@ -70,8 +67,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   setPaymentMode,
   selectedTank,
   setSelectedTank,
-  isPlatformSelected,
-  onPlatformToggle,
   selectedReposOsOptions,
   onReposOsToggle,
   selectedMechanicalInclusionOptions,
@@ -238,33 +233,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* 2. Platform */}
-            <div className="mb-[45px]">
-                <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Platform</h2>
-                <div className="space-y-4">
-                     <button 
-                        onClick={onPlatformToggle}
-                        className={`group relative w-full p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                          isPlatformSelected
-                          ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                          : 'border-gray-300 hover:border-gray-500'
-                        }`}
-                     >
-                        <div className="flex justify-between items-center">
-                            <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">RPS Platform</p>
-                             <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors ${
-                                isPlatformSelected ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
-                             }`}>
-                                {isPlatformSelected && (
-                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                                )}
-                             </div>
-                        </div>
-                     </button>
-                </div>
-            </div>
+            {/* 2. Platform Section REMOVED */}
 
             {/* 3. RPS Capacity */}
             <div className="mb-[45px]">
@@ -363,9 +332,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* 5. RFID Enabled Dispensing Unit */}
+            {/* 5. Dispensing Module (Renamed from RFID Enabled Dispensing Unit) */}
             <div className="mb-[45px]">
-              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RFID Enabled Dispensing Unit</h2>
+              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Dispensing Module</h2>
               <div className="space-y-2">
                 {DISPENSING_UNIT_OPTIONS.map(option => (
                   <button
@@ -394,7 +363,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       <div className="flex justify-between items-center">
                         <div>
                           <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                          <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
+                          {option.subtext && (
+                            <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
+                          )}
                         </div>
                         <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
                           {showPrices ? formatPrice(option.price) : ''}
@@ -406,63 +377,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* 6. Decantation Unit */}
-             <div className="mb-[45px]">
-              <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Decantation Unit</h2>
-              <div className="space-y-2">
-                {DECANTATION_OPTIONS.map(option => (
-                  <div key={`decantation-${option.id}`} className="flex flex-col">
-                    <button
-                      onClick={() => onDecantationToggle(option)}
-                      className={`group relative w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                        selectedDecantation.some(o => o.id === option.id)
-                          ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                          : 'border-gray-300 hover:border-gray-500'
-                      }`}
-                    >
-                      {/* Checkbox Tick */}
-                      <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                        selectedDecantation.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
-                      }`}>
-                        {selectedDecantation.some(o => o.id === option.id) && (
-                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-
-                      <div className="flex-grow">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                            <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
-                          </div>
-                          <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
-                            {showPrices ? formatPrice(option.price) : ''}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                    
-                    {option.id === 'advanced-skid' && (
-                      <div className="flex justify-end mt-2 mr-1">
-                         <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setLearnMoreOption(option);
-                          }}
-                          className="text-xs font-medium text-gray-500 hover:text-blue-600 underline transition-colors"
-                        >
-                          What is Metering Counter?
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 7. Sensors and Controller Unit */}
+            {/* 6. Sensors and Controller Unit */}
             <div className="mb-[45px]">
                 <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Sensors and Controller Unit</h2>
                 <div className="space-y-2">
@@ -512,9 +427,9 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 </div>
             </div>
 
-            {/* 8. Safety Upgrades */}
+            {/* 7. Add-Ons (Formerly Safety Upgrades) */}
             <div className="mb-[45px]">
-                <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Safety Upgrades</h2>
+                <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Add-Ons</h2>
                 <div className="space-y-6">
                   {SAFETY_UPGRADE_OPTIONS.map(option => (
                     <div key={option.id} className="flex flex-col">
@@ -542,7 +457,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                         
                         <div className="w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
                           <img 
-                            src={getSafetyImage(selectedTank, option.id)} 
+                            src={option.imageUrl || getSafetyImage(selectedTank, option.id)} 
                             alt={option.name} 
                             className="max-h-[150px] w-auto object-contain mix-blend-multiply"
                           />
@@ -564,7 +479,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 </div>
             </div>
 
-            {/* 9. Repos OS */}
+            {/* 8. Repos OS */}
             <div className="mb-[45px]">
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Repos OS</h2>
               <div className="space-y-2">
@@ -596,7 +511,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* 10. Licenses and Compliances Section */}
+            {/* 9. Licenses and Compliances Section */}
             <div className="mb-[45px]">
               <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
               <div className="space-y-3 mt-6">

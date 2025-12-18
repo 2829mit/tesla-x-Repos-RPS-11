@@ -57,19 +57,27 @@ export const getVisualizerLayers = (
   decantation: IotOption[] = [],
   hasPlatform: boolean = false
 ): string[] => {
-    // Exclusive View: If RPS Platform is selected, show ONLY the platform image
+    const isSmallTank = tank === '22kl' || tank === '30kl';
+
+    // Exclusive View: Capacity Preview Mode
     if (hasPlatform) {
-         return ['https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/60kl%20platform-min.png'];
+         if (isSmallTank) {
+            return ['https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/30kl%20platform-min.png'];
+         } else {
+            return ['https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/60kl%20platform-min.png'];
+         }
     }
 
     const layers: string[] = [];
-    const isSmallTank = tank === '22kl' || tank === '30kl';
 
-    // 1. Base Tank Layer
-    if (isSmallTank) {
-         layers.push('https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/2-kl%20tank30-min.png');
-    } else {
-         layers.push('https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/2-kl%20tank60-min.png');
+    // 1. Base Tank Layer (Dual Walled Tank)
+    // Only show tank base if 'dual-walled-tank' is selected in Mechanical Inclusions
+    if (mechanicalOptions.some(o => o.id === 'dual-walled-tank')) {
+         if (isSmallTank) {
+             layers.push('https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/2-kl%20tank30-min.png');
+         } else {
+             layers.push('https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/2-kl%20tank60-min.png');
+         }
     }
 
     // 2. Dispensing Units (Single DU)
@@ -134,17 +142,18 @@ export const getVisualizerLayers = (
 
     // 5. Mechanical Inclusions - Overlays
     
-    // Flame Proof Illumination
-    if (mechanicalOptions.some(o => o.id === 'flame-proof-illumination')) {
+    // Flame Proof Illumination (Now part of dispensing units checklist)
+    if (dispensingUnits.some(o => o.id === 'flame-proof-illumination')) {
         layers.push('https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/-6-5-Flame%20Proof-common-min.png');
     }
-    // Filtration Mechanism
-    if (mechanicalOptions.some(o => o.id === 'filtration-mechanism')) {
+    // Filtration Mechanism (Now part of dispensing units checklist)
+    if (dispensingUnits.some(o => o.id === 'filtration-mechanism')) {
         layers.push('https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/-6-4b-Filteration%20mechanism-option-common-min.png');
     }
 
-    // 6. Decantation - Advanced Skid
-    if (decantation.some(d => d.id === 'advanced-skid')) {
+    // 6. Decantation/Add-ons - Advanced Skid
+    // Check both arrays to support backward compatibility or state transitions
+    if (decantation.some(d => d.id === 'advanced-skid') || safetyUpgrades.some(u => u.id === 'advanced-skid')) {
          layers.push('https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/-7-10-Advanced%20Skid-%20Flowmeter-common-min.png');
     }
 

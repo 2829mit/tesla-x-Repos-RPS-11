@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Header from './Header';
 
@@ -48,7 +47,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onExploreClick, o
           playsInline
           poster="https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg"
         >
-          {/* Placeholder video source - Abstract Tech/Industrial Flow */}
           <source src="https://videos.pexels.com/video-files/5309381/5309381-uhd_2560_1440_25fps.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
@@ -79,7 +77,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onExploreClick, o
         </div>
       </div>
 
-      {/* Section 2: Transforming Energy Distribution (New Video Section) */}
+      {/* Section 2: Transforming Energy Distribution */}
       <div className="relative h-screen overflow-hidden bg-black shrink-0">
          <video 
             className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover"

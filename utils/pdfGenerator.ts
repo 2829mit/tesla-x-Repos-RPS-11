@@ -172,11 +172,13 @@ export const generateQuotePDF = async (data: QuoteData) => {
   doc.text(`Proforma Invoice No. - ${invoiceNo}`, col2X + 2, yPos);
   doc.text(`Dated- ${invoiceDate}`, col2X + 2, yPos + 5);
   
-  const modeText = data.paymentMode === 'installments' ? 'Easy Installments (36 Months)' : 'Outright (Full Amount)';
+  const isInstallment = data.paymentMode === 'installments';
+  const modeText = isInstallment ? 'Easy Installments (36 Months)' : 'Outright (Full Amount)';
+  
   doc.setFont("helvetica", "normal");
   doc.text(`Payment Mode: ${modeText}`, col2X + 2, yPos + 10);
 
-  if (data.paymentMode === 'installments' && data.monthlyPrice) {
+  if (isInstallment && data.monthlyPrice) {
       doc.setFont("helvetica", "bold");
       doc.text(`Monthly Payment: Rs. ${formatIndianCurrency(data.monthlyPrice)}`, col2X + 2, yPos + 15);
       doc.text(`Down Payment: Rs. ${formatIndianCurrency(data.gstAmount || 0)}`, col2X + 2, yPos + 20);
@@ -211,95 +213,133 @@ export const generateQuotePDF = async (data: QuoteData) => {
           productDesc += `Dispenser: Suction type (${du.name}, ${du.subtext})\n`;
       });
   } else {
-      // Fallback to Standard Single DU Text to ensure Invoice remains correct even if selection is cleared
       productDesc += `Dispenser: Suction type (Single DU, 2 Nozzle 100 Tags)\n`;
   }
   
   productDesc += `DU Make: Tokheim Branding : Only Logo as per Buyer\nRequirement\n`;
   
-  const addons: string[] = [];
-  data.configuration.accessories.reposOs.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });
-  
-  // Handle decantation logic - iterate over selected array
-  if (data.configuration.decantation && data.configuration.decantation.length > 0) {
-      data.configuration.decantation.forEach(opt => {
-          if (opt.price > 0) {
-              addons.push(`Decantation: ${opt.name}`);
-          }
+  const addons: {name: string, price: number}[] = [];
+  const collectAddons = (list: any[]) => {
+      list.forEach(item => {
+          if (item.price > 0) addons.push({name: item.name, price: item.price});
       });
-  }
-  
-  data.configuration.accessories.mechanical.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });
-  data.configuration.accessories.safetyUnits.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });
-  data.configuration.accessories.safetyUpgrades.forEach(acc => { if (acc.price > 0) addons.push(acc.name); });
+  };
+
+  collectAddons(data.configuration.accessories.reposOs);
+  collectAddons(data.configuration.decantation);
+  collectAddons(data.configuration.accessories.mechanical);
+  collectAddons(data.configuration.accessories.safetyUnits);
+  collectAddons(data.configuration.accessories.safetyUpgrades);
   
   if (addons.length > 0) {
     productDesc += "\nPAID ADD-ONS INCLUDED:\n";
-    addons.forEach(addon => productDesc += `- ${addon}\n`);
+    addons.forEach(addon => productDesc += `- ${addon.name} (Rs. ${formatIndianCurrency(addon.price)}/mo)\n`);
   }
 
   // Rate Calculation:
-  const rate = data.totalContractValue || 0;
-  const amount = rate;
-
   const customerState = data.customerDetails?.state?.toLowerCase() || "";
   const isMaharashtra = customerState.includes("maharashtra");
   
-  const gstRate = 0.18;
+  let columns = ["Sr", "Product Descriptions", "HSN/SAC", "Quantity", "Rate", "Per", "Amount"];
+  let tableBody: any[] = [];
+  let grandTotal = 0;
+  let taxAmount = 0; // For Outright mode
+  
+  // Installment Mode Variables
   let cgstAmount = 0;
   let sgstAmount = 0;
   let igstAmount = 0;
 
-  if (isMaharashtra) {
-    cgstAmount = rate * 0.09;
-    sgstAmount = rate * 0.09;
+  if (isInstallment) {
+      // Installment Mode Logic
+      columns = ["Sr", "Product Descriptions", "HSN/SAC", "Quantity", "Rate", "Tenure", "Down Payment\n(GST Component)"];
+      
+      const rate = data.monthlyPrice || 0;
+      const downPayment = data.gstAmount || 0;
+      grandTotal = downPayment;
+
+      // Tax breakdown for Footer (of the Down Payment amount)
+      // Assuming Down Payment = Total GST. 
+      // Breakdown logic: if Maharashtra, split 50/50. Else IGST.
+      if (isMaharashtra) {
+        cgstAmount = downPayment / 2;
+        sgstAmount = downPayment / 2;
+      } else {
+        igstAmount = downPayment;
+      }
+
+      tableBody = [
+        [
+          "1",
+          productDesc,
+          "84131191",
+          "1",
+          formatIndianCurrency(rate),
+          "36 Months",
+          formatIndianCurrency(downPayment)
+        ]
+      ];
   } else {
-    igstAmount = rate * gstRate;
+      // Outright Mode Logic
+      const rate = data.totalContractValue || 0;
+      taxAmount = rate * 0.18;
+      
+      if (isMaharashtra) {
+        cgstAmount = rate * 0.09;
+        sgstAmount = rate * 0.09;
+      } else {
+        igstAmount = rate * 0.18;
+      }
+
+      grandTotal = rate + taxAmount;
+
+      tableBody = [
+        [
+          "1",
+          productDesc,
+          "84131191",
+          "1",
+          formatIndianCurrency(rate),
+          "Nos",
+          formatIndianCurrency(rate)
+        ]
+      ];
   }
 
-  const totalTax = cgstAmount + sgstAmount + igstAmount;
-  const grandTotal = rate + totalTax;
-
-  const tableBody = [
-    [
-      "1",
-      productDesc,
-      "84131191",
-      "1",
-      formatIndianCurrency(rate),
-      "Nos",
-      // Removed Discount Column Value
-      formatIndianCurrency(amount)
-    ]
-  ];
-
   const addFooterRow = (label: string, value: string) => {
-    // Removed one empty string to match new column count (7 columns instead of 8)
+    // 7 Columns
     tableBody.push(["", label, "", "", "", "", value]);
   };
 
   addFooterRow("Packing & Forwarding Charges", "0");
   
-  if (isMaharashtra) {
-    addFooterRow("CGST @ 9% Output", formatIndianCurrency(cgstAmount));
-    addFooterRow("SGST @ 9% Output", formatIndianCurrency(sgstAmount));
+  if (isInstallment) {
+      // For installments, the Amount column IS the tax component (Down Payment).
+      // We don't add tax to it. We just show the total.
+      // Optionally we could show the breakdown as info rows, but standard additive rows would be confusing.
+      // Current implementation: Just show Total.
   } else {
-    addFooterRow("IGST @ 18% Output", formatIndianCurrency(igstAmount));
+      // For Outright, we add tax rows
+      if (isMaharashtra) {
+        addFooterRow("CGST @ 9% Output", formatIndianCurrency(cgstAmount));
+        addFooterRow("SGST @ 9% Output", formatIndianCurrency(sgstAmount));
+      } else {
+        addFooterRow("IGST @ 18% Output", formatIndianCurrency(igstAmount));
+      }
   }
   
   addFooterRow("Round Off", "0");
   addFooterRow("TCS 1%", "0");
   
-  // Adjusted total row for 7 columns
+  // Total Row
   tableBody.push(["", "Total (INR)", "", "", "", "1 Nos", formatIndianCurrency(grandTotal)]);
 
   doc.autoTable({
     startY: yPos,
-    // Removed "Disc. %" from header
-    head: [["Sr", "Product Descriptions", "HSN/SAC", "Quantity", "Rate", "Per", "Amount"]],
+    head: [columns],
     body: tableBody,
     theme: 'grid',
-    tableWidth: 175, // Explicit constrained width
+    // Removed tableWidth to allow auto-calculation based on margins and page width
     margin: { left: 10, right: 10 }, 
     styles: {
       font: "helvetica",
@@ -319,14 +359,13 @@ export const generateQuotePDF = async (data: QuoteData) => {
       lineColor: [0, 0, 0],
     },
     columnStyles: {
-      0: { cellWidth: 8, halign: 'center' }, 
-      1: { cellWidth: 55 }, // Reduced to prevent overflow
-      2: { cellWidth: 15, halign: 'center' },
-      3: { cellWidth: 10, halign: 'center' },
-      4: { cellWidth: 20, halign: 'right' }, 
-      5: { cellWidth: 10, halign: 'center' },
-      // Index 6 is now Amount
-      6: { cellWidth: 25, halign: 'right' },
+      0: { cellWidth: 10, halign: 'center' }, 
+      1: { cellWidth: 'auto' }, // Allow product description to fill available space
+      2: { cellWidth: 20, halign: 'center' },
+      3: { cellWidth: 15, halign: 'center' },
+      4: { cellWidth: 25, halign: 'right' }, 
+      5: { cellWidth: 25, halign: 'center' }, 
+      6: { cellWidth: 40, halign: 'right' },  
     },
     didParseCell: function (data: any) {
       // Bold Total Row
@@ -334,7 +373,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
          data.cell.styles.fontStyle = 'bold';
       }
       // Bold 'PAID ADD-ONS' row
-      if (data.section === 'body' && data.cell.text[0] === 'PAID ADD-ONS INCLUDED:') {
+      if (data.section === 'body' && data.cell.text[0].includes('PAID ADD-ONS INCLUDED:')) {
           data.cell.styles.fontStyle = 'bold';
       }
     }
@@ -352,18 +391,21 @@ export const generateQuotePDF = async (data: QuoteData) => {
   const footerTop = finalY;
   
   // PAGE 1 Footer Container
-  doc.rect(5, footerTop, 200, 287 - footerTop - 5);
-  doc.line(140, footerTop, 140, 287 - 5);
+  // Ensure we don't draw outside page bounds if content is long, but for invoice 1 page usually fits
+  if (footerTop < 280) {
+    doc.rect(5, footerTop, 200, 287 - footerTop - 5);
+    doc.line(140, footerTop, 140, 287 - 5);
 
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "italic");
-  doc.text("Note: Please refer to the attached Annexure for detailed", 7, footerTop + 10);
-  doc.text("Terms and Conditions regarding this invoice.", 7, footerTop + 15);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "italic");
+    doc.text("Note: Please refer to the attached Annexure for detailed", 7, footerTop + 10);
+    doc.text("Terms and Conditions regarding this invoice.", 7, footerTop + 15);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text("For Repos Energy India Private Limited", 142, footerTop + 5);
-  doc.text("Authorised Signatory", 160, 287 - 10, { align: "center" });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("For Repos Energy India Private Limited", 142, footerTop + 5);
+    doc.text("Authorised Signatory", 160, 287 - 10, { align: "center" });
+  }
 
   // --- PAGE 2: TERMS AND CONDITIONS ---
   doc.addPage();
