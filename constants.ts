@@ -1,4 +1,3 @@
-
 import type { PerformanceSpec, IotOption, TankOption, AccessoryOption, DispensingUnitOption, SafetyUpgradeOption, LicenseOption } from './types';
 
 // Removed static BASE_PRICE as it is now determined by the selected Tank
@@ -39,7 +38,7 @@ export const MECHANICAL_INCLUSION_OPTIONS: AccessoryOption[] = [
     infoImageUrl: 'https://res.cloudinary.com/dt8jmqu8d/image/upload/v1764951511/Double_walled_tank_r7u9hb.png',
     description: 'Double-walled construction ensures zero leakage and provides an extra layer of environmental protection and safety compliance.'
   },
-  { id: 'iso-certified-frame', name: 'ISO Certified Frame', price: 0 },
+  { id: 'iso-certified-frame', name: 'ISO Container Frame', price: 0 },
   { id: 'peso-manhole', name: 'PESO Approved Manhole Assembly', price: 0 },
   { id: 'weather-proof-canopy', name: 'Weather Proof Modular Canopy', price: 0 },
   { id: 'ss-pipeline', name: 'Stainless Steel Pipeline', price: 0 },
@@ -89,7 +88,7 @@ export const SAFETY_UPGRADE_OPTIONS: SafetyUpgradeOption[] = [
   },
   { 
     id: 'advanced-skid', 
-    name: 'Advanced Skid', 
+    name: 'Advanced Decanting Skid', 
     price: 9999, 
     imageUrl: 'https://drf-media-data.s3.ap-south-1.amazonaws.com/compressor_aws/final/-7-10-Advanced%20Skid-%20Flowmeter-common-min.png',
     description: 'A Flow Meter is a high-precision instrument used to measure the volume of fuel being unloaded (decanted) into the station. It ensures accurate quantity verification, transparency, and prevents pilferage during the refilling process.'

@@ -1,4 +1,3 @@
-
 import { TANK_OPTIONS } from '../constants';
 import { QuoteData } from '../types';
 
@@ -94,7 +93,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
   let yPos = 15;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.text("PROFORMA INVOICE", 105, yPos, { align: "center" });
+  doc.text("BUSINESS PROPOSAL", 105, yPos, { align: "center" });
   doc.line(5, yPos + 2, 205, yPos + 2); 
 
   yPos += 8;
@@ -156,7 +155,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
     }
   });
 
-  // Invoice Details
+  // Proposal Details
   const tank = TANK_OPTIONS.find(t => t.id === data.configuration.tank);
   const capacity = tank ? tank.name : '22KL';
   
@@ -164,26 +163,19 @@ export const generateQuotePDF = async (data: QuoteData) => {
   const dateStr = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
   const serial = String(Date.now()).slice(-4);
   
-  const invoiceNo = `REIPL_RPS_${capacity}_${dateStr}_${serial}`;
-  const invoiceDate = now.toLocaleDateString('en-GB');
+  const proposalNo = `REIPL_RPS_${capacity}_${dateStr}_${serial}`;
+  const proposalDate = now.toLocaleDateString('en-GB');
   
   yPos = sectionTop + 5;
   doc.setFont("helvetica", "bold");
-  doc.text(`Proforma Invoice No. - ${invoiceNo}`, col2X + 2, yPos);
-  doc.text(`Dated- ${invoiceDate}`, col2X + 2, yPos + 5);
+  doc.text(`Proposal No. - ${proposalNo}`, col2X + 2, yPos);
+  doc.text(`Dated- ${proposalDate}`, col2X + 2, yPos + 5);
   
   const isInstallment = data.paymentMode === 'installments';
   const modeText = isInstallment ? 'Easy Installments (36 Months)' : 'Outright (Full Amount)';
   
   doc.setFont("helvetica", "normal");
   doc.text(`Payment Mode: ${modeText}`, col2X + 2, yPos + 10);
-
-  if (isInstallment && data.monthlyPrice) {
-      doc.setFont("helvetica", "bold");
-      doc.text(`Monthly Payment: Rs. ${formatIndianCurrency(data.monthlyPrice)}`, col2X + 2, yPos + 15);
-      doc.text(`Down Payment: Rs. ${formatIndianCurrency(data.gstAmount || 0)}`, col2X + 2, yPos + 20);
-      doc.setFont("helvetica", "normal");
-  }
 
   // Repos Account
   yPos = sectionTop + rowHeight + 5;
@@ -399,7 +391,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
     doc.text("Note: Please refer to the attached Annexure for detailed", 7, footerTop + 10);
-    doc.text("Terms and Conditions regarding this invoice.", 7, footerTop + 15);
+    doc.text("Terms and Conditions regarding this proposal.", 7, footerTop + 15);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
@@ -494,5 +486,5 @@ export const generateQuotePDF = async (data: QuoteData) => {
 
   addPoint("14. MISCELLANEOUS", '• No amendment to these terms shall be valid unless agreed upon in writing by both parties.\n• Any notices under this agreement shall be communicated via registered mail or email.\n• By purchasing or operating a RPS from Repos, the Customer acknowledges that they have read, understood, and agreed to these Terms and Conditions.');
 
-  doc.save(`${invoiceNo}.pdf`);
+  doc.save(`${proposalNo}.pdf`);
 };
