@@ -93,7 +93,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
   let yPos = 15;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.text("COMMERCIAL PROPOSAL", 105, yPos, { align: "center" });
+  doc.text("BUSINESS PROPOSAL", 105, yPos, { align: "center" });
   doc.line(5, yPos + 2, 205, yPos + 2); 
 
   yPos += 8;
@@ -260,6 +260,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
   let tableBody: any[] = [];
   let subtotalMainItem = 0;
   let subtotalAddons = 0;
+  let totalRateSum = 0;
 
   paidLineItems.forEach((item, index) => {
     const rate = item.rate;
@@ -276,6 +277,8 @@ export const generateQuotePDF = async (data: QuoteData) => {
     } else {
       subtotalMainItem += amount;
     }
+
+    totalRateSum += rate;
     
     tableBody.push([
       (index + 1).toString(),
@@ -319,7 +322,16 @@ export const generateQuotePDF = async (data: QuoteData) => {
   }
   
   tableBody.push(["", "Round Off", "", "", "", "", "0"]);
-  tableBody.push(["", "Total (INR)", "", "", "", "", formatIndianCurrency(grandTotal)]);
+  // Modified Total row to show sums of Rate and Tenure
+  tableBody.push([
+    "", 
+    "Total (INR)", 
+    "", 
+    "", 
+    formatIndianCurrency(totalRateSum), 
+    isInstallment ? "36 Months" : "", 
+    formatIndianCurrency(grandTotal)
+  ]);
 
   doc.autoTable({
     startY: yPos,
@@ -361,19 +373,19 @@ export const generateQuotePDF = async (data: QuoteData) => {
     doc.line(140, finalY, 140, 287 - 5);
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
-    doc.text("Note: This is a commercial proposal.", 7, finalY + 10);
+    doc.text("Note: This is a business proposal.", 7, finalY + 10);
     doc.setFont("helvetica", "bold");
     doc.text("For Repos Energy India Private Limited", 142, finalY + 5);
     doc.text("Authorised Signatory", 160, 287 - 10, { align: "center" });
   }
 
-  // --- PAGE 2: INCLUDED ITEMS ---
+  // --- PAGE 2: STANDARD INCLUSIONS ---
   doc.addPage();
   doc.rect(5, 5, 200, 287);
   let page2Y = 20;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("STANDARD INCLUSIONS & TECHNICAL SPECIFICATIONS", 105, page2Y, { align: 'center' });
+  doc.text("STANDARD INCLUSIONS", 105, page2Y, { align: 'center' });
   doc.line(5, page2Y + 2, 205, page2Y + 2);
   page2Y += 10;
 
