@@ -209,16 +209,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
   // Base Product
   let mainProductDesc = "Sale of Repos Portable Station\n";
   mainProductDesc += `Model: Repos Portable Station Capacity : ${capacity} (HSD)\n`;
-  const duList = data.configuration.dispensingUnits;
-  if (duList && duList.length > 0) {
-      duList.forEach(du => {
-          mainProductDesc += `Dispenser: Suction type (${du.name}, ${du.subtext})\n`;
-      });
-  } else {
-      mainProductDesc += `Dispenser: Suction type (Single DU, 2 Nozzle 100 Tags)\n`;
-  }
-  mainProductDesc += `DU Make: Tokheim Branding : Only Logo as per Buyer Requirement\n`;
-
+  
   allSelectedItems.push({
     desc: mainProductDesc,
     rate: (tankObj?.price || 0) * multiplier,
@@ -229,45 +220,54 @@ export const generateQuotePDF = async (data: QuoteData) => {
 
   const collectItems = (list: any[]) => {
       list.forEach(item => {
+          let description = item.name;
+          if (item.id === 'advanced-skid') {
+            description = "Advanced Skid with Metering Counter";
+          }
           allSelectedItems.push({
-            desc: item.name,
+            desc: description,
             rate: (item.price || 0) * multiplier,
             hsn: "84131191",
-            tenure: "36",
+            tenure: isInstallment ? "36" : "Nos",
             isAddon: true
           });
       });
   };
 
+  // Collect ALL categories
+  collectItems(data.configuration.dispensingUnits);
   collectItems(data.configuration.accessories.reposOs);
   collectItems(data.configuration.decantation);
   collectItems(data.configuration.accessories.mechanical);
   collectItems(data.configuration.accessories.safetyUnits);
   collectItems(data.configuration.accessories.safetyUpgrades);
 
-  // Split into Paid and Included
-  const paidLineItems = allSelectedItems.filter(item => item.rate > 0 || !item.isAddon);
-  const includedLineItems = allSelectedItems.filter(item => item.rate === 0 && item.isAddon);
-
   // --- COMMERCIAL TABLE ---
   const customerState = data.customerDetails?.state?.toLowerCase() || "";
   const isMaharashtra = customerState.includes("maharashtra");
   
-  let columns = ["Sr", "Product Descriptions", "HSN/SAC", "Quantity", "Rate", "Tenure", "Amount"];
-  if (!isInstallment) columns[5] = "Per";
-  if (isInstallment) columns[6] = "Down Payment\n(GST Component)";
+  // New columns array including 'Classification'
+  let columns = ["Sr", "Product Descriptions", "Classification", "HSN/SAC", "Quantity", "Rate", "Tenure", "Amount"];
+  if (!isInstallment) columns[6] = "Per";
+  if (isInstallment) columns[7] = "Down Payment\n(GST Component)";
 
   let tableBody: any[] = [];
   let subtotalMainItem = 0;
   let subtotalAddons = 0;
   let totalRateSum = 0;
 
-  paidLineItems.forEach((item, index) => {
+  allSelectedItems.forEach((item, index) => {
     const rate = item.rate;
     let amount = 0;
     
+    // Rule: Standard if price is 0, Addon otherwise
+    const classification = rate === 0 ? "Standard" : "Addon";
+
     if (isInstallment) {
-      amount = item.isAddon ? 0 : (rate * 36 * 0.18);
+      // In installment mode, only the main product (tank) usually carries the upfront GST component amount 
+      // or specific addons carry 0 if they are part of monthly payment.
+      // However, for commercial clarity we follow the previous logic for 'amount' calculation.
+      amount = item.rate === 0 ? 0 : (item.isAddon ? 0 : (rate * 36 * 0.18));
     } else {
       amount = rate;
     }
@@ -283,6 +283,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
     tableBody.push([
       (index + 1).toString(),
       item.desc,
+      classification,
       item.hsn,
       "1",
       formatIndianCurrency(rate),
@@ -314,20 +315,20 @@ export const generateQuotePDF = async (data: QuoteData) => {
 
   if (!isInstallment) {
     if (isMaharashtra) {
-      tableBody.push(["", "CGST @ 9% Output (Main Item)", "", "", "", "", formatIndianCurrency(cgst)]);
-      tableBody.push(["", "SGST @ 9% Output (Main Item)", "", "", "", "", formatIndianCurrency(sgst)]);
+      tableBody.push(["", "CGST @ 9% Output (Main Item)", "", "", "", "", "", formatIndianCurrency(cgst)]);
+      tableBody.push(["", "SGST @ 9% Output (Main Item)", "", "", "", "", "", formatIndianCurrency(sgst)]);
     } else {
-      tableBody.push(["", "IGST @ 18% Output (Main Item)", "", "", "", "", formatIndianCurrency(igst)]);
+      tableBody.push(["", "IGST @ 18% Output (Main Item)", "", "", "", "", "", formatIndianCurrency(igst)]);
     }
   }
   
-  tableBody.push(["", "Round Off", "", "", "", "", "0"]);
-  // Modified Total row to show sums of Rate and Tenure
+  tableBody.push(["", "Round Off", "", "", "", "", "", "0"]);
   tableBody.push([
     "", 
     "Total (INR)", 
     "", 
     "", 
+    "",
     formatIndianCurrency(totalRateSum), 
     isInstallment ? "36 Months" : "", 
     formatIndianCurrency(grandTotal)
@@ -340,14 +341,20 @@ export const generateQuotePDF = async (data: QuoteData) => {
     theme: 'grid',
     margin: { left: 10, right: 10 }, 
     styles: {
-      font: "helvetica", fontSize: 7, textColor: black, lineColor: [0, 0, 0], lineWidth: 0.1, valign: 'top', cellPadding: 1.5, overflow: 'linebreak'
+      font: "helvetica", fontSize: 6.5, textColor: black, lineColor: [0, 0, 0], lineWidth: 0.1, valign: 'top', cellPadding: 1, overflow: 'linebreak'
     },
     headStyles: {
       fillColor: [255, 255, 255], textColor: black, fontStyle: 'bold', lineWidth: 0.1, lineColor: [0, 0, 0],
     },
     columnStyles: {
-      0: { cellWidth: 10, halign: 'center' }, 1: { cellWidth: 'auto' }, 2: { cellWidth: 20, halign: 'center' },
-      3: { cellWidth: 15, halign: 'center' }, 4: { cellWidth: 25, halign: 'right' }, 5: { cellWidth: 25, halign: 'center' }, 6: { cellWidth: 40, halign: 'right' },  
+      0: { cellWidth: 8, halign: 'center' }, 
+      1: { cellWidth: 'auto' }, 
+      2: { cellWidth: 20, halign: 'center' }, // Classification column
+      3: { cellWidth: 15, halign: 'center' },
+      4: { cellWidth: 12, halign: 'center' }, 
+      5: { cellWidth: 22, halign: 'right' }, 
+      6: { cellWidth: 22, halign: 'center' }, 
+      7: { cellWidth: 35, halign: 'right' },  
     },
     didParseCell: function (data: any) {
       if (data.row.index === tableBody.length - 1) {
@@ -379,7 +386,8 @@ export const generateQuotePDF = async (data: QuoteData) => {
     doc.text("Authorised Signatory", 160, 287 - 10, { align: "center" });
   }
 
-  // --- PAGE 2: STANDARD INCLUSIONS ---
+  // --- PAGE 2: STANDARD INCLUSIONS (Items with rate 0) ---
+  const includedLineItems = allSelectedItems.filter(item => item.rate === 0 && item.isAddon);
   doc.addPage();
   doc.rect(5, 5, 200, 287);
   let page2Y = 20;
