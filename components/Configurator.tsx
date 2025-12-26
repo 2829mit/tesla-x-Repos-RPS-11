@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { AccessoryOption, IotOption, TankOption, DispensingUnitOption, SafetyUpgradeOption, CustomerDetails, LicenseOption } from '../types';
 import { CONSUMPTION_OPTIONS, TANK_OPTIONS, REPOS_OS_OPTIONS, DISPENSING_UNIT_OPTIONS, MECHANICAL_INCLUSION_OPTIONS, SAFETY_UPGRADE_OPTIONS, LICENSE_OPTIONS, SAFETY_UNIT_OPTIONS } from '../constants';
@@ -26,6 +27,10 @@ interface ConfiguratorProps {
   onSafetyUnitToggle: (option: AccessoryOption) => void;
   selectedSafetyUpgrades: SafetyUpgradeOption[];
   onSafetyUpgradeToggle: (option: SafetyUpgradeOption) => void;
+
+  rfidTagsQuantity: number;
+  setRfidTagsQuantity: (qty: number) => void;
+
   selectedLicenseOptions: LicenseOption[];
   selectedConsumption: string | null;
   onConsumptionSelect: (consumption: string) => void;
@@ -79,7 +84,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
   onSafetyUnitToggle,
   selectedSafetyUpgrades,
   onSafetyUpgradeToggle,
-  selectedLicenseOptions,
+  rfidTagsQuantity,
+  setRfidTagsQuantity,
   selectedConsumption,
   onConsumptionSelect,
   
@@ -154,7 +160,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
 
   let pricingItems = [
     { name: `RPS Base Price (${currentTank?.name || ''} Tank)`, price: tankBasePrice * multiplier },
-    // Map all selected DUs
     ...selectedDispensingUnits.map(du => ({ name: du.name, price: du.price * multiplier })),
     ...selectedReposOsOptions.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
     ...selectedDecantation.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
@@ -162,6 +167,13 @@ const Configurator: React.FC<ConfiguratorProps> = ({
     ...selectedSafetyUnits.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
     ...selectedSafetyUpgrades.map(opt => ({ name: opt.name, price: opt.price * multiplier })),
   ];
+
+  if (rfidTagsQuantity > 0) {
+    pricingItems.push({
+      name: `RFID Tags (${rfidTagsQuantity} nos)`,
+      price: (rfidTagsQuantity * 49) * multiplier
+    });
+  }
 
   // Hide Tank Base Price row from the list if desired
   pricingItems = pricingItems.filter(item => !item.name.includes('RPS Base Price'));
@@ -233,8 +245,6 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* 2. Platform Section REMOVED */}
-
             {/* 3. RPS Capacity */}
             <div className="mb-[45px]">
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">RPS Capacity</h2>
@@ -305,23 +315,12 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     </div>
                     <div className="flex-grow flex justify-between items-center">
                       <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                      
-                      {/* Price / Info Icon Switcher */}
                       <div className="relative min-w-[60px] flex justify-end">
                          <span className={`font-medium text-[14px] leading-[20px] text-[#171A20] transition-opacity duration-200 ${option.infoImageUrl ? 'group-hover:opacity-0' : ''}`}>
                              {showPrices ? formatPrice(option.price) : ''}
                          </span>
-                         
                          {option.infoImageUrl && (
-                           <div 
-                             role="button"
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               setLearnMoreOption(option);
-                             }}
-                             className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 text-black hover:bg-black/10 rounded-full p-1"
-                             title="View Image"
-                           >
+                           <div role="button" onClick={(e) => { e.stopPropagation(); setLearnMoreOption(option); }} className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 text-black hover:bg-black/10 rounded-full p-1" title="View Image">
                              <InfoIcon />
                            </div>
                          )}
@@ -332,7 +331,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* 5. Dispensing Module (Renamed from RFID Enabled Dispensing Unit) */}
+            {/* 5. Dispensing Module */}
             <div className="mb-[45px]">
               <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Dispensing Module</h2>
               <div className="space-y-2">
@@ -346,11 +345,8 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                         : 'border-gray-300 hover:border-gray-500'
                     }`}
                   >
-                    {/* Tickbox - Square Checkbox Style - Unified Color */}
                     <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                      selectedDispensingUnits.some(du => du.id === option.id)
-                        ? 'bg-gray-600 border-gray-600'
-                        : 'bg-white border-gray-300'
+                      selectedDispensingUnits.some(du => du.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
                     }`}>
                       {selectedDispensingUnits.some(du => du.id === option.id) && (
                         <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
@@ -358,14 +354,11 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                         </svg>
                       )}
                     </div>
-
                     <div className="flex-grow">
                       <div className="flex justify-between items-center">
                         <div>
                           <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                          {option.subtext && (
-                            <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>
-                          )}
+                          {option.subtext && <p className="font-medium text-[12px] leading-[18px] text-[#5C5E62]">{option.subtext}</p>}
                         </div>
                         <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">
                           {showPrices ? formatPrice(option.price) : ''}
@@ -400,23 +393,12 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       </div>
                       <div className="flex-grow flex justify-between items-center">
                         <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
-                        
-                        {/* Price / Info Icon Switcher */}
                         <div className="relative min-w-[60px] flex justify-end">
                             <span className={`font-medium text-[14px] leading-[20px] text-[#171A20] transition-opacity duration-200 ${option.infoImageUrl ? 'group-hover:opacity-0' : ''}`}>
                                 {showPrices ? formatPrice(option.price) : ''}
                             </span>
-                            
                             {option.infoImageUrl && (
-                              <div 
-                                role="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setLearnMoreOption(option);
-                                }}
-                                className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 text-black hover:bg-black/10 rounded-full p-1"
-                                title="View Image"
-                              >
+                              <div role="button" onClick={(e) => { e.stopPropagation(); setLearnMoreOption(option); }} className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 text-black hover:bg-black/10 rounded-full p-1" title="View Image">
                                 <InfoIcon />
                               </div>
                             )}
@@ -427,13 +409,43 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                 </div>
             </div>
 
-            {/* 7. Add-Ons (Formerly Safety Upgrades) */}
+            {/* 7. Add-Ons */}
             <div className="mb-[45px]">
                 <h2 className="font-medium text-[20px] leading-[28px] text-[#171A20] mb-3 text-center">Add-Ons</h2>
                 <div className="space-y-6">
+                  {/* RFID Tags Numeric Option */}
+                  <div className={`group w-full p-4 border border-gray-300 rounded-lg transition-all duration-300 bg-white hover:border-gray-400`}>
+                    <div className="flex justify-between items-center">
+                       <span className="font-medium text-[14px] leading-[20px] text-[#171A20]">RFID Tags</span>
+                       <div className="flex items-center gap-4">
+                          <span className="font-medium text-[14px] leading-[20px] text-[#171A20]">{showPrices ? formatPrice(rfidTagsQuantity * 49) : ''}</span>
+                          <div className="flex items-center border border-gray-200 rounded-md bg-gray-50 overflow-hidden">
+                             <button 
+                               onClick={() => setRfidTagsQuantity(Math.max(0, rfidTagsQuantity - 1))}
+                               className="px-3 py-1 bg-white hover:bg-gray-100 text-gray-800 font-bold border-r border-gray-200"
+                             >
+                               -
+                             </button>
+                             <input 
+                               type="number" 
+                               min="0"
+                               value={rfidTagsQuantity}
+                               onChange={(e) => setRfidTagsQuantity(Math.max(0, parseInt(e.target.value) || 0))}
+                               className="w-12 text-center bg-transparent text-sm font-semibold outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                             />
+                             <button 
+                               onClick={() => setRfidTagsQuantity(rfidTagsQuantity + 1)}
+                               className="px-3 py-1 bg-white hover:bg-gray-100 text-gray-800 font-bold border-l border-gray-200"
+                             >
+                               +
+                             </button>
+                          </div>
+                       </div>
+                    </div>
+                  </div>
+
                   {SAFETY_UPGRADE_OPTIONS.map(option => {
                     const isListItemStyle = ['advanced-skid', 'backup-du', 'sampling-kit'].includes(option.id);
-
                     if (isListItemStyle) {
                       return (
                         <button
@@ -461,49 +473,24 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                         </button>
                       );
                     }
-
                     return (
                       <div key={option.id} className="flex flex-col">
-                        <div
-                          onClick={() => onSafetyUpgradeToggle(option)}
-                          className={`border rounded-lg p-4 cursor-pointer transition-all duration-300 ${
-                            selectedSafetyUpgrades.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400' : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                        >
+                        <div onClick={() => onSafetyUpgradeToggle(option)} className={`border rounded-lg p-4 cursor-pointer transition-all duration-300 ${selectedSafetyUpgrades.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400' : 'border-gray-300 hover:border-gray-400'}`}>
                           <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
-                              <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors ${
-                                selectedSafetyUpgrades.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
-                              }`}>
-                                {selectedSafetyUpgrades.some(o => o.id === option.id) && (
-                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
-                                )}
+                              <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors ${selectedSafetyUpgrades.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'}`}>
+                                {selectedSafetyUpgrades.some(o => o.id === option.id) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                               </div>
                               <span className="font-medium text-gray-900">{option.name}</span>
                             </div>
                             <span className="font-medium text-gray-900">{showPrices ? formatPrice(option.price) : ''}</span>
                           </div>
-                          
                           <div className="w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                            <img 
-                              src={option.imageUrl || getSafetyImage(selectedTank, option.id)} 
-                              alt={option.name} 
-                              className="max-h-[150px] w-auto object-contain mix-blend-multiply"
-                            />
+                            <img src={option.imageUrl || getSafetyImage(selectedTank, option.id)} alt={option.name} className="max-h-[150px] w-auto object-contain mix-blend-multiply" />
                           </div>
                         </div>
                         <div className="flex justify-center mt-3">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setLearnMoreOption(option);
-                            }}
-                            className="bg-gray-100 text-gray-800 px-6 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
-                          >
-                            Learn More
-                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setLearnMoreOption(option); }} className="bg-gray-100 text-gray-800 px-6 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors">Learn More</button>
                         </div>
                       </div>
                     );
@@ -520,19 +507,11 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                     key={option.id}
                     onClick={() => onReposOsToggle(option)}
                     className={`w-full flex items-center p-4 border rounded-lg text-left cursor-pointer transition-all duration-300 ${
-                      selectedReposOsOptions.some(o => o.id === option.id)
-                        ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50'
-                        : 'border-gray-300 hover:border-gray-500'
+                      selectedReposOsOptions.some(o => o.id === option.id) ? 'border-gray-400 ring-1 ring-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-500'
                     }`}
                   >
-                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${
-                      selectedReposOsOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'
-                    }`}>
-                      {selectedReposOsOptions.some(o => o.id === option.id) && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
+                    <div className={`h-5 w-5 border rounded flex-shrink-0 flex items-center justify-center transition-colors mr-3 ${selectedReposOsOptions.some(o => o.id === option.id) ? 'bg-gray-600 border-gray-600' : 'bg-white border-gray-300'}`}>
+                      {selectedReposOsOptions.some(o => o.id === option.id) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                     </div>
                     <div className="flex-grow flex justify-between items-center">
                       <p className="font-medium text-[14px] leading-[20px] text-[#171A20]">{option.name}</p>
@@ -543,7 +522,7 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* 9. Licenses and Compliances Section */}
+            {/* 9. Licenses and Compliances */}
             <div className="mb-[45px]">
               <h2 className="text-2xl font-semibold text-center text-gray-900 mt-8">Licenses and Compliance</h2>
               <div className="space-y-3 mt-6">
@@ -558,60 +537,41 @@ const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
             </div>
 
-            {/* Pricing Breakdown & Actions */}
+            {/* Pricing Breakdown */}
             {showPrices ? (
               <div ref={pricingSectionRef} className="pt-8 border-t border-gray-200">
-                <div 
-                  className="flex justify-between items-center mb-6 cursor-pointer group select-none"
-                  onClick={() => setIsPricingDetailsOpen(!isPricingDetailsOpen)}
-                >
+                <div className="flex justify-between items-center mb-6 cursor-pointer group select-none" onClick={() => setIsPricingDetailsOpen(!isPricingDetailsOpen)}>
                   <h2 className="text-xl font-medium text-gray-900">Pricing Details</h2>
                   <div className="flex items-center gap-4">
-                      {/* Small Circular Toggle for Payment Mode */}
                       <div className="flex items-center gap-2 text-sm">
                           <span className={`${paymentMode === 'installments' ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>Monthly</span>
-                          <button 
-                              onClick={(e) => {
-                                  e.stopPropagation();
-                                  setPaymentMode(paymentMode === 'installments' ? 'outright' : 'installments');
-                              }}
-                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${paymentMode === 'outright' ? 'bg-blue-600' : 'bg-gray-300'}`}
-                          >
+                          <button onClick={(e) => { e.stopPropagation(); setPaymentMode(paymentMode === 'installments' ? 'outright' : 'installments'); }} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${paymentMode === 'outright' ? 'bg-blue-600' : 'bg-gray-300'}`}>
                               <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${paymentMode === 'outright' ? 'translate-x-5' : 'translate-x-1'}`} />
                           </button>
                           <span className={`${paymentMode === 'outright' ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>Full Price</span>
                       </div>
-                      
-                      <div className="p-1 rounded-full group-hover:bg-gray-100 transition-colors">
-                        {isPricingDetailsOpen ? <ChevronUp /> : <ChevronDown />}
-                      </div>
+                      <div className="p-1 rounded-full group-hover:bg-gray-100 transition-colors">{isPricingDetailsOpen ? <ChevronUp /> : <ChevronDown />}</div>
                   </div>
                 </div>
-                
                 <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isPricingDetailsOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'}`}>
                   <div className="space-y-3 text-sm text-gray-600 mb-8">
-                      
-                      {/* Show Breakdown for BOTH modes. Multiplier handles price logic. */}
                       {paidItems.map((item, idx) => (
                         <div key={`paid-${idx}`} className="flex justify-between">
                           <span>{item.name}</span>
                           <span>{formatCurrency(item.price)}</span>
                         </div>
                       ))}
-                      
                       <div className="border-t border-gray-200 my-3 pt-3">
                           <div className="flex justify-between font-semibold text-gray-800">
                               <span>{subtotalLabel}</span>
                               <span>{formatCurrency(subtotalDisplay)}</span>
                           </div>
-                          
                           {paymentMode === 'outright' && (
                             <div className="flex justify-between text-gray-600 mt-1">
                                 <span>GST (18%)</span>
                                 <span>{formatCurrency(gstAmount)}</span>
                             </div>
                           )}
-
                           {paymentMode === 'installments' && (
                              <>
                                <div className="flex justify-between text-blue-600 font-medium mt-2 text-sm">
@@ -622,26 +582,16 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                                   <span>Tenure</span>
                                   <span>36 Months</span>
                                </div>
-                               <div className="mt-2 text-xs text-gray-500 italic text-right">
-                                  Subject to approval from Partnered Bank
-                               </div>
+                               <div className="mt-2 text-xs text-gray-500 italic text-right">Subject to approval from Partnered Bank</div>
                              </>
                           )}
                       </div>
-
-                      {/* Show included items toggle (For both modes as they are relevant) */}
                       {includedItems.length > 0 && (
                         <div className="mt-4 border-t border-gray-100 pt-2">
-                           <button 
-                            onClick={() => setShowIncludedOptions(!showIncludedOptions)}
-                            className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 mb-2"
-                           >
+                           <button onClick={() => setShowIncludedOptions(!showIncludedOptions)} className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 mb-2">
                              {showIncludedOptions ? 'Hide included features' : 'Show included features'}
-                             <span className="ml-1">
-                              {showIncludedOptions ? <ChevronUp /> : <ChevronDown />}
-                             </span>
+                             <span className="ml-1">{showIncludedOptions ? <ChevronUp /> : <ChevronDown />}</span>
                            </button>
-                           
                            <div className={`space-y-2 pl-2 transition-all duration-300 overflow-hidden ${showIncludedOptions ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
                              {includedItems.map((item, idx) => (
                                <div key={`inc-${idx}`} className="flex justify-between text-gray-500">
@@ -654,112 +604,50 @@ const Configurator: React.FC<ConfiguratorProps> = ({
                       )}
                   </div>
                 </div>
-                
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 mb-8">
                      <span className="text-lg font-semibold text-gray-900">{displayedPriceLabel}</span>
                      <div className="text-right">
                         <span className="text-lg font-bold text-gray-900">{formatCurrency(finalPrice)}</span>
-                        {paymentMode === 'outright' && (
-                            <p className="text-xs text-gray-500 font-normal">Inclusive of GST</p>
-                        )}
+                        {paymentMode === 'outright' && <p className="text-xs text-gray-500 font-normal">Inclusive of GST</p>}
                      </div>
                 </div>
-
                 <div className="flex gap-4 flex-col sm:flex-row">
-                     <button
-                       onClick={() => setSelectedAction('contact')}
-                       className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${selectedAction === 'contact' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
-                    >
-                      Contact Sales
-                    </button>
-                     <button
-                       onClick={handleViewQuoteClick}
-                       className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${selectedAction === 'quote' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
-                    >
-                      View Quote
-                    </button>
+                     <button onClick={() => setSelectedAction('contact')} className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${selectedAction === 'contact' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>Contact Sales</button>
+                     <button onClick={handleViewQuoteClick} className={`flex-1 py-3 px-4 rounded text-sm font-semibold transition-colors ${selectedAction === 'quote' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>View Quote</button>
                 </div>
               </div>
             ) : (
               <div className="pt-8 border-t border-gray-200 mb-8">
                   <div className="flex gap-4 flex-col sm:flex-row">
-                     <button
-                       className="w-full py-3 px-4 rounded text-sm font-semibold bg-blue-600 text-white transition-colors hover:bg-blue-700"
-                       onClick={() => {
-                         alert("Thank you for your interest. Our sales team will contact you shortly.");
-                       }}
-                    >
-                      Contact Sales
-                    </button>
+                     <button className="w-full py-3 px-4 rounded text-sm font-semibold bg-blue-600 text-white transition-colors hover:bg-blue-700" onClick={() => alert("Thank you for your interest. Our sales team will contact you shortly.")}>Contact Sales</button>
                   </div>
               </div>
             )}
-
           </div>
         </div>
       </div>
-      
       {showPrices && (
         <div className={`fixed bottom-0 left-0 right-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 p-4 z-20 w-full pointer-events-none transition-transform duration-300 ease-in-out ${isStickyFooterVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}>
           <div className="bg-white border border-gray-200 shadow-lg rounded-xl p-4 pointer-events-auto">
              <div className="flex justify-between items-center mb-2">
                 <div>
                   <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{formatCurrency(footerPrice)}</p>
-                  {paymentMode === 'installments' && (
-                      <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Per Month</p>
-                  )}
+                  {paymentMode === 'installments' && <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Per Month</p>}
                 </div>
-                <button
-                  onClick={handleViewQuoteClick}
-                  className="bg-blue-600 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-md text-sm sm:text-base font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
-                >
-                  View Quote
-                </button>
+                <button onClick={handleViewQuoteClick} className="bg-blue-600 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-md text-sm sm:text-base font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md">View Quote</button>
              </div>
           </div>
         </div>
       )}
-
-      {/* Learn More / Image Info Modal */}
       {learnMoreOption && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
-          onClick={() => setLearnMoreOption(null)}
-        >
-          <div 
-            className="bg-white rounded-lg shadow-xl w-full max-w-lg relative p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button 
-              onClick={() => setLearnMoreOption(null)} 
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setLearnMoreOption(null)}>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg relative p-6" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setLearnMoreOption(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
             <h3 className="text-2xl font-semibold mb-4 text-gray-900 text-center">{learnMoreOption.name}</h3>
-            
-            {/* Logic to determine image source: infoImageUrl > getSafetyImage > imageUrl */}
             {((learnMoreOption as any).infoImageUrl || (learnMoreOption as any).imageUrl || (learnMoreOption as SafetyUpgradeOption).id) ? (
-               <div className="flex justify-center mb-6">
-                <img 
-                  src={
-                      (learnMoreOption as any).infoImageUrl || 
-                      ((learnMoreOption as SafetyUpgradeOption).id.includes('fire') || (learnMoreOption as SafetyUpgradeOption).id.includes('crash') 
-                      ? getSafetyImage(selectedTank, (learnMoreOption as SafetyUpgradeOption).id) 
-                      : (learnMoreOption as any).imageUrl)
-                  }
-                  alt={learnMoreOption.name} 
-                  className="max-h-64 object-contain"
-                />
-              </div>
+               <div className="flex justify-center mb-6"><img src={(learnMoreOption as any).infoImageUrl || ((learnMoreOption as SafetyUpgradeOption).id.includes('fire') || (learnMoreOption as SafetyUpgradeOption).id.includes('crash') ? getSafetyImage(selectedTank, (learnMoreOption as SafetyUpgradeOption).id) : (learnMoreOption as any).imageUrl)} alt={learnMoreOption.name} className="max-h-64 object-contain" /></div>
             ) : null}
-           
-            <p className="text-gray-600 text-center leading-relaxed">
-              {(learnMoreOption as any).description || 'No description available.'}
-            </p>
+            <p className="text-gray-600 text-center leading-relaxed">{(learnMoreOption as any).description || 'No description available.'}</p>
           </div>
         </div>
       )}

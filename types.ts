@@ -66,6 +66,7 @@ export interface QuoteData {
   gstAmount: number;
   totalContractValue: number;
   monthlyPrice?: number;
+  rfidTagsQuantity?: number;
   configuration: {
     tank: string;
     dispensingUnits: DispensingUnitOption[];

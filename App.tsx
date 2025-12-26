@@ -48,12 +48,12 @@ const App: React.FC = () => {
   const [selectedSafetyUnits, setSelectedSafetyUnits] = useState<AccessoryOption[]>([]);
   const [selectedSafetyUpgrades, setSelectedSafetyUpgrades] = useState<SafetyUpgradeOption[]>([]);
   const [selectedLicenseOptions, setSelectedLicenseOptions] = useState<LicenseOption[]>([]);
+  const [rfidTagsQuantity, setRfidTagsQuantity] = useState<number>(0);
 
   const [selectedConsumption, setSelectedConsumption] = useState<string | null>(null);
   const [recommendedTankId, setRecommendedTankId] = useState<TankOption['id'] | null>(null);
 
   // Compute if we should show the capacity platform preview
-  // showCapacityPreview is true ONLY if NO add-ons are selected (selection count = 1, just the tank)
   const showCapacityPreview = useMemo(() => {
     const addOnCount = 
       selectedReposOsOptions.length + 
@@ -61,7 +61,8 @@ const App: React.FC = () => {
       selectedDecantation.length + 
       selectedDispensingUnits.length + 
       selectedSafetyUnits.length + 
-      selectedSafetyUpgrades.length;
+      selectedSafetyUpgrades.length +
+      (rfidTagsQuantity > 0 ? 1 : 0);
     
     return addOnCount === 0;
   }, [
@@ -70,7 +71,8 @@ const App: React.FC = () => {
     selectedDecantation, 
     selectedDispensingUnits, 
     selectedSafetyUnits, 
-    selectedSafetyUpgrades
+    selectedSafetyUpgrades,
+    rfidTagsQuantity
   ]);
 
   useEffect(() => {
@@ -170,6 +172,7 @@ const App: React.FC = () => {
     setSelectedSafetyUnits([]);
     setSelectedSafetyUpgrades([]);
     setSelectedLicenseOptions([]);
+    setRfidTagsQuantity(0);
     setPaymentMode('installments');
   };
 
@@ -180,13 +183,15 @@ const App: React.FC = () => {
     let price = tankPrice;
     price += selectedDispensingUnits.reduce((sum, du) => sum + du.price, 0);
     price += selectedReposOsOptions.reduce((total, opt) => total + opt.price, 0);
-    price += selectedMechanicalInclusionOptions.reduce((total, opt) => total + opt.price, 0);
+    price += selectedMechanicalInclusionOptions.reduce((total, totalOpt) => total + totalOpt.price, 0);
     price += selectedDecantation.reduce((total, opt) => total + opt.price, 0);
     price += selectedSafetyUnits.reduce((total, unit) => total + unit.price, 0);
     price += selectedSafetyUpgrades.reduce((total, unit) => total + unit.price, 0);
     price += selectedLicenseOptions.reduce((total, opt) => total + opt.price, 0);
+    // Add RFID Tags cost: 49 per tag per month
+    price += (rfidTagsQuantity * 49);
     return price;
-  }, [selectedTank, selectedDispensingUnits, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions]);
+  }, [selectedTank, selectedDispensingUnits, selectedReposOsOptions, selectedMechanicalInclusionOptions, selectedDecantation, selectedSafetyUnits, selectedSafetyUpgrades, selectedLicenseOptions, rfidTagsQuantity]);
 
   const totalContractValue = useMemo(() => {
     return monthlyTotalPrice * 36;
@@ -232,7 +237,7 @@ const App: React.FC = () => {
       gstAmount: gstAmount,
       totalContractValue: totalContractValue,
       monthlyPrice: paymentMode === 'installments' ? displayPrice : undefined,
-      
+      rfidTagsQuantity,
       configuration: {
         tank: selectedTank,
         dispensingUnits: selectedDispensingUnits,
@@ -373,6 +378,10 @@ const App: React.FC = () => {
               selectedSafetyUpgrades={selectedSafetyUpgrades}
               onSafetyUpgradeToggle={handleSafetyUpgradeToggle}
               selectedLicenseOptions={selectedLicenseOptions}
+              
+              rfidTagsQuantity={rfidTagsQuantity}
+              setRfidTagsQuantity={setRfidTagsQuantity}
+
               selectedConsumption={selectedConsumption}
               onConsumptionSelect={handleConsumptionSelect}
               

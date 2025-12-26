@@ -202,6 +202,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
     hsn: string;
     tenure: string;
     isAddon: boolean;
+    quantity: string;
   }
 
   const allSelectedItems: LineItem[] = [];
@@ -215,7 +216,8 @@ export const generateQuotePDF = async (data: QuoteData) => {
     rate: (tankObj?.price || 0) * multiplier,
     hsn: "84131191",
     tenure: tenureText,
-    isAddon: false
+    isAddon: false,
+    quantity: "1"
   });
 
   const collectItems = (list: any[]) => {
@@ -229,7 +231,8 @@ export const generateQuotePDF = async (data: QuoteData) => {
             rate: (item.price || 0) * multiplier,
             hsn: "84131191",
             tenure: isInstallment ? "36" : "Nos",
-            isAddon: true
+            isAddon: true,
+            quantity: "1"
           });
       });
   };
@@ -242,11 +245,22 @@ export const generateQuotePDF = async (data: QuoteData) => {
   collectItems(data.configuration.accessories.safetyUnits);
   collectItems(data.configuration.accessories.safetyUpgrades);
 
+  // Add RFID Tags if selected
+  if (data.rfidTagsQuantity && data.rfidTagsQuantity > 0) {
+    allSelectedItems.push({
+      desc: "RFID Tags",
+      rate: (data.rfidTagsQuantity * 49) * multiplier,
+      hsn: "84131191",
+      tenure: isInstallment ? "36" : "Nos",
+      isAddon: true,
+      quantity: data.rfidTagsQuantity.toString()
+    });
+  }
+
   // --- COMMERCIAL TABLE ---
   const customerState = data.customerDetails?.state?.toLowerCase() || "";
   const isMaharashtra = customerState.includes("maharashtra");
   
-  // New columns array including 'Classification'
   let columns = ["Sr", "Product Descriptions", "Classification", "HSN/SAC", "Quantity", "Rate", "Tenure", "Amount"];
   if (!isInstallment) columns[6] = "Per";
   if (isInstallment) columns[7] = "Down Payment\n(GST Component)";
@@ -260,13 +274,9 @@ export const generateQuotePDF = async (data: QuoteData) => {
     const rate = item.rate;
     let amount = 0;
     
-    // Rule: Standard if price is 0, Addon otherwise
     const classification = rate === 0 ? "Standard" : "Addon";
 
     if (isInstallment) {
-      // In installment mode, only the main product (tank) usually carries the upfront GST component amount 
-      // or specific addons carry 0 if they are part of monthly payment.
-      // However, for commercial clarity we follow the previous logic for 'amount' calculation.
       amount = item.rate === 0 ? 0 : (item.isAddon ? 0 : (rate * 36 * 0.18));
     } else {
       amount = rate;
@@ -285,7 +295,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
       item.desc,
       classification,
       item.hsn,
-      "1",
+      item.quantity,
       formatIndianCurrency(rate),
       item.tenure,
       formatIndianCurrency(amount)
@@ -349,7 +359,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
     columnStyles: {
       0: { cellWidth: 8, halign: 'center' }, 
       1: { cellWidth: 'auto' }, 
-      2: { cellWidth: 20, halign: 'center' }, // Classification column
+      2: { cellWidth: 20, halign: 'center' },
       3: { cellWidth: 15, halign: 'center' },
       4: { cellWidth: 12, halign: 'center' }, 
       5: { cellWidth: 22, halign: 'right' }, 
@@ -400,7 +410,7 @@ export const generateQuotePDF = async (data: QuoteData) => {
   const includedBody = includedLineItems.map((item, idx) => [
     (idx + 1).toString(),
     item.desc,
-    "1",
+    item.quantity,
     "Included"
   ]);
 
